@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | 1020 All-in-One</title>
+  <title>Movie Lotto | Balanced Center</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
     
     :root {
-      --bg-color: #fdfaf1;
+      --bg-gradient: linear-gradient(180deg, #fdfaf1 0%, #f7f3e9 100%);
       --card-bg: #ffffff;
       --text-main: #1a1a1a;
       --text-sub: #666666;
@@ -19,7 +19,7 @@
     }
 
     .dark-mode {
-      --bg-color: #121212;
+      --bg-gradient: linear-gradient(180deg, #1a1a1a 0%, #121212 100%);
       --card-bg: #1e1e1e;
       --text-main: #f5f5f5;
       --text-sub: #a0a0a0;
@@ -30,78 +30,92 @@
 
     body {
       font-family: 'Pretendard', sans-serif;
-      background-color: var(--bg-color);
+      background: var(--bg-gradient);
       color: var(--text-main);
-      height: 100dvh;
+      min-height: 100dvh;
       width: 100vw;
       display: flex;
       justify-content: center;
       align-items: center;
       margin: 0;
       overflow: hidden;
-      transition: background-color 0.4s ease, color 0.4s ease;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* 화면 정중앙 배치를 위한 래퍼 */
+    .app-wrapper {
+      width: 100%;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center; /* 수직 중앙 */
+      align-items: center;
+      padding: 40px 20px 60px; /* 상하 여백 넉넉히 */
     }
 
     .hip-card {
       width: 100%;
-      max-width: 420px;
-      height: 100dvh;
+      max-width: 380px; /* 아이폰 12 최적화 폭 */
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 16px 16px 80px; /* 하단 세이프존 확보 */
+      background: var(--card-bg);
+      border-radius: 36px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); /* 입체감 강화 */
+      transition: transform 0.4s ease, background-color 0.4s ease;
     }
 
     @media (min-width: 768px) {
-      .hip-card { max-width: 800px; height: auto; max-height: 90dvh; padding: 32px; padding-bottom: 40px; }
+      .hip-card { max-width: 800px; height: auto; max-height: 85dvh; padding: 40px; }
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
       flex-shrink: 0;
+      width: 100%;
     }
 
     .logo {
       font-weight: 900;
-      font-size: 18px;
-      letter-spacing: -0.05em;
+      font-size: 16px;
+      letter-spacing: -0.02em;
       cursor: pointer;
       color: var(--neon);
       text-transform: uppercase;
     }
 
-    /* 반응형 레이아웃 */
     .display-area {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 20px; /* 요소 간 간격 확대 */
       flex-grow: 1;
       min-height: 0;
     }
 
     @media (min-width: 768px) {
-      .display-area { flex-direction: row; align-items: stretch; gap: 32px; }
+      .display-area { flex-direction: row; align-items: stretch; gap: 40px; }
     }
 
-    /* 포스터 영역 - 모바일에서 32% 고정 */
+    /* 포스터 영역 - 비율 최적화 */
     .poster-box {
       width: 50%;
-      height: 32dvh;
+      height: 28dvh; /* 높이 소폭 축소 */
       margin: 0 auto;
       flex-shrink: 0;
       position: relative;
       border-radius: 20px;
       overflow: hidden;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      background: #000;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
 
     @media (min-width: 768px) {
-      .poster-box { width: 320px; height: auto; margin: 0; border-radius: 32px; }
+      .poster-box { width: 320px; height: auto; margin: 0; border-radius: 28px; }
     }
 
     .poster-img {
@@ -113,30 +127,29 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
     }
 
-    /* 정보 컨테이너 */
     .info-container {
       display: flex;
       flex-direction: column;
       flex-grow: 1;
       min-height: 0;
       text-align: center;
-      justify-content: center;
+      justify-content: space-between; /* 상하 균형 */
     }
 
     @media (min-width: 768px) {
-      .info-container { text-align: left; justify-content: flex-start; padding-top: 10px; }
+      .info-container { text-align: left; justify-content: flex-start; }
     }
 
     .badge-row {
-      display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: center;
+      display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
     }
 
     @media (min-width: 768px) {
-      .badge-row { justify-content: flex-start; margin-top: 16px; gap: 10px; }
+      .badge-row { justify-content: flex-start; gap: 8px; }
     }
 
     .sticker-badge {
-      font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 10px;
+      font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 8px;
       background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
       display: flex; align-items: center; gap: 4px; text-decoration: none;
     }
@@ -146,76 +159,80 @@
     }
 
     .provider-sticker {
-      width: 24px; height: 24px; border-radius: 50%; border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;
+      width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1); background: white;
     }
     
-    .provider-name { font-size: 7px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
+    .provider-name { font-size: 6px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
 
-    .title { font-size: 17px; font-weight: 800; margin-bottom: 2px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; padding: 0 4px; }
+    .title { font-size: 18px; font-weight: 900; margin-bottom: 4px; line-height: 1.2; }
+    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
     @media (min-width: 768px) {
-      .title { font-size: 28px; margin-bottom: 8px; white-space: normal; }
-      .desc { font-size: 15px; -webkit-line-clamp: 8; line-height: 1.6; }
+      .title { font-size: 32px; margin-bottom: 12px; }
+      .desc { font-size: 15px; -webkit-line-clamp: 6; }
     }
 
     .btn-draw {
       margin-top: 24px; width: 100%; background: var(--accent); color: var(--bg-color);
       padding: 18px; border-radius: 20px; font-weight: 800; font-size: 16px;
-      border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       transition: all 0.3s ease; flex-shrink: 0;
     }
-    .btn-draw:active { transform: scale(0.97); }
+    .btn-draw:active { transform: scale(0.96); }
     .btn-draw:disabled { opacity: 0.3; }
 
-    .controls { display: flex; gap: 10px; }
-    .icon-btn { font-size: 16px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
+    .controls { display: flex; gap: 12px; }
+    .icon-btn { font-size: 16px; cursor: pointer; opacity: 0.4; transition: opacity 0.2s; }
     .icon-btn:hover { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <div class="hip-card">
-    <header class="header">
-      <div class="logo" onclick="resetApp()">MOVIE LOTTO</div>
-      <div class="controls">
-        <span class="icon-btn" onclick="toggleLanguage()">🌐</span>
-        <span id="theme-icon" class="icon-btn" onclick="toggleTheme()">🌙</span>
-      </div>
-    </header>
+  <div class="app-wrapper">
+    <div class="hip-card">
+      <header class="header">
+        <div class="logo" onclick="resetApp()">MOVIE LOTTO</div>
+        <div class="controls">
+          <span class="icon-btn" onclick="toggleLanguage()">🌐</span>
+          <span id="theme-icon" class="icon-btn" onclick="toggleTheme()">🌙</span>
+        </div>
+      </header>
 
-    <div class="display-area">
-      <!-- Media Area -->
-      <div class="poster-box">
-        <div id="slot-layer" class="slot-layer">
-          <div class="w-[80px] h-[120px] overflow-hidden rounded-lg border border-dashed border-gray-300 flex flex-col items-center">
-            <div id="slot-track" class="transition-transform duration-100 linear">
-              <div class="h-[120px] flex items-center justify-center text-3xl opacity-20">?</div>
+      <div class="display-area">
+        <!-- Media Area -->
+        <div class="poster-box">
+          <div id="slot-layer" class="slot-layer">
+            <div class="w-[70px] h-[100px] overflow-hidden rounded-lg border border-dashed border-gray-300 flex flex-col items-center">
+              <div id="slot-track" class="transition-transform duration-100 linear">
+                <div class="h-[100px] flex items-center justify-center text-2xl opacity-20">?</div>
+              </div>
             </div>
           </div>
-        </div>
-        <img id="res-poster" class="poster-img opacity-0" src="" alt="">
-      </div>
-
-      <!-- Info Container -->
-      <div class="info-container">
-        <div id="res-title" class="title">MOVIE LOTTO</div>
-        
-        <div id="badge-row-scores" class="badge-row" onclick="event.stopPropagation()">
-          <span class="sticker-badge">TMDB --</span>
-          <span class="sticker-badge">IMDb --</span>
-          <span class="sticker-badge">Rotten --</span>
+          <img id="res-poster" class="poster-img opacity-0" src="" alt="">
         </div>
 
-        <p id="res-desc" class="desc mt-3">추첨 버튼을 눌러 당신의 인생 영화를 찾아보세요.</p>
+        <!-- Info Container -->
+        <div class="info-container">
+          <div class="space-y-4">
+            <div id="res-title" class="title">MOVIE LOTTO</div>
+            
+            <div id="badge-row-scores" class="badge-row" onclick="event.stopPropagation()">
+              <span class="sticker-badge">TMDB --</span>
+              <span class="sticker-badge">IMDb --</span>
+              <span class="sticker-badge">Rotten --</span>
+            </div>
 
-        <!-- OTT Badges -->
-        <div id="badge-row-meta" class="badge-row !mt-4" onclick="event.stopPropagation()"></div>
+            <p id="res-desc" class="desc">오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.</p>
+          </div>
+
+          <!-- OTT Badges -->
+          <div id="badge-row-meta" class="badge-row mt-6" onclick="event.stopPropagation()"></div>
+        </div>
       </div>
+
+      <button id="draw-btn" class="btn-draw" onclick="startDraw()">다음 영화 뽑기</button>
     </div>
-
-    <button id="draw-btn" class="btn-draw" onclick="startDraw()">다음 영화 뽑기</button>
   </div>
 
   <script>
@@ -281,13 +298,13 @@
       
       const track = document.getElementById('slot-track');
       track.style.transform = 'translateY(0)';
-      track.innerHTML = samples.map(m => `<div class="h-[120px] w-[80px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
+      track.innerHTML = samples.map(m => `<div class="h-[100px] w-[70px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
 
       let step = 0;
       const totalSteps = 10 + Math.floor(Math.random() * 5);
       const animate = () => {
         step++;
-        track.style.transform = `translateY(-${(step % samples.length) * 120}px)`;
+        track.style.transform = `translateY(-${(step % samples.length) * 100}px)`;
         if (step < totalSteps) {
           setTimeout(animate, 50 + (step * 20));
         } else {
