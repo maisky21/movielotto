@@ -3,28 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무비 로또 (Movie Lotto) | 최종 완성판</title>
+  <title>Movie Lotto | Instagram Edition</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
     
     :root {
-      --bg-color: #f8f9fa;
+      --bg-color: #fafafa;
       --card-bg: #ffffff;
-      --text-main: #1a1a1a;
-      --text-sub: #9ca3af;
-      --slot-bg: #fafafa;
-      --border-color: #f0f0f0;
-      --gold: #D4AF37;
+      --text-main: #262626;
+      --text-sub: #8e8e8e;
+      --border-color: #dbdbdb;
+      --accent: #ed4956; /* 인스타 하트 색상 */
     }
 
     .dark-mode {
       --bg-color: #121212;
       --card-bg: #1e1e1e;
-      --text-main: #ffffff;
-      --text-sub: #888888;
-      --slot-bg: #2a2a2a;
-      --border-color: #333333;
+      --text-main: #f5f5f5;
+      --text-sub: #a8a8a8;
+      --border-color: #363636;
     }
 
     body {
@@ -36,258 +34,350 @@
       justify-content: center;
       align-items: center;
       margin: 0;
-      padding: 16px;
       transition: background-color 0.3s ease;
     }
 
-    /* 반응형 카드 레이아웃 */
-    .app-card {
+    /* 인스타그램 피드 스타일 카드 */
+    .insta-card {
       background: var(--card-bg);
-      width: 90%; /* 모바일에서 꽉 차지 않게 여백 유지 */
-      max-width: 420px;
-      margin-left: auto;
-      margin-right: auto;
-      padding: 32px 20px;
-      border-radius: 32px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      position: relative;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      border: 1px solid var(--border-color);
-    }
-
-    @media (min-width: 768px) {
-      .app-card { padding: 40px 32px; width: 100%; }
-    }
-
-    .top-controls {
-      position: absolute;
-      top: 16px;
-      right: 20px;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .control-btn {
-      background: transparent;
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      opacity: 0.6;
-    }
-    .control-btn:hover { opacity: 1; border-color: var(--gold); }
-
-    .slot-machine {
-      width: 200px;
-      height: 300px;
-      background: var(--slot-bg);
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-      border: 1px solid var(--border-color);
-    }
-
-    .slot-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      transition: transform 0.1s linear;
-    }
-
-    .slot-item {
-      height: 300px;
-      width: 200px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .placeholder-icon {
-      font-size: 64px;
-      color: var(--gold);
-      animation: bounce 2s infinite;
-      opacity: 0.2;
-    }
-
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    #result-info {
-      display: none;
       width: 100%;
+      max-width: 450px;
+      margin: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 0;
+      display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      animation: fadeIn 0.6s ease forwards;
+      position: relative;
+      transition: all 0.3s ease;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @media (min-width: 640px) {
+      .insta-card { border-radius: 12px; margin: 20px auto; }
     }
 
-    .rating-badge {
+    /* 상단 헤더 */
+    .card-header {
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 10px;
-      font-weight: 800;
-      transition: all 0.2s;
-      border: 1px solid rgba(0,0,0,0.03);
-      text-decoration: none;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
     }
-    
-    .bg-tmdb { background: rgba(1, 180, 228, 0.1); color: #01b4e4; }
-    .bg-imdb { background: rgba(245, 197, 24, 0.1); color: #f5c518; }
-    .bg-rotten { background: rgba(250, 17, 21, 0.1); color: #fa1115; }
 
-    .provider-icon {
+    .avatar {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-radius: 50%;
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      padding: 2px;
+      margin-right: 10px;
+    }
+    .avatar-inner {
+      width: 100%; height: 100%; border-radius: 50%; background: white;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
     }
 
-    .btn-draw {
-      padding: 14px 40px;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 17px;
-      color: white;
-      background: var(--gold);
-      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
-      border: none;
-      cursor: pointer;
+    /* 미디어 영역 (포스터) */
+    .media-container {
       width: 100%;
-      transition: all 0.3s;
+      aspect-ratio: 4 / 5;
+      background: #efefef;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .btn-draw:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(212, 175, 55, 0.35); }
-    .btn-draw:active { transform: translateY(0); }
-    .btn-draw:disabled { background: #e0e0e0; color: #aaa; box-shadow: none; }
+
+    .media-poster {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.5s ease;
+    }
+
+    /* 액션 버튼 */
+    .actions {
+      display: flex;
+      padding: 12px 16px;
+      gap: 16px;
+    }
+
+    .icon-btn { cursor: pointer; transition: transform 0.1s ease; }
+    .icon-btn:active { transform: scale(1.2); }
+
+    /* 평점 배지 */
+    .rating-badges {
+      display: flex;
+      gap: 6px;
+      padding: 0 16px 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* 텍스트 영역 */
+    .content-area {
+      padding: 0 16px 16px;
+      text-align: left;
+    }
+
+    .movie-title { font-weight: 700; margin-bottom: 4px; }
+    .movie-overview { font-size: 13px; color: var(--text-sub); line-height: 1.4; }
+
+    /* 슬롯 애니메이션 오버레이 */
+    .slot-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--card-bg);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .slot-window {
+      width: 180px;
+      height: 270px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    .slot-track { transition: transform 0.1s linear; }
+
+    /* 메인 버튼 */
+    .next-btn {
+      margin: 16px;
+      background: #0095f6;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+    .next-btn:hover { background: #1877f2; }
+    .next-btn:disabled { background: #b2dffc; cursor: not-allowed; }
+
+    .top-controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
   </style>
 </head>
 <body>
 
-  <div class="app-card">
-    <!-- Top Controls -->
-    <div class="top-controls">
-      <button id="lang-btn" class="control-btn" onclick="toggleLanguage()">EN</button>
-      <button id="theme-btn" class="control-btn" onclick="toggleTheme()">🌙</button>
-    </div>
+  <div class="top-controls">
+    <button onclick="toggleLanguage()" class="text-[10px] font-bold border border-gray-300 rounded px-2 py-1">EN/KO</button>
+    <button onclick="toggleTheme()" class="text-[10px] font-bold border border-gray-300 rounded px-2 py-1">🌙/☀️</button>
+  </div>
 
-    <div class="space-y-1">
-      <h1 id="ui-title" class="text-xl font-bold tracking-tight">무비 로또</h1>
-      <p id="ui-subtitle" class="text-[10px] text-gray-400 uppercase tracking-widest">Pick your destiny</p>
-    </div>
-
-    <div class="display-area w-full flex flex-col items-center">
-      <!-- Slot View -->
-      <div id="slot-view" class="slot-machine">
-        <div id="slot-track" class="slot-content">
-          <div class="slot-item">
-            <div class="placeholder-icon">?</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Result View -->
-      <div id="result-info" class="w-full">
-        <div class="w-full h-48 md:h-56 rounded-2xl overflow-hidden relative shadow-md">
-          <img id="res-backdrop" class="w-full h-full object-cover" src="" alt="">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
-          <div id="res-theater" class="absolute top-3 left-3 hidden">
-            <span class="bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-lg">🎬 THEATER</span>
-          </div>
-        </div>
-
-        <h2 id="res-title" class="text-lg font-bold mt-3 mb-1 truncate">영화 제목</h2>
-        
-        <div class="flex flex-wrap justify-center gap-1.5 mb-3">
-          <div class="rating-badge bg-tmdb">
-            <span>TMDB</span>
-            <span id="score-tmdb">-</span>
-          </div>
-          <a id="link-imdb" href="#" target="_blank" class="rating-badge bg-imdb">
-            <span>IMDb</span>
-            <span id="score-imdb">확인</span>
-          </a>
-          <a id="link-rt" href="#" target="_blank" class="rating-badge bg-rotten">
-            <span>Rotten</span>
-            <span id="score-rt">확인</span>
-          </a>
-        </div>
-
-        <p id="res-desc" class="text-[11px] text-gray-500 leading-relaxed line-clamp-3 mb-4 px-2"></p>
-
-        <div class="w-full border-t border-dashed border-gray-100 dark:border-gray-800 pt-4">
-          <p id="ui-watch" class="text-[9px] text-gray-400 font-bold mb-3 tracking-widest uppercase">WATCH NOW ON</p>
-          <div id="res-providers" class="flex justify-center gap-3 flex-wrap min-h-[32px] items-center"></div>
-        </div>
+  <div class="insta-card">
+    <!-- Header -->
+    <div class="card-header">
+      <div class="avatar"><div class="avatar-inner">🎬</div></div>
+      <div class="flex flex-col text-left">
+        <span class="text-sm font-bold">movie_lotto</span>
+        <span id="ui-header-sub" class="text-[10px] text-gray-400">오늘의 추천 영화</span>
       </div>
     </div>
 
-    <button id="draw-btn" class="btn-draw" onclick="startDraw()">추첨하기</button>
+    <!-- Media (Poster & Slot) -->
+    <div class="media-container">
+      <div id="slot-overlay" class="slot-overlay">
+        <div class="slot-window">
+          <div id="slot-track" class="slot-track flex flex-col">
+            <div class="h-[270px] w-[180px] flex items-center justify-center text-4xl">?</div>
+          </div>
+        </div>
+        <p id="ui-status" class="text-xs font-bold text-gray-400">운명 확인 중...</p>
+      </div>
+      <img id="res-poster" class="media-poster opacity-0" src="" alt="">
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <div id="heart-btn" class="icon-btn text-2xl" onclick="toggleHeart()">🤍</div>
+      <div class="icon-btn text-2xl">💬</div>
+      <div class="icon-btn text-2xl">🚀</div>
+    </div>
+
+    <!-- Ratings -->
+    <div id="rating-badges" class="rating-badges">
+      <span class="badge">TMDB --</span>
+      <span class="badge">IMDb --</span>
+      <span class="badge">Rotten --</span>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area">
+      <div id="res-title" class="movie-title"></div>
+      <div id="res-desc" class="movie-overview line-clamp-3"></div>
+      <div id="res-providers" class="flex gap-2 mt-4 flex-wrap"></div>
+    </div>
+
+    <!-- Footer Action -->
+    <button id="draw-btn" class="next-btn" onclick="startDraw()">다음 영화 뽑기</button>
   </div>
 
   <script>
-    /**
-     * @CONFIG
-     * Centralized Configuration for API Keys and URLs
-     */
     const CONFIG = {
       TMDB_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
       OMDB_KEY: 'd4e88f94',
       TMDB_BASE: 'https://api.themoviedb.org/3',
       OMDB_BASE: 'https://www.omdbapi.com/',
       IMG_URL: 'https://image.tmdb.org/t/p/w500',
-      BD_URL: 'https://image.tmdb.org/t/p/w780',
       LANG: localStorage.getItem('movielotto-lang') || 'ko-KR',
       THEME: localStorage.getItem('movielotto-theme') || 'light'
     };
 
-    const UI_TEXT = {
-      'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', spinning: '운명 확인 중...', retry: '다시 뽑기', watch: 'WATCH NOW ON', noStream: '네이버에서 정보 확인하기', check: '확인' },
-      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', spinning: 'Spinning...', retry: 'Spin Again', watch: 'WATCH NOW ON', noStream: 'Search on Naver', check: 'Check' }
-    };
-
-    const PROVIDER_LINKS = {
-      'Netflix': 'https://www.netflix.com/kr/',
-      'Disney Plus': 'https://www.disneyplus.com/ko-kr/',
-      'wavve': 'https://www.wavve.com/',
-      'Watcha': 'https://watcha.com/',
-      'Tving': 'https://www.tving.com/',
-      'Coupang Play': 'https://www.coupangplay.com/'
-    };
-
-    let movies = [];
+    let allMovies = [];
+    let viewedIds = new Set();
     let isRolling = false;
-    let isResultState = false;
 
-    function applyTheme() {
-      document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark');
-      document.getElementById('theme-btn').textContent = CONFIG.THEME === 'dark' ? '☀️' : '🌙';
+    // 초기화
+    async function init() {
+      applyTheme();
+      await fetchHugeData();
+      startDraw();
     }
 
-    function applyLanguage() {
-      const t = UI_TEXT[CONFIG.LANG];
-      document.getElementById('ui-title').textContent = t.title;
-      document.getElementById('ui-subtitle').textContent = t.subtitle;
-      document.getElementById('draw-btn').textContent = isResultState ? t.retry : t.draw;
-      document.getElementById('ui-watch').textContent = t.watch;
-      document.getElementById('lang-btn').textContent = CONFIG.LANG === 'ko-KR' ? 'EN' : 'KO';
+    // 5페이지까지 데이터 수집 (약 100개)
+    async function fetchHugeData() {
+      try {
+        const pages = [1, 2, 3, 4, 5];
+        const requests = pages.map(p => 
+          fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=${p}`)
+          .then(r => r.json())
+        );
+        const results = await Promise.all(requests);
+        allMovies = results.flatMap(r => r.results).filter(m => m.vote_count >= 500 && m.vote_average >= 5.0);
+        // 무작위 셔플
+        allMovies.sort(() => Math.random() - 0.5);
+      } catch (e) { console.error('Data Load Error', e); }
+    }
+
+    async function startDraw() {
+      if (isRolling) return;
+      
+      // 중복 제거 및 리스트 관리
+      const pool = allMovies.filter(m => !viewedIds.has(m.id));
+      if (pool.length === 0) {
+        viewedIds.clear(); // 모두 봤으면 초기화
+        return startDraw();
+      }
+
+      const drawBtn = document.getElementById('draw-btn');
+      const slotOverlay = document.getElementById('slot-overlay');
+      const resPoster = document.getElementById('res-poster');
+      const track = document.getElementById('slot-track');
+      
+      isRolling = true;
+      drawBtn.disabled = true;
+      slotOverlay.style.display = 'flex';
+      resPoster.classList.add('opacity-0');
+      document.getElementById('heart-btn').textContent = '🤍';
+
+      // 룰렛 시각화용 샘플
+      const samples = [];
+      for(let i=0; i<15; i++) samples.push(pool[Math.floor(Math.random() * pool.length)]);
+      
+      track.innerHTML = samples.map(m => `
+        <div class="h-[270px] w-[180px] flex-shrink-0">
+          <img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg">
+        </div>
+      `).join('');
+
+      let step = 0;
+      let currentPos = 0;
+      const totalSteps = 15 + Math.floor(Math.random() * 10);
+      
+      const animate = () => {
+        step++;
+        currentPos = (currentPos + 1) % samples.length;
+        track.style.transform = `translateY(-${currentPos * 270}px)`;
+        
+        if (step < totalSteps) {
+          setTimeout(animate, 50 + (step * 10));
+        } else {
+          const winner = samples[currentPos];
+          viewedIds.add(winner.id);
+          finishDraw(winner);
+        }
+      };
+      animate();
+    }
+
+    async function finishDraw(movie) {
+      const details = await getExtendedInfo(movie);
+      
+      // 결과 바인딩
+      document.getElementById('res-poster').src = CONFIG.IMG_URL + movie.poster_path;
+      document.getElementById('res-title').textContent = movie.title === movie.original_title ? movie.title : `${movie.title} (${movie.original_title})`;
+      document.getElementById('res-desc').textContent = movie.overview || '상세 정보가 없습니다.';
+      
+      // 평점 배지
+      const badges = document.getElementById('rating-badges');
+      badges.innerHTML = `
+        <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="badge bg-tmdb">TMDB ${movie.vote_average.toFixed(1)}</a>
+        <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="badge bg-imdb">IMDb ${details.imdb || '--'}</a>
+        <a href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title)}" target="_blank" class="badge bg-rotten">Rotten ${details.rt || '--'}</a>
+      `;
+
+      // OTT (KR)
+      const providersArea = document.getElementById('res-providers');
+      providersArea.innerHTML = details.providers.map(p => `
+        <a href="${PROVIDER_LINKS[p.provider_name] || '#'}" target="_blank">
+          <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}">
+        </a>
+      `).join('');
+
+      // 연출: 페이드 인
+      setTimeout(() => {
+        document.getElementById('slot-overlay').style.display = 'none';
+        document.getElementById('res-poster').classList.remove('opacity-0');
+        document.getElementById('draw-btn').disabled = false;
+        isRolling = false;
+      }, 500);
+    }
+
+    async function getExtendedInfo(movie) {
+      try {
+        const [extRes, watchRes] = await Promise.all([
+          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`),
+          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`)
+        ]);
+        const ext = await extRes.json();
+        const watch = await watchRes.json();
+        
+        let imdb = null, rt = null;
+        if (ext.imdb_id) {
+          const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
+          if (omdb.Response === 'True') {
+            imdb = omdb.imdbRating;
+            rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
+          }
+        }
+        return { imdbId: ext.imdb_id, imdb, rt, providers: watch.results?.KR?.flatrate || [] };
+      } catch (e) { return { providers: [], imdb: null, rt: null }; }
+    }
+
+    const PROVIDER_LINKS = { 'Netflix': 'https://www.netflix.com/kr/', 'Disney Plus': 'https://www.disneyplus.com/ko-kr/', 'Tving': 'https://www.tving.com/', 'Coupang Play': 'https://www.coupangplay.com/' };
+
+    function toggleHeart() {
+      const btn = document.getElementById('heart-btn');
+      btn.textContent = btn.textContent === '🤍' ? '❤️' : '🤍';
     }
 
     function toggleTheme() {
@@ -296,159 +386,17 @@
       applyTheme();
     }
 
+    function applyTheme() {
+      document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark');
+    }
+
     async function toggleLanguage() {
       CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR';
       localStorage.setItem('movielotto-lang', CONFIG.LANG);
-      applyLanguage();
       await init();
-      resetToSlot();
     }
 
-    async function init() {
-      try {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=1`);
-        const data = await res.json();
-        movies = data.results.filter(m => m.vote_average >= 5.0);
-      } catch (e) { console.error('API Error', e); }
-    }
-
-    const track = document.getElementById('slot-track');
-    const drawBtn = document.getElementById('draw-btn');
-    const slotView = document.getElementById('slot-view');
-    const resultInfo = document.getElementById('result-info');
-
-    function resetToSlot() {
-      isResultState = false;
-      resultInfo.style.display = 'none';
-      slotView.style.display = 'block';
-      track.style.transform = 'translateY(0)';
-      track.innerHTML = '<div class="slot-item"><div class="placeholder-icon">?</div></div>';
-      drawBtn.textContent = UI_TEXT[CONFIG.LANG].draw;
-    }
-
-    function renderSlotItems() {
-      const shuffled = [...movies].sort(() => Math.random() - 0.5);
-      track.innerHTML = shuffled.map(movie => `
-        <div class="slot-item">
-          <img src="${CONFIG.IMG_URL}${movie.poster_path}" class="w-[160px] h-[240px] rounded-xl object-cover shadow-md" alt="${movie.title}">
-        </div>
-      `).join('');
-      return shuffled;
-    }
-
-    async function startDraw() {
-      if (isRolling) return;
-      if (isResultState) { resetToSlot(); return; }
-
-      const currentMovies = renderSlotItems();
-      isRolling = true;
-      drawBtn.disabled = true;
-      drawBtn.textContent = UI_TEXT[CONFIG.LANG].spinning;
-
-      const rollCount = 12 + Math.floor(Math.random() * 8);
-      let step = 0, currentPos = 0, speed = 40;
-
-      function animate() {
-        step++;
-        currentPos = (currentPos + 1) % currentMovies.length;
-        track.style.transform = `translateY(-${currentPos * 300}px)`;
-        if (step < rollCount) {
-          if (step > rollCount * 0.7) speed += 50;
-          setTimeout(animate, speed);
-        } else {
-          finishDraw(currentMovies[currentPos]);
-        }
-      }
-      animate();
-    }
-
-    async function finishDraw(movie) {
-      const details = await getMovieDetail(movie);
-      showResult(movie, details);
-      isRolling = false;
-      drawBtn.disabled = false;
-      drawBtn.textContent = UI_TEXT[CONFIG.LANG].retry;
-      isResultState = true;
-    }
-
-    async function getMovieDetail(movie) {
-      try {
-        const [tmdbExtRes, tmdbWatchRes, tmdbRelRes] = await Promise.all([
-          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`),
-          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`),
-          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/release_dates?api_key=${CONFIG.TMDB_KEY}`)
-        ]);
-        
-        const extData = await tmdbExtRes.json();
-        const watchData = await tmdbWatchRes.json();
-        const relData = await tmdbRelRes.json();
-        
-        let scores = { imdb: null, rt: null };
-        
-        // 평점 검색 시 TMDB original_title(영어 제목) 사용 최적화
-        const searchTitle = movie.original_title || movie.title;
-        const omdbUrl = extData.imdb_id 
-          ? `${CONFIG.OMDB_BASE}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`
-          : `${CONFIG.OMDB_BASE}?t=${encodeURIComponent(searchTitle)}&apikey=${CONFIG.OMDB_KEY}`;
-
-        try {
-          const omdbRes = await fetch(omdbUrl);
-          const omdbData = await omdbRes.json();
-          if (omdbData.Response === 'True') {
-            scores.imdb = omdbData.imdbRating;
-            const rt = omdbData.Ratings?.find(r => r.Source === 'Rotten Tomatoes');
-            scores.rt = rt ? rt.Value : null;
-          }
-        } catch (e) {}
-
-        return {
-          imdbId: extData.imdb_id,
-          providers: watchData.results?.KR?.flatrate || [],
-          isTheatrical: (relData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3),
-          scores,
-          tmdbLink: watchData.results?.KR?.link || ''
-        };
-      } catch (e) { return { providers: [], scores: { imdb: null, rt: null } }; }
-    }
-
-    function showResult(movie, details) {
-      slotView.style.display = 'none';
-      resultInfo.style.display = 'flex';
-
-      // 한글 제목 (원제목) 형식으로 표시
-      const displayTitle = movie.title === movie.original_title 
-        ? movie.title 
-        : `${movie.title} (${movie.original_title})`;
-      document.getElementById('res-title').textContent = displayTitle;
-      document.getElementById('score-tmdb').textContent = movie.vote_average.toFixed(1);
-      
-      const imdbS = document.getElementById('score-imdb'), rtS = document.getElementById('score-rt');
-      imdbS.textContent = (details.scores.imdb && details.scores.imdb !== 'N/A') ? details.scores.imdb : UI_TEXT[CONFIG.LANG].check;
-      rtS.textContent = details.scores.rt || UI_TEXT[CONFIG.LANG].check;
-      
-      document.getElementById('link-imdb').href = details.imdbId ? `https://www.imdb.com/title/${details.imdbId}` : `https://www.imdb.com/find?q=${encodeURIComponent(movie.original_title || movie.title)}`;
-      document.getElementById('link-rt').href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title || movie.title)}`;
-
-      document.getElementById('res-desc').textContent = movie.overview || (CONFIG.LANG === 'ko-KR' ? '줄거리가 없습니다.' : 'No summary available.');
-      document.getElementById('res-backdrop').src = CONFIG.BD_URL + (movie.backdrop_path || movie.poster_path);
-      
-      const badge = document.getElementById('res-theater');
-      if (details.isTheatrical) badge.classList.remove('hidden'); else badge.classList.add('hidden');
-
-      const pList = document.getElementById('res-providers');
-      if (details.providers.length > 0) {
-        pList.innerHTML = details.providers.map(p => {
-          const url = PROVIDER_LINKS[p.provider_name] || details.tmdbLink || '#';
-          return `<a href="${url}" target="_blank"><img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}"></a>`;
-        }).join('');
-      } else {
-        const naverUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(movie.title + ' 영화 정보')}`;
-        pList.innerHTML = `<a href="${naverUrl}" target="_blank" class="text-[10px] bg-gray-50 text-gray-400 px-4 py-2 rounded-xl font-bold flex items-center gap-1 border border-gray-100">${UI_TEXT[CONFIG.LANG].noStream}</a>`;
-      }
-    }
-
-    applyTheme(); applyLanguage(); init();
-    window.addEventListener('resize', () => { if (!isRolling) resetToSlot(); });
+    init();
   </script>
 </body>
 </html>
