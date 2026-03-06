@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Balanced Center</title>
+  <title>Movie Lotto | Perfect Contrast</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
@@ -13,7 +13,8 @@
       --card-bg: #ffffff;
       --text-main: #1a1a1a;
       --text-sub: #666666;
-      --accent: #000000;
+      --accent: #000000; /* Light 모드 버튼 배경: 검정 */
+      --btn-text: #ffffff; /* Light 모드 버튼 글자: 흰색 */
       --neon: #3b82f6;
       --border: #eeeeee;
     }
@@ -23,7 +24,8 @@
       --card-bg: #1e1e1e;
       --text-main: #f5f5f5;
       --text-sub: #a0a0a0;
-      --accent: #ccff00;
+      --accent: #ccff00; /* Dark 모드 버튼 배경: 형광 연두 */
+      --btn-text: #000000; /* Dark 모드 버튼 글자: 검정 */
       --neon: #ccff00;
       --border: #2a2a2a;
     }
@@ -42,20 +44,19 @@
       transition: background 0.4s ease, color 0.4s ease;
     }
 
-    /* 화면 정중앙 배치를 위한 래퍼 */
     .app-wrapper {
       width: 100%;
       height: 100dvh;
       display: flex;
       flex-direction: column;
-      justify-content: center; /* 수직 중앙 */
+      justify-content: center;
       align-items: center;
-      padding: 40px 20px 60px; /* 상하 여백 넉넉히 */
+      padding: 20px 20px 80px; /* 하단 세이프존 확보 */
     }
 
     .hip-card {
       width: 100%;
-      max-width: 380px; /* 아이폰 12 최적화 폭 */
+      max-width: 380px;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -63,7 +64,7 @@
       border-radius: 36px;
       padding: 24px;
       border: 1px solid var(--border);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15); /* 입체감 강화 */
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
       transition: transform 0.4s ease, background-color 0.4s ease;
     }
 
@@ -92,7 +93,7 @@
     .display-area {
       display: flex;
       flex-direction: column;
-      gap: 20px; /* 요소 간 간격 확대 */
+      gap: 20px;
       flex-grow: 1;
       min-height: 0;
     }
@@ -101,10 +102,9 @@
       .display-area { flex-direction: row; align-items: stretch; gap: 40px; }
     }
 
-    /* 포스터 영역 - 비율 최적화 */
     .poster-box {
       width: 50%;
-      height: 28dvh; /* 높이 소폭 축소 */
+      height: 28dvh;
       margin: 0 auto;
       flex-shrink: 0;
       position: relative;
@@ -133,7 +133,7 @@
       flex-grow: 1;
       min-height: 0;
       text-align: center;
-      justify-content: space-between; /* 상하 균형 */
+      justify-content: space-between;
     }
 
     @media (min-width: 768px) {
@@ -173,12 +173,29 @@
       .desc { font-size: 15px; -webkit-line-clamp: 6; }
     }
 
+    /* 버튼 스타일 수정: 대비 및 모바일 최적화 */
     .btn-draw {
-      margin-top: 24px; width: 100%; background: var(--accent); color: var(--bg-color);
-      padding: 18px; border-radius: 20px; font-weight: 800; font-size: 16px;
-      border: none; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      transition: all 0.3s ease; flex-shrink: 0;
+      margin-top: 24px; 
+      width: 100%; 
+      background: var(--accent) !important; 
+      color: var(--btn-text) !important;
+      padding: 18px; 
+      border-radius: 20px; 
+      font-weight: 800; 
+      font-size: 16px;
+      border: none; 
+      cursor: pointer; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transition: all 0.3s ease; 
+      flex-shrink: 0;
+      -webkit-appearance: none; /* 모바일 브라우저 기본 스타일 방지 */
     }
+    
+    .btn-draw:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+    }
+
     .btn-draw:active { transform: scale(0.96); }
     .btn-draw:disabled { opacity: 0.3; }
 
@@ -200,7 +217,6 @@
       </header>
 
       <div class="display-area">
-        <!-- Media Area -->
         <div class="poster-box">
           <div id="slot-layer" class="slot-layer">
             <div class="w-[70px] h-[100px] overflow-hidden rounded-lg border border-dashed border-gray-300 flex flex-col items-center">
@@ -212,7 +228,6 @@
           <img id="res-poster" class="poster-img opacity-0" src="" alt="">
         </div>
 
-        <!-- Info Container -->
         <div class="info-container">
           <div class="space-y-4">
             <div id="res-title" class="title">MOVIE LOTTO</div>
@@ -226,7 +241,6 @@
             <p id="res-desc" class="desc">오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.</p>
           </div>
 
-          <!-- OTT Badges -->
           <div id="badge-row-meta" class="badge-row mt-6" onclick="event.stopPropagation()"></div>
         </div>
       </div>
