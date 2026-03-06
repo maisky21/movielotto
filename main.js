@@ -11,7 +11,7 @@ const CONFIG = {
 const UI_TEXT = {
   'ko-KR': { 
     draw: '다음 영화 뽑기', 
-    drawing: '추첨 중...',
+    drawing: '추천 중...',
     loading: '데이터 로딩 중...',
     error: '다시 시도해주세요',
     noInfo: '정보 없음', 
@@ -20,7 +20,8 @@ const UI_TEXT = {
     defaultDesc: '추첨 버튼을 눌러 당신의 운명적인 영화를 찾아보세요.',
     shareTitle: '무비 로또 결과!',
     shareMsg: '오늘 밤 제가 볼 운명의 영화는 [TITLE] 입니다! 함께 보실래요?',
-    copied: '링크가 복사되었습니다!'
+    copied: '링크가 복사되었습니다!',
+    safeMode: '검증된 명작 추천 중...'
   },
   'en-US': { 
     draw: 'Next Movie', 
@@ -33,7 +34,8 @@ const UI_TEXT = {
     defaultDesc: 'Tap the button to find your masterpiece.',
     shareTitle: 'Movie Lotto Result!',
     shareMsg: 'My destiny movie for tonight is [TITLE]! Want to watch together?',
-    copied: 'Link copied to clipboard!'
+    copied: 'Link copied to clipboard!',
+    safeMode: 'Safe Mode: Loading Masterpieces...'
   }
 };
 
@@ -43,11 +45,15 @@ let selectedGenre = null;
 let currentMovie = null;
 let viewedIds = new Set();
 let isRolling = false;
+let dataFetched = false;
 
 async function init() {
   applyTheme();
   applyLanguage();
-  await Promise.all([fetchGenres(), fetchData()]);
+  await fetchGenres();
+  // We don't wait for fetchData in init to speed up first load, 
+  // startDraw will handle it if data isn't ready.
+  fetchData(); 
   renderGenres();
 }
 
@@ -60,6 +66,7 @@ async function fetchGenres() {
 
 function renderGenres() {
   const container = document.getElementById('genre-filter');
+  if (!container) return;
   const allLabel = CONFIG.LANG === 'ko-KR' ? '전체' : 'All';
   
   container.innerHTML = `<div class="genre-chip ${!selectedGenre ? 'active' : ''}" onclick="selectGenre(null)">${allLabel}</div>`;
@@ -72,45 +79,76 @@ function selectGenre(id) {
   if (isRolling) return;
   selectedGenre = id;
   renderGenres();
+  dataFetched = false;
   fetchData();
 }
 
-async function fetchData() {
+async function fetchData(retryCount = 0) {
+  if (dataFetched && allMovies.length > 0) return true;
+  
   const btn = document.getElementById('draw-btn');
   const originalText = UI_TEXT[CONFIG.LANG].draw;
-  btn.disabled = true;
-  btn.textContent = UI_TEXT[CONFIG.LANG].loading;
-
+  
   try {
-    const pages = [1, 2, 3]; // Increased focus for faster loading with filters
+    // 3 Second Timeout Pattern
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     let url = `${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`;
     if (selectedGenre) {
       url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&with_genres=${selectedGenre}&sort_by=popularity.desc`;
     }
 
-    const fetchPromises = pages.map(p => fetch(`${url}&page=${p}`).then(r => r.json()));
+    const pages = [1, 2, 3, 4, 5];
+    const fetchPromises = pages.map(p => 
+      fetch(`${url}&page=${p}`, { signal: controller.signal }).then(r => r.json())
+    );
+
     const results = await Promise.all(fetchPromises);
+    clearTimeout(timeoutId);
+
+    // Filter by Rating 7.0+ as requested
+    allMovies = results.flatMap(r => r.results).filter(m => m.vote_average >= 7.0 && m.poster_path);
     
-    allMovies = results.flatMap(r => r.results).filter(m => m.vote_average >= 6.0 && m.poster_path);
+    // SAFE MODE: If no 7.0+ movies found, fallback to high popularity regardless of rating (but still prioritize quality)
+    if (allMovies.length === 0) {
+      console.warn('Safe Mode Triggered: No 7.0+ movies found.');
+      allMovies = results.flatMap(r => r.results).filter(m => m.vote_average >= 6.0 && m.poster_path);
+      if (allMovies.length === 0) allMovies = results.flatMap(r => r.results);
+    }
+
     allMovies.sort(() => Math.random() - 0.5);
+    dataFetched = true;
+    return true;
   } catch (e) { 
-    console.error('Fetch error:', e);
-    btn.textContent = UI_TEXT[CONFIG.LANG].error;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
+    console.error('Fetch error or timeout:', e);
+    if (retryCount < 2) {
+      return fetchData(retryCount + 1);
+    }
+    return false;
   }
 }
 
 async function startDraw() {
-  if (isRolling || allMovies.length === 0) return;
+  if (isRolling) return;
   
+  const btn = document.getElementById('draw-btn');
+  btn.disabled = true;
+  btn.textContent = UI_TEXT[CONFIG.LANG].drawing;
+
+  // Ensure data is ready before starting animation
+  const success = await fetchData();
+  if (!success || allMovies.length === 0) {
+    btn.disabled = false;
+    btn.textContent = UI_TEXT[CONFIG.LANG].error;
+    setTimeout(() => { btn.textContent = UI_TEXT[CONFIG.LANG].draw; }, 2000);
+    return;
+  }
+
   const pool = allMovies.filter(m => !viewedIds.has(m.id));
   if (pool.length === 0) { viewedIds.clear(); return startDraw(); }
 
   isRolling = true;
-  document.getElementById('draw-btn').disabled = true;
-  document.getElementById('draw-btn').textContent = UI_TEXT[CONFIG.LANG].drawing;
   document.getElementById('share-bar').classList.remove('visible');
   
   // Reset Card Flip State
@@ -118,7 +156,7 @@ async function startDraw() {
   container.classList.remove('flipped');
   document.getElementById('slot-layer').style.display = 'flex';
 
-  // Slot Animation
+  // Slot Animation Setup
   const samples = [];
   for(let i=0; i<15; i++) samples.push(pool[Math.floor(Math.random() * pool.length)]);
   
@@ -131,13 +169,13 @@ async function startDraw() {
   `).join('');
 
   let step = 0;
-  const totalSteps = 15 + Math.floor(Math.random() * 10);
+  const totalSteps = 20 + Math.floor(Math.random() * 10);
   
   const animate = () => {
     step++;
     track.style.transform = `translateY(-${(step % samples.length) * 120}px)`;
     if (step < totalSteps) {
-      setTimeout(animate, 50 + (step * 15));
+      setTimeout(animate, 40 + (step * 10)); // Faster initial, slower towards end
     } else {
       currentMovie = samples[step % samples.length];
       viewedIds.add(currentMovie.id);
@@ -148,21 +186,38 @@ async function startDraw() {
 }
 
 async function finishDraw() {
-  if (!currentMovie) return;
-  const details = await getExtraInfo(currentMovie);
-  renderUI(currentMovie, details);
-  
-  setTimeout(() => {
-    document.getElementById('slot-layer').style.display = 'none';
-    document.getElementById('poster-container').classList.add('flipped'); // Trigger Flip Animation
+  if (!currentMovie) {
+    recoverButtonState();
+    return;
+  }
+
+  try {
+    // Parallel Fetch extra info
+    const details = await getExtraInfo(currentMovie);
+    renderUI(currentMovie, details);
     
+    // Final Confirmation Logic: Wait for UI to update, then reveal
     setTimeout(() => {
-      document.getElementById('draw-btn').disabled = false;
-      document.getElementById('draw-btn').textContent = UI_TEXT[CONFIG.LANG].draw;
-      document.getElementById('share-bar').classList.add('visible');
-      isRolling = false;
-    }, 800); // Wait for flip animation
-  }, 400);
+      document.getElementById('slot-layer').style.display = 'none';
+      document.getElementById('poster-container').classList.add('flipped'); 
+      
+      // Complete state recovery after flip animation
+      setTimeout(() => {
+        recoverButtonState();
+        document.getElementById('share-bar').classList.add('visible');
+      }, 800); 
+    }, 400);
+  } catch (e) {
+    console.error('Finish draw error:', e);
+    recoverButtonState();
+  }
+}
+
+function recoverButtonState() {
+  const btn = document.getElementById('draw-btn');
+  btn.disabled = false;
+  btn.textContent = UI_TEXT[CONFIG.LANG].draw;
+  isRolling = false;
 }
 
 function renderUI(movie, details) {
@@ -176,13 +231,17 @@ function renderUI(movie, details) {
   const providers = [...(details.flatrate || []), ...(details.rent || []), ...(details.buy || [])];
   const uniqueProviders = Array.from(new Map(providers.map(p => [p.provider_id, p])).values()).slice(0, 4);
   
-  uniqueProviders.forEach(p => {
-    metaRow.innerHTML += `
-      <div class="flex flex-col items-center gap-1">
-        <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="w-8 h-8 rounded-lg border border-white/50 shadow-sm">
-        <span class="text-[8px] font-bold opacity-60">${p.provider_name}</span>
-      </div>`;
-  });
+  if (uniqueProviders.length > 0) {
+    uniqueProviders.forEach(p => {
+      metaRow.innerHTML += `
+        <div class="flex flex-col items-center gap-1">
+          <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="w-10 h-10 rounded-xl border-2 border-white/50 shadow-md">
+          <span class="text-[9px] font-black opacity-70 uppercase tracking-tighter">${p.provider_name}</span>
+        </div>`;
+    });
+  } else {
+    metaRow.innerHTML = `<span class="text-[10px] text-gray-400 font-black uppercase tracking-widest">NO OTT INFO</span>`;
+  }
 
   document.getElementById('badge-row-scores').innerHTML = `
     <span class="sticker-badge">TMDB ${movie.vote_average.toFixed(1)}</span>
@@ -199,18 +258,23 @@ async function getExtraInfo(movie) {
     ]);
     let imdb = null, rt = null;
     if (ext.imdb_id) {
-      const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
-      if (omdb.Response === 'True') {
-        imdb = omdb.imdbRating;
-        rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
-      }
+      try {
+        const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
+        if (omdb.Response === 'True') {
+          imdb = omdb.imdbRating;
+          rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
+        }
+      } catch (e) { console.warn('OMDb fetch failed, skipping scores.'); }
     }
     const krWatch = watch.results?.KR || {};
     return { 
       imdbId: ext.imdb_id, imdb, rt,
       flatrate: krWatch.flatrate || [], rent: krWatch.rent || [], buy: krWatch.buy || []
     };
-  } catch (e) { return { flatrate: [], rent: [], buy: [] }; }
+  } catch (e) { 
+    console.error('getExtraInfo fatal error:', e);
+    return { flatrate: [], rent: [], buy: [] }; 
+  }
 }
 
 function shareResult(type) {
@@ -218,20 +282,29 @@ function shareResult(type) {
   const msg = UI_TEXT[CONFIG.LANG].shareMsg.replace('[TITLE]', currentMovie.title);
   const url = window.location.href;
 
-  if (type === 'kakao' || (type === 'link' && navigator.share)) {
-    if (navigator.share) {
-      navigator.share({ title: UI_TEXT[CONFIG.LANG].shareTitle, text: msg, url: url }).catch(() => {});
-    } else {
-      copyToClipboard(url + " - " + msg);
-    }
+  if (navigator.share && type === 'kakao') {
+    navigator.share({ title: UI_TEXT[CONFIG.LANG].shareTitle, text: msg, url: url }).catch(() => {});
   } else {
-    copyToClipboard(url + " - " + msg);
+    copyToClipboard(url + "\n" + msg);
   }
 }
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
     alert(UI_TEXT[CONFIG.LANG].copied);
+  }).catch(() => {
+    // Fallback for non-secure contexts
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert(UI_TEXT[CONFIG.LANG].copied);
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textArea);
   });
 }
 
@@ -262,6 +335,7 @@ async function toggleLanguage() {
   CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; 
   localStorage.setItem('movielotto-lang', CONFIG.LANG); 
   applyLanguage(); 
+  dataFetched = false;
   await Promise.all([fetchGenres(), fetchData()]); 
   renderGenres();
 }
