@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무비 로또 (Movie Lotto) | 인라인 결과판</title>
+  <title>무비 로또 (Movie Lotto) | 프로 등급</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
@@ -39,7 +39,6 @@
       transition: background-color 0.3s ease;
     }
 
-    /* 메인 앱 카드 */
     .app-card {
       background: var(--card-bg);
       width: 100%;
@@ -77,7 +76,6 @@
       cursor: pointer;
     }
 
-    /* 슬롯 / 결과 영역 컨테이너 */
     .display-area {
       width: 100%;
       min-height: 300px;
@@ -124,13 +122,7 @@
       50% { transform: translateY(-10px); }
     }
 
-    .slot-thumbnail {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* 결과 상세 정보 스타일 */
+    /* Result 상세 정보 */
     #result-info {
       display: none;
       width: 100%;
@@ -145,18 +137,27 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .score-btn {
+    /* 평점 배지 스타일 */
+    .rating-badge {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: #f8f9fa;
-      padding: 6px 12px;
+      gap: 4px;
+      padding: 4px 10px;
       border-radius: 8px;
       font-size: 11px;
-      font-weight: 700;
-      color: #495057;
+      font-weight: 800;
+      transition: transform 0.2s;
+      border: 1px solid rgba(0,0,0,0.05);
     }
-    .dark-mode .score-btn { background: #333; color: #ddd; }
+    .rating-badge:hover { transform: translateY(-2px); }
+    
+    .bg-tmdb { background: rgba(13, 37, 63, 0.1); color: #01b4e4; }
+    .bg-imdb { background: rgba(245, 197, 24, 0.1); color: #f5c518; }
+    .bg-rotten { background: rgba(250, 17, 21, 0.1); color: #fa1115; }
+    
+    .dark-mode .bg-tmdb { background: rgba(1, 180, 228, 0.2); }
+    .dark-mode .bg-imdb { background: rgba(245, 197, 24, 0.2); }
+    .dark-mode .bg-rotten { background: rgba(250, 17, 21, 0.2); }
 
     .provider-icon {
       width: 32px;
@@ -179,8 +180,6 @@
       cursor: pointer;
     }
     .btn-draw:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
-
-    .gold-accent { color: #D4AF37; }
   </style>
 </head>
 <body>
@@ -196,9 +195,7 @@
       <p id="ui-subtitle" class="text-xs text-gray-400">당신의 운명을 결정할 단 하나의 영화</p>
     </div>
 
-    <!-- Main Display Area -->
     <div class="display-area">
-      <!-- Slot View (Active during idle or spinning) -->
       <div id="slot-view" class="slot-machine">
         <div id="slot-track" class="slot-content">
           <div class="slot-item">
@@ -207,31 +204,37 @@
         </div>
       </div>
 
-      <!-- Result View (Active after spin) -->
       <div id="result-info" class="w-full">
         <div class="w-full h-48 rounded-2xl overflow-hidden mb-4 relative flex-shrink-0">
           <img id="res-backdrop" class="w-full h-full object-cover" src="" alt="">
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
           <div id="res-theater" class="absolute top-3 left-3 hidden">
-            <span class="bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded-md">🎬 THEATER</span>
+            <span class="bg-red-500 text-white text-[9px] font-black px-2 py-1 rounded-md shadow-lg">🎬 THEATER</span>
           </div>
         </div>
 
-        <h2 id="res-title" class="text-xl font-bold mb-1">영화 제목</h2>
+        <h2 id="res-title" class="text-xl font-bold mb-3">영화 제목</h2>
         
-        <div class="flex flex-wrap justify-center gap-2 mb-3">
-          <div class="flex items-center gap-1 text-sm font-bold text-gold-500">
-            <span class="text-[#D4AF37]">TMDB</span>
-            <span id="res-rating" class="text-[#D4AF37]">0.0</span>
+        <!-- Ratings Badges -->
+        <div class="flex flex-wrap justify-center gap-2 mb-4">
+          <div class="rating-badge bg-tmdb">
+            <span>TMDB</span>
+            <span id="score-tmdb">-</span>
           </div>
-          <a id="res-imdb" href="#" target="_blank" class="score-btn">IMDb</a>
-          <a id="res-rt" href="#" target="_blank" class="score-btn">Rotten</a>
+          <a id="link-imdb" href="#" target="_blank" class="rating-badge bg-imdb">
+            <span>IMDb</span>
+            <span id="score-imdb">확인</span>
+          </a>
+          <a id="link-rt" href="#" target="_blank" class="rating-badge bg-rotten">
+            <span>Rotten</span>
+            <span id="score-rt">확인</span>
+          </a>
         </div>
 
         <p id="res-desc" class="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-4 px-2"></p>
 
         <div class="w-full border-t border-dashed border-gray-200 dark:border-gray-700 pt-4 mb-2">
-          <p id="ui-watch" class="text-[9px] text-gray-400 font-bold mb-2 tracking-widest uppercase">WATCH NOW ON</p>
+          <p id="ui-watch" class="text-[9px] text-gray-400 font-bold mb-3 tracking-widest uppercase">WATCH NOW ON</p>
           <div id="res-providers" class="flex justify-center gap-2 flex-wrap min-h-[32px] items-center"></div>
         </div>
       </div>
@@ -242,8 +245,10 @@
 
   <script>
     const CONFIG = {
-      API_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
+      TMDB_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
+      OMDB_KEY: 'ef7741f2', // 공용 데모 키 (일일 제한 있음)
       BASE_URL: 'https://api.themoviedb.org/3',
+      OMDB_URL: 'https://www.omdbapi.com/',
       IMG_URL: 'https://image.tmdb.org/t/p/w500',
       BD_URL: 'https://image.tmdb.org/t/p/w780',
       LANG: localStorage.getItem('movielotto-lang') || 'ko-KR',
@@ -251,8 +256,8 @@
     };
 
     const UI_TEXT = {
-      'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', spinning: '운명 확인 중...', retry: '다시 뽑기', watch: 'WATCH NOW ON', noStream: '네이버에서 정보 확인하기' },
-      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', spinning: 'Spinning Destiny...', retry: 'Spin Again', watch: 'WATCH NOW ON', noStream: 'Search on Naver' }
+      'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', spinning: '운명 확인 중...', retry: '다시 뽑기', watch: 'WATCH NOW ON', noStream: '네이버에서 정보 확인하기', check: '확인' },
+      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', spinning: 'Spinning Destiny...', retry: 'Spin Again', watch: 'WATCH NOW ON', noStream: 'Search on Naver', check: 'Check' }
     };
 
     const PROVIDER_LINKS = {
@@ -274,11 +279,11 @@
     }
 
     function applyLanguage() {
-      const texts = UI_TEXT[CONFIG.LANG];
-      document.getElementById('ui-title').textContent = texts.title;
-      document.getElementById('ui-subtitle').textContent = texts.subtitle;
-      document.getElementById('draw-btn').textContent = isResultState ? texts.retry : texts.draw;
-      document.getElementById('ui-watch').textContent = texts.watch;
+      const t = UI_TEXT[CONFIG.LANG];
+      document.getElementById('ui-title').textContent = t.title;
+      document.getElementById('ui-subtitle').textContent = t.subtitle;
+      document.getElementById('draw-btn').textContent = isResultState ? t.retry : t.draw;
+      document.getElementById('ui-watch').textContent = t.watch;
       document.getElementById('lang-btn').textContent = CONFIG.LANG === 'ko-KR' ? 'EN' : 'KO';
     }
 
@@ -298,7 +303,7 @@
 
     async function init() {
       try {
-        const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.API_KEY}&language=${CONFIG.LANG}&page=1`);
+        const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=1`);
         const data = await res.json();
         movies = data.results.filter(m => m.vote_average >= 5.0);
       } catch (e) { console.error('API Error', e); }
@@ -330,17 +335,14 @@
 
     async function startDraw() {
       if (isRolling) return;
-      if (isResultState) {
-        resetToSlot();
-        return;
-      }
+      if (isResultState) { resetToSlot(); return; }
 
       const currentMovies = renderSlotItems();
       isRolling = true;
       drawBtn.disabled = true;
       drawBtn.textContent = UI_TEXT[CONFIG.LANG].spinning;
 
-      const rollCount = 15 + Math.floor(Math.random() * 15);
+      const rollCount = 15 + Math.floor(Math.random() * 10);
       let step = 0, currentPos = 0, speed = 40;
 
       function animate() {
@@ -348,7 +350,7 @@
         currentPos = (currentPos + 1) % currentMovies.length;
         track.style.transform = `translateY(-${currentPos * 300}px)`;
         if (step < rollCount) {
-          if (step > rollCount * 0.7) speed += 30;
+          if (step > rollCount * 0.7) speed += 40;
           setTimeout(animate, speed);
         } else {
           finishDraw(currentMovies[currentPos]);
@@ -358,7 +360,7 @@
     }
 
     async function finishDraw(movie) {
-      const details = await getMovieDetail(movie.id);
+      const details = await getMovieDetail(movie.id, movie.title);
       showResult(movie, details);
       isRolling = false;
       drawBtn.disabled = false;
@@ -366,19 +368,39 @@
       isResultState = true;
     }
 
-    async function getMovieDetail(movieId) {
+    async function getMovieDetail(movieId, title) {
       try {
-        const [pRes, rRes] = await Promise.all([
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.API_KEY}`),
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.API_KEY}`)
+        const [tmdbExtRes, tmdbWatchRes, tmdbRelRes] = await Promise.all([
+          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/external_ids?api_key=${CONFIG.TMDB_KEY}`),
+          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.TMDB_KEY}`),
+          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.TMDB_KEY}`)
         ]);
-        const pData = await pRes.json(), rData = await rRes.json();
+        
+        const extData = await tmdbExtRes.json();
+        const watchData = await tmdbWatchRes.json();
+        const relData = await tmdbRelRes.json();
+        
+        let scores = { imdb: null, rt: null };
+        if (extData.imdb_id) {
+          try {
+            const omdbRes = await fetch(`${CONFIG.OMDB_URL}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`);
+            const omdbData = await omdbRes.json();
+            if (omdbData.Response === 'True') {
+              scores.imdb = omdbData.imdbRating;
+              const rt = omdbData.Ratings?.find(r => r.Source === 'Rotten Tomatoes');
+              scores.rt = rt ? rt.Value : null;
+            }
+          } catch (e) { console.error('OMDb Error', e); }
+        }
+
         return {
-          providers: pData.results?.KR?.flatrate || [],
-          isTheatrical: (rData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3),
-          tmdbLink: pData.results?.KR?.link || ''
+          imdbId: extData.imdb_id,
+          providers: watchData.results?.KR?.flatrate || [],
+          isTheatrical: (relData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3),
+          scores,
+          tmdbLink: watchData.results?.KR?.link || ''
         };
-      } catch (e) { return { providers: [], isTheatrical: false, tmdbLink: '' }; }
+      } catch (e) { return { imdbId: null, providers: [], isTheatrical: false, scores: { imdb: null, rt: null }, tmdbLink: '' }; }
     }
 
     function showResult(movie, details) {
@@ -386,14 +408,22 @@
       resultInfo.style.display = 'flex';
 
       document.getElementById('res-title').textContent = movie.title;
-      document.getElementById('res-rating').textContent = movie.vote_average.toFixed(1);
+      document.getElementById('score-tmdb').textContent = movie.vote_average.toFixed(1);
+      
+      const imdbScore = document.getElementById('score-imdb');
+      const rtScore = document.getElementById('score-rt');
+      const imdbLink = document.getElementById('link-imdb');
+      const rtLink = document.getElementById('link-rt');
+
+      imdbScore.textContent = (details.scores.imdb && details.scores.imdb !== 'N/A') ? details.scores.imdb : UI_TEXT[CONFIG.LANG].check;
+      rtScore.textContent = (details.scores.rt) ? details.scores.rt : UI_TEXT[CONFIG.LANG].check;
+      
+      imdbLink.href = details.imdbId ? `https://www.imdb.com/title/${details.imdbId}` : `https://www.imdb.com/find?q=${encodeURIComponent(movie.title)}`;
+      rtLink.href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.title)}`;
+
       document.getElementById('res-desc').textContent = movie.overview || (CONFIG.LANG === 'ko-KR' ? '줄거리가 없습니다.' : 'No summary.');
       document.getElementById('res-backdrop').src = CONFIG.BD_URL + (movie.backdrop_path || movie.poster_path);
       
-      const query = encodeURIComponent(movie.title);
-      document.getElementById('res-imdb').href = `https://www.imdb.com/find?q=${query}`;
-      document.getElementById('res-rt').href = `https://www.rottentomatoes.com/search?search=${query}`;
-
       const badge = document.getElementById('res-theater');
       if (details.isTheatrical) badge.classList.remove('hidden'); else badge.classList.add('hidden');
 
