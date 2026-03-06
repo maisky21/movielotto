@@ -1,14 +1,265 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+  <title>무비 로또 (Movie Lotto) | Netflix Style</title>
+  <!-- Tailwind CSS v4 CDN -->
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap');
+    
+    body {
+      font-family: 'Noto+Sans KR', sans-serif;
+      background-color: #141414;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    /* 룰렛 애니메이션을 위한 커스텀 스타일 */
+    .roulette-container {
+      position: relative;
+      height: 450px;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    }
+
+    .roulette-track {
+      display: flex;
+      gap: 20px;
+      position: absolute;
+      left: 0;
+      transition: transform 5s cubic-bezier(0.1, 0.7, 0.1, 1);
+    }
+
+    .movie-card {
+      flex: 0 0 300px;
+      height: 450px;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+      background: #2f2f2f;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .movie-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .winner-overlay {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 470px;
+      border: 5px solid #E50914;
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 12px;
+      box-shadow: 0 0 30px rgba(229, 9, 20, 0.6);
+      display: none;
+    }
+
+    .netflix-red {
+      color: #E50914;
+    }
+    
+    .btn-netflix {
+      background-color: #E50914;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-netflix:hover {
+      background-color: #b20710;
+    }
+
+    /* 노이즈 텍스처 효과 */
+    .noise {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+      opacity: 0.05;
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
 </head>
-<body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+<body class="flex flex-col min-h-screen">
+  <div class="noise"></div>
+
+  <!-- Header -->
+  <header class="p-6 md:p-10 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-50">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tighter netflix-red">MOVIE LOTTO</h1>
+    <div class="flex gap-4">
+      <input id="api-key" type="password" placeholder="TMDB API Key (Optional)" class="bg-black/50 border border-white/30 rounded px-3 py-1 text-sm focus:outline-none focus:border-red-500 hidden md:block" />
+      <button id="config-btn" class="text-white/70 hover:text-white"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex flex-col justify-center items-center px-4 pt-24">
+    <div class="text-center mb-12">
+      <h2 class="text-4xl md:text-6xl font-extrabold mb-4">무엇을 볼까 고민되나요?</h2>
+      <p class="text-lg md:text-xl text-white/70">무비 로또를 돌려 오늘의 영화를 골라보세요!</p>
+    </div>
+
+    <!-- Roulette Viewport -->
+    <div class="w-full max-w-6xl relative mb-12">
+      <div id="roulette" class="roulette-container">
+        <div id="track" class="roulette-track">
+          <!-- Movie cards will be injected here -->
+          <div class="flex items-center justify-center w-full h-full text-white/30 text-2xl italic">Loading movies...</div>
+        </div>
+        <div id="winner-box" class="winner-overlay"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-col items-center gap-6">
+      <button id="spin-btn" class="btn-netflix text-white px-12 py-4 rounded font-bold text-2xl shadow-xl hover:scale-105 transition transform flex items-center gap-3">
+        <span>럭키 드로우 시작!</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/><path d="M22 2v6h-6"/><path d="M22 8l-6-6"/></svg>
+      </button>
+      
+      <div id="movie-info" class="opacity-0 transform translate-y-4 transition-all duration-500 text-center max-w-2xl">
+        <h3 id="movie-title" class="text-3xl font-bold mb-2">영화 제목</h3>
+        <p id="movie-desc" class="text-white/60 line-clamp-3">영화 줄거리가 여기에 표시됩니다.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="p-8 text-center text-white/30 text-sm">
+    &copy; 2024 Movie Lotto. Built with Vanilla JS & Tailwind. Powered by TMDB.
+  </footer>
+
+  <script>
+    const CONFIG = {
+      TMDB_API_BASE: 'https://api.themoviedb.org/3',
+      IMAGE_BASE: 'https://image.tmdb.org/t/p/w500',
+      FALLBACK_MOVIES: [
+        { title: '인터스텔라', poster_path: 'https://image.tmdb.org/t/p/w500/gEU2QniE6EwfVDxCzs25QvS2lRt.jpg', overview: '지구의 운명이 걸린 우주 탐사 프로젝트.' },
+        { title: '인셉션', poster_path: 'https://image.tmdb.org/t/p/w500/edv5CZvj0Yv9upOQ6I6dfQbiyA4.jpg', overview: '타인의 꿈속에 침투하여 정보를 추출하거나 심는 작전.' },
+        { title: '다크 나이트', poster_path: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDp9QmSJJmUrpup9vC2.jpg', overview: '배트맨과 조커의 운명적인 대결.' },
+        { title: '기생충', poster_path: 'https://image.tmdb.org/t/p/w500/7iiTT0wYGuwcZ9u9S9GqS9GqS.jpg', overview: '전원 백수인 기택네 장남 기우가 고액 과외 면접을 가며 벌어지는 소동.' },
+        { title: '어벤져스: 엔드게임', poster_path: 'https://image.tmdb.org/t/p/w500/or06vS3STVEP1vEEwtR0pSTo9p.\jpg', overview: '타노스에 맞서 우주의 운명을 건 최후의 전투.' },
+        { title: '너의 이름은.', poster_path: 'https://image.tmdb.org/t/p/w500/6vS9L0S1W6S2w3S4W5S6S7S8S9S.jpg', overview: '꿈속에서 몸이 뒤바뀐 소년과 소녀의 기적 같은 이야기.' }
+      ]
+    };
+
+    let movies = [];
+    let isSpinning = false;
+    const track = document.getElementById('track');
+    const spinBtn = document.getElementById('spin-btn');
+    const winnerBox = document.getElementById('winner-box');
+    const movieInfo = document.getElementById('movie-info');
+    const movieTitle = document.getElementById('movie-title');
+    const movieDesc = document.getElementById('movie-desc');
+    const apiKeyInput = document.getElementById('api-key');
+
+    // 영화 데이터 가져오기
+    async function fetchMovies() {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        console.warn('API Key가 없어 기본 영화 목록을 사용합니다.');
+        return [...CONFIG.FALLBACK_MOVIES, ...CONFIG.FALLBACK_MOVIES, ...CONFIG.FALLBACK_MOVIES]; // 반복해서 채우기
+      }
+
+      try {
+        const response = await fetch(`${CONFIG.TMDB_API_BASE}/movie/popular?api_key=${apiKey}&language=ko-KR&page=1`);
+        const data = await response.json();
+        if (data.results) {
+          return data.results;
+        }
+      } catch (err) {
+        console.error('TMDB API 호출 에러:', err);
+      }
+      return CONFIG.FALLBACK_MOVIES;
+    }
+
+    // 카드 생성 및 초기화
+    async function initRoulette() {
+      movies = await fetchMovies();
+      // 룰렛 효과를 위해 목록을 복제하여 길게 만듭니다.
+      const displayMovies = Array(10).fill(movies).flat();
+      
+      track.innerHTML = '';
+      displayMovies.forEach((movie, index) => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+        card.innerHTML = `<img src="${movie.poster_path.startsWith('http') ? movie.poster_path : CONFIG.IMAGE_BASE + movie.poster_path}" alt="${movie.title}" loading="lazy">`;
+        track.appendChild(card);
+      });
+      
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0)';
+    }
+
+    // 룰렛 돌리기
+    function spin() {
+      if (isSpinning) return;
+      
+      isSpinning = true;
+      spinBtn.disabled = true;
+      winnerBox.style.display = 'none';
+      movieInfo.style.opacity = '0';
+      movieInfo.style.transform = 'translateY(20px)';
+      
+      const cardWidth = 320; // 300px + 20px gap
+      const totalCards = track.children.length;
+      
+      // 랜덤하게 멈출 인덱스 선택 (앞쪽 2/3 지점 이후에서 선택)
+      const stopIndex = Math.floor(Math.random() * (totalCards - 10)) + 5;
+      const viewportWidth = document.getElementById('roulette').offsetWidth;
+      const centerOffset = (viewportWidth / 2) - (300 / 2);
+      
+      const targetTranslate = -(stopIndex * cardWidth) + centerOffset;
+      
+      track.style.transition = 'transform 5s cubic-bezier(0.1, 0.7, 0.1, 1)';
+      track.style.transform = `translateX(${targetTranslate}px)`;
+      
+      setTimeout(() => {
+        showWinner(stopIndex % movies.length);
+        isSpinning = false;
+        spinBtn.disabled = false;
+      }, 5000);
+    }
+
+    function showWinner(index) {
+      const winner = movies[index];
+      winnerBox.style.display = 'block';
+      
+      movieTitle.textContent = winner.title;
+      movieDesc.textContent = winner.overview || '줄거리 정보가 없습니다.';
+      
+      movieInfo.style.opacity = '1';
+      movieInfo.style.transform = 'translateY(0)';
+      
+      // 파티클 효과나 사운드를 여기에 추가할 수 있습니다.
+    }
+
+    spinBtn.addEventListener('click', spin);
+    document.getElementById('config-btn').addEventListener('click', () => {
+      apiKeyInput.classList.toggle('hidden');
+      if (!apiKeyInput.classList.contains('hidden')) apiKeyInput.focus();
+    });
+
+    // 초기 실행
+    initRoulette();
+
+    // 윈도우 리사이즈 대응
+    window.addEventListener('resize', () => {
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0)';
+      winnerBox.style.display = 'none';
+      movieInfo.style.opacity = '0';
+    });
+  </script>
 </body>
 </html>
