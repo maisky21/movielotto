@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Hip & Functional</title>
+  <title>Movie Lotto | Final Polish</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
@@ -49,11 +49,11 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 20px 20px 40px; /* 하단 여백 확보 */
+      padding: 20px 20px 80px; /* 하단 여백 대폭 확보 (60px 이상) */
     }
 
     @media (min-width: 640px) {
-      .hip-card { height: auto; max-height: 95dvh; padding-bottom: 40px; }
+      .hip-card { height: auto; max-height: 95dvh; padding-bottom: 60px; }
     }
 
     .header {
@@ -108,7 +108,7 @@
     .badge-row {
       display: flex;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 16px;
       flex-wrap: wrap;
       justify-content: center;
       flex-shrink: 0;
@@ -126,15 +126,16 @@
       align-items: center;
       gap: 4px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      text-decoration: none;
     }
-
-    .badge-neon { border-color: var(--neon); color: var(--neon); }
 
     .provider-sticker {
       width: 28px; height: 28px; border-radius: 50%; border: 2px solid white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       background: white;
+      transition: transform 0.2s ease;
     }
+    .provider-sticker:hover { transform: scale(1.1); }
 
     .info-box {
       margin-top: 16px;
@@ -146,11 +147,11 @@
     .desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding: 0 10px; }
 
     .btn-draw {
-      margin-top: 20px;
+      margin-top: 30px; /* 카드와의 간격 조절 */
       width: 100%;
       background: var(--accent);
       color: var(--bg-color);
-      padding: 20px; /* 터치 영역 확대 */
+      padding: 20px;
       border-radius: 24px;
       font-weight: 800;
       font-size: 16px;
@@ -193,8 +194,10 @@
         <img id="res-poster" class="poster-img opacity-0" src="" alt="">
       </div>
 
+      <!-- OTT Badges Only (Theater Removed) -->
       <div id="badge-row-meta" class="badge-row"></div>
 
+      <!-- Score Badges -->
       <div id="badge-row-scores" class="badge-row !mt-3">
         <span class="sticker-badge">TMDB --</span>
         <span class="sticker-badge">IMDb --</span>
@@ -222,8 +225,8 @@
     };
 
     const UI_TEXT = {
-      'ko-KR': { status: '운명 동기화 중', draw: '다음 영화 뽑기', theater: '🎬 극장 상영 중', noInfo: '정보 없음' },
-      'en-US': { status: 'Syncing Destiny', draw: 'Next Movie', theater: '🎬 In Theaters', noInfo: 'No info' }
+      'ko-KR': { status: '운명 동기화 중', draw: '다음 영화 뽑기', noInfo: '정보 없음' },
+      'en-US': { status: 'Syncing Destiny', draw: 'Next Movie', noInfo: 'No info' }
     };
 
     const PROVIDER_LINKS = { 
@@ -292,6 +295,7 @@
     }
 
     async function finishDraw() {
+      if (!currentMovie) return;
       const details = await getExtraInfo(currentMovie);
       renderUI(currentMovie, details);
       
@@ -308,37 +312,35 @@
       document.getElementById('res-title').textContent = movie.title + (movie.title !== movie.original_title ? ` (${movie.original_title})` : '');
       document.getElementById('res-desc').textContent = movie.overview || UI_TEXT[CONFIG.LANG].noInfo;
 
+      // OTT Badges (Theater Info Removed)
       const metaRow = document.getElementById('badge-row-meta');
       metaRow.innerHTML = '';
       
-      if (details.isTheatrical) {
-        metaRow.innerHTML += `<span class="sticker-badge badge-neon">${UI_TEXT[CONFIG.LANG].theater}</span>`;
-      }
-
-      // OTT Providers (Flatrate, Rent, Buy 모두 포함하여 한국 가용 정보 확인)
       const providers = [...details.flatrate, ...details.rent, ...details.buy];
       const uniqueProviders = Array.from(new Map(providers.map(p => [p.provider_id, p])).values());
       
       uniqueProviders.forEach(p => {
+        const link = PROVIDER_LINKS[p.provider_name] || '#';
+        // stopPropagation is not needed here as the drawBtn is separate, but added safety
         metaRow.innerHTML += `
-          <a href="${PROVIDER_LINKS[p.provider_name] || '#'}" target="_blank">
+          <a href="${link}" target="_blank" onclick="event.stopPropagation()">
             <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-sticker" title="${p.provider_name}">
           </a>`;
       });
 
+      // Score Badges
       document.getElementById('badge-row-scores').innerHTML = `
-        <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="sticker-badge">TMDB ${movie.vote_average.toFixed(1)}</a>
-        <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="sticker-badge">IMDb ${details.imdb || '--'}</a>
-        <a href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title)}" target="_blank" class="sticker-badge">Rotten ${details.rt || '--'}</a>
+        <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="sticker-badge" onclick="event.stopPropagation()">TMDB ${movie.vote_average.toFixed(1)}</a>
+        <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="sticker-badge" onclick="event.stopPropagation()">IMDb ${details.imdb || '--'}</a>
+        <a href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title)}" target="_blank" class="sticker-badge" onclick="event.stopPropagation()">Rotten ${details.rt || '--'}</a>
       `;
     }
 
     async function getExtraInfo(movie) {
       try {
-        const [ext, watch, rel] = await Promise.all([
+        const [ext, watch] = await Promise.all([
           fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json()),
-          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json()),
-          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/release_dates?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json())
+          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json())
         ]);
 
         let imdb = null, rt = null;
@@ -351,17 +353,14 @@
         }
 
         const krWatch = watch.results?.KR || {};
-        const isTheatrical = (rel.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
-
         return { 
           imdbId: ext.imdb_id, 
           imdb, rt, 
-          isTheatrical, 
           flatrate: krWatch.flatrate || [],
           rent: krWatch.rent || [],
           buy: krWatch.buy || []
         };
-      } catch (e) { return { flatrate: [], rent: [], buy: [], isTheatrical: false }; }
+      } catch (e) { return { flatrate: [], rent: [], buy: [] }; }
     }
 
     function toggleTheme() { CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light'; localStorage.setItem('movielotto-theme', CONFIG.THEME); applyTheme(); }
