@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Instagram Final Fix</title>
+  <title>Movie Lotto | Instagram Final Edition</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
@@ -36,7 +36,7 @@
       align-items: center;
       margin: 0;
       overflow: hidden;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .insta-card {
@@ -48,6 +48,7 @@
       flex-direction: column;
       position: relative;
       border: none;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     @media (min-width: 640px) {
@@ -65,8 +66,16 @@
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      padding: 12px 16px;
+      justify-content: space-between;
+      padding: 14px 16px;
       border-bottom: 1px solid var(--border-color);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
     }
 
     .avatar {
@@ -77,9 +86,10 @@
     .avatar-inner {
       width: 100%; height: 100%; border-radius: 50%; background: var(--card-bg);
       display: flex; align-items: center; justify-content: center; font-size: 14px;
+      transition: background-color 0.3s ease;
     }
 
-    /* 미디어 영역 - 짤림 방지를 위해 비율 및 최대 높이 제한 */
+    /* 미디어 영역 */
     .media-container {
       flex-grow: 1;
       min-height: 0;
@@ -102,50 +112,52 @@
     .actions {
       flex-shrink: 0;
       display: flex;
-      padding: 12px 16px 8px;
-      gap: 16px;
+      padding: 16px 16px 12px;
+      gap: 18px;
     }
 
-    /* 평점 배지 - 절대 짤리지 않게 flex-shrink: 0 */
+    /* 평점 배지 */
     .rating-badges {
       flex-shrink: 0;
       display: flex;
-      gap: 6px;
-      padding: 0 16px 10px;
+      gap: 8px;
+      padding: 0 16px 14px;
       overflow-x: auto;
-      scrollbar-width: none; /* Firefox */
+      scrollbar-width: none;
     }
-    .rating-badges::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    .rating-badges::-webkit-scrollbar { display: none; }
 
     .badge {
       flex-shrink: 0;
-      font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+      font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 6px;
       border: 1px solid var(--border-color); background: rgba(0,0,0,0.03);
       white-space: nowrap;
+      transition: all 0.3s ease;
     }
     .dark-mode .badge { background: rgba(255,255,255,0.08); border-color: #333; }
 
     /* 텍스트 영역 */
     .content-area {
       flex-shrink: 0;
-      padding: 0 16px 12px;
+      padding: 0 16px 16px;
       text-align: left;
     }
-    .movie-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
-    .movie-overview { font-size: 13px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .movie-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; color: var(--text-main); }
+    .movie-overview { font-size: 13px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     /* OTT 영역 */
     .res-providers {
-      display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+      display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
     }
     .provider-icon {
-      width: 28px; height: 28px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: 30px; height: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     /* 슬롯 애니메이션 */
     .slot-overlay {
       position: absolute; inset: 0; background: var(--card-bg); z-index: 50;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+      transition: background-color 0.3s ease;
     }
     .slot-window {
       width: 180px; height: 270px; border-radius: 16px; overflow: hidden;
@@ -155,40 +167,42 @@
     /* 하단 버튼 */
     .footer-btn-area {
       flex-shrink: 0;
-      padding: 0 16px 20px;
+      padding: 0 16px 24px;
     }
     .next-btn {
       width: 100%; background: #0095f6; color: white; padding: 14px;
       border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, transform 0.1s;
     }
     .next-btn:active { opacity: 0.8; transform: scale(0.98); }
     .next-btn:disabled { background: #b2dffc; }
 
     .top-controls {
-      position: absolute; top: 14px; right: 16px; display: flex; gap: 10px; z-index: 100;
+      display: flex; gap: 12px;
     }
-    .control-icon { font-size: 16px; cursor: pointer; opacity: 0.6; }
+    .control-icon { font-size: 16px; cursor: pointer; opacity: 0.6; transition: opacity 0.2s; }
+    .control-icon:hover { opacity: 1; }
   </style>
 </head>
 <body>
 
   <div class="insta-card">
-    <div class="top-controls">
-      <span class="control-icon" onclick="toggleLanguage()">🌐</span>
-      <span id="theme-icon" class="control-icon" onclick="toggleTheme()">🌙</span>
-    </div>
-
     <!-- Header -->
     <div class="card-header">
-      <div class="avatar"><div class="avatar-inner">🎬</div></div>
-      <div class="flex flex-col text-left">
-        <span class="text-sm font-bold">movie_lotto</span>
-        <span id="ui-header-sub" class="text-[10px] text-gray-400">Recommended for you</span>
+      <div class="logo-area" onclick="handleLogoClick()">
+        <div class="avatar"><div class="avatar-inner">🎬</div></div>
+        <div class="flex flex-col text-left">
+          <span class="text-sm font-bold tracking-tight">MOVIE LOTTO</span>
+          <span id="ui-header-sub" class="text-[10px] text-gray-400">Recommended for you</span>
+        </div>
+      </div>
+      <div class="top-controls">
+        <span class="control-icon" onclick="toggleLanguage()">🌐</span>
+        <span id="theme-icon" class="control-icon" onclick="toggleTheme()">🌙</span>
       </div>
     </div>
 
-    <!-- Media Area (Flexible) -->
+    <!-- Media Area -->
     <div class="media-container">
       <div id="slot-overlay" class="slot-overlay">
         <div class="slot-window">
@@ -201,7 +215,7 @@
       <img id="res-poster" class="media-poster opacity-0" src="" alt="">
     </div>
 
-    <!-- Info Area (Fixed height sections to prevent overlap) -->
+    <!-- Info Area -->
     <div class="actions">
       <span id="heart-btn" class="cursor-pointer text-2xl" onclick="toggleHeart()">🤍</span>
       <span class="text-2xl opacity-80">💬</span>
@@ -215,7 +229,7 @@
     </div>
 
     <div class="content-area">
-      <div id="res-title" class="movie-title truncate"></div>
+      <div id="res-title" class="movie-title"></div>
       <div id="res-desc" class="movie-overview"></div>
       <div id="res-providers" class="res-providers"></div>
     </div>
@@ -242,6 +256,7 @@
     };
 
     let allMovies = [];
+    let currentMovie = null;
     let viewedIds = new Set();
     let isRolling = false;
 
@@ -290,18 +305,33 @@
         if (step < totalSteps) {
           setTimeout(animate, 40 + (step * 15));
         } else {
-          const winner = samples[step % samples.length];
-          viewedIds.add(winner.id);
-          finishDraw(winner);
+          currentMovie = samples[step % samples.length];
+          viewedIds.add(currentMovie.id);
+          finishDraw();
         }
       };
       animate();
     }
 
-    async function finishDraw(movie) {
-      const details = await getExtendedInfo(movie);
+    async function finishDraw() {
+      if (!currentMovie) return;
+      const details = await getExtendedInfo(currentMovie);
+      updateResultUI(currentMovie, details);
+
+      setTimeout(() => {
+        document.getElementById('slot-overlay').style.display = 'none';
+        document.getElementById('res-poster').classList.remove('opacity-0');
+        document.getElementById('draw-btn').disabled = false;
+        isRolling = false;
+      }, 400);
+    }
+
+    function updateResultUI(movie, details) {
       document.getElementById('res-poster').src = CONFIG.IMG_URL + movie.poster_path;
-      document.getElementById('res-title').textContent = movie.title + (movie.title !== movie.original_title ? ` (${movie.original_title})` : '');
+      
+      // 제목 표시 (언어 설정 반영)
+      const displayTitle = movie.title + (movie.title !== movie.original_title ? ` (${movie.original_title})` : '');
+      document.getElementById('res-title').textContent = displayTitle;
       document.getElementById('res-desc').textContent = movie.overview || UI_TEXT[CONFIG.LANG].noInfo;
       
       document.getElementById('rating-badges').innerHTML = `
@@ -312,13 +342,6 @@
 
       const pArea = document.getElementById('res-providers');
       pArea.innerHTML = details.providers.map(p => `<a href="${PROVIDER_LINKS[p.provider_name] || '#'}" target="_blank"><img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}"></a>`).join('');
-
-      setTimeout(() => {
-        document.getElementById('slot-overlay').style.display = 'none';
-        document.getElementById('res-poster').classList.remove('opacity-0');
-        document.getElementById('draw-btn').disabled = false;
-        isRolling = false;
-      }, 400);
     }
 
     async function getExtendedInfo(movie) {
@@ -346,7 +369,35 @@
     function toggleTheme() { CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light'; localStorage.setItem('movielotto-theme', CONFIG.THEME); applyTheme(); }
     function applyTheme() { document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark'); document.getElementById('theme-icon').textContent = CONFIG.THEME === 'dark' ? '☀️' : '🌙'; }
     function applyLanguage() { const t = UI_TEXT[CONFIG.LANG]; document.getElementById('ui-header-sub').textContent = t.header; document.getElementById('ui-status').textContent = t.status; document.getElementById('draw-btn').textContent = t.draw; }
-    async function toggleLanguage() { CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; localStorage.setItem('movielotto-lang', CONFIG.LANG); applyLanguage(); await fetchHugeData(); startDraw(); }
+    
+    async function toggleLanguage() { 
+      CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; 
+      localStorage.setItem('movielotto-lang', CONFIG.LANG); 
+      applyLanguage(); 
+      
+      // 전체 데이터 재로딩 (번역된 메타데이터를 위해)
+      await fetchHugeData(); 
+      
+      // 현재 영화가 이미 있다면 제목만 업데이트 (새로 뽑지 않음)
+      if (currentMovie) {
+        // allMovies에서 번역된 최신 객체 찾기
+        const translatedMovie = allMovies.find(m => m.id === currentMovie.id) || currentMovie;
+        const details = await getExtendedInfo(translatedMovie);
+        updateResultUI(translatedMovie, details);
+      }
+    }
+
+    function handleLogoClick() {
+      if (isRolling) return;
+      document.getElementById('slot-overlay').style.display = 'flex';
+      document.getElementById('res-poster').classList.add('opacity-0');
+      document.getElementById('res-title').textContent = '';
+      document.getElementById('res-desc').textContent = '';
+      document.getElementById('rating-badges').innerHTML = '<span class="badge">TMDB --</span><span class="badge">IMDb --</span><span class="badge">Rotten --</span>';
+      document.getElementById('res-providers').innerHTML = '';
+      document.getElementById('heart-btn').textContent = '🤍';
+      currentMovie = null;
+    }
 
     init();
   </script>
