@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Responsive Info-First</title>
+  <title>Movie Lotto | Masterpiece Focus</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
@@ -49,18 +49,18 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 16px 16px 80px; /* 모바일 하단 여백 확보 */
+      padding: 16px 16px 100px; /* 모바일 하단 여백 100px 이상 확보 */
     }
 
-    @media (min-width: 640px) {
-      .hip-card { max-width: 720px; height: auto; max-height: 90dvh; padding-bottom: 40px; }
+    @media (min-width: 768px) {
+      .hip-card { max-width: 760px; height: auto; max-height: 90dvh; padding-bottom: 40px; }
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       flex-shrink: 0;
     }
 
@@ -73,35 +73,35 @@
       text-transform: uppercase;
     }
 
-    /* 메인 디스플레이 영역 (반응형) */
+    /* 메인 디스플레이 영역 */
     .display-area {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
       flex-grow: 1;
       min-height: 0;
     }
 
-    @media (min-width: 640px) {
+    @media (min-width: 768px) {
       .display-area { flex-direction: row; align-items: center; gap: 24px; }
     }
 
-    /* 포스터 박스 크기 조절 */
+    /* 포스터 박스 크기 조절 (모바일 우선) */
     .poster-box {
-      width: 55%; /* 모바일에서 55% */
-      max-height: 220px;
+      width: 50%;
+      max-height: 280px; /* 모바일 40% 이하 제한 */
       margin: 0 auto;
       flex-shrink: 0;
       position: relative;
-      border-radius: 24px;
+      border-radius: 20px;
       overflow: hidden;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
     }
 
-    @media (min-width: 640px) {
-      .poster-box { width: 280px; max-height: 420px; height: 100%; margin: 0; border-radius: 32px; }
+    @media (min-width: 768px) {
+      .poster-box { width: 300px; max-height: 450px; height: 100%; margin: 0; border-radius: 32px; }
     }
 
     .poster-img {
@@ -129,29 +129,30 @@
       flex-grow: 1;
       min-height: 0;
       text-align: center;
+      justify-content: center;
     }
 
-    @media (min-width: 640px) {
+    @media (min-width: 768px) {
       .info-container { text-align: left; align-items: flex-start; }
     }
 
     .badge-row {
       display: flex;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 8px;
       flex-wrap: wrap;
       justify-content: center;
     }
 
-    @media (min-width: 640px) {
-      .badge-row { justify-content: flex-start; }
+    @media (min-width: 768px) {
+      .badge-row { justify-content: flex-start; margin-top: 12px; }
     }
 
     .sticker-badge {
       font-size: 10px;
       font-weight: 800;
       padding: 4px 10px;
-      border-radius: 12px;
+      border-radius: 10px;
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-main);
@@ -169,22 +170,22 @@
     }
 
     .provider-sticker {
-      width: 26px; height: 28px; border-radius: 50%; border: 2px solid white;
+      width: 24px; height: 24px; border-radius: 50%; border: 2px solid white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;
     }
     
     .provider-name { font-size: 7px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
 
-    .title { font-size: 18px; font-weight: 800; margin-bottom: 4px; line-height: 1.2; }
-    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+    .title { font-size: 17px; font-weight: 800; margin-bottom: 2px; line-height: 1.2; }
+    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-    @media (min-width: 640px) {
-      .title { font-size: 24px; margin-bottom: 8px; }
+    @media (min-width: 768px) {
+      .title { font-size: 26px; margin-bottom: 8px; }
       .desc { font-size: 14px; -webkit-line-clamp: 6; }
     }
 
     .btn-draw {
-      margin-top: 20px;
+      margin-top: 24px;
       width: 100%;
       background: var(--accent);
       color: var(--bg-color);
@@ -220,9 +221,9 @@
       <!-- Media Area -->
       <div class="poster-box">
         <div id="slot-layer" class="slot-layer">
-          <div class="w-[100px] h-[150px] overflow-hidden rounded-xl border border-dashed border-gray-300 flex flex-col items-center">
+          <div class="w-[80px] h-[120px] overflow-hidden rounded-lg border border-dashed border-gray-300 flex flex-col items-center">
             <div id="slot-track" class="transition-transform duration-100 linear">
-              <div class="h-[150px] flex items-center justify-center text-3xl opacity-20">?</div>
+              <div class="h-[120px] flex items-center justify-center text-3xl opacity-20">?</div>
             </div>
           </div>
         </div>
@@ -231,7 +232,7 @@
 
       <!-- Info Container -->
       <div class="info-container">
-        <div id="res-title" class="title">영화 제목</div>
+        <div id="res-title" class="title">MOVIE LOTTO</div>
         
         <div id="badge-row-scores" class="badge-row">
           <span class="sticker-badge">TMDB --</span>
@@ -239,8 +240,9 @@
           <span class="sticker-badge">Rotten --</span>
         </div>
 
-        <p id="res-desc" class="desc mt-3">추첨하기 버튼을 눌러 당신의 인생 영화를 찾아보세요.</p>
+        <p id="res-desc" class="desc mt-2">오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.</p>
 
+        <!-- OTT Badges -->
         <div id="badge-row-meta" class="badge-row !mt-4"></div>
       </div>
     </div>
@@ -264,6 +266,15 @@
       'en-US': { draw: 'Next Movie', noInfo: 'No info' }
     };
 
+    const PROVIDER_LINKS = { 
+      'Netflix': 'https://www.netflix.com/kr/', 
+      'Disney Plus': 'https://www.disneyplus.com/ko-kr/', 
+      'Tving': 'https://www.tving.com/', 
+      'Coupang Play': 'https://www.coupangplay.com/',
+      'wavve': 'https://www.wavve.com/',
+      'Watcha': 'https://watcha.com/'
+    };
+
     let allMovies = [];
     let currentMovie = null;
     let viewedIds = new Set();
@@ -282,6 +293,7 @@
         const res = await Promise.all(pages.map(p => 
           fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=${p}`).then(r => r.json())
         ));
+        // 명작 기준: 평점 7.0 이상
         allMovies = res.flatMap(r => r.results).filter(m => m.vote_count >= 500 && m.vote_average >= 7.0);
         allMovies.sort(() => Math.random() - 0.5);
       } catch (e) { console.error(e); }
@@ -302,13 +314,13 @@
       
       const track = document.getElementById('slot-track');
       track.style.transform = 'translateY(0)';
-      track.innerHTML = samples.map(m => `<div class="h-[150px] w-[100px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
+      track.innerHTML = samples.map(m => `<div class="h-[120px] w-[80px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
 
       let step = 0;
       const totalSteps = 10 + Math.floor(Math.random() * 5);
       const animate = () => {
         step++;
-        track.style.transform = `translateY(-${(step % samples.length) * 150}px)`;
+        track.style.transform = `translateY(-${(step % samples.length) * 120}px)`;
         if (step < totalSteps) {
           setTimeout(animate, 50 + (step * 20));
         } else {
@@ -346,8 +358,8 @@
       
       uniqueProviders.forEach(p => {
         metaRow.innerHTML += `
-          <div class="provider-container" onclick="event.stopPropagation()">
-            <a href="${details.deepLink}" target="_blank">
+          <div class="provider-container" onclick="event.stopPropagation();">
+            <a href="${details.deepLink}" target="_blank" onclick="event.stopPropagation();">
               <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-sticker" title="${p.provider_name}">
             </a>
             <span class="provider-name">${p.provider_name}</span>
@@ -355,9 +367,9 @@
       });
 
       document.getElementById('badge-row-scores').innerHTML = `
-        <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="sticker-badge" onclick="event.stopPropagation()">TMDB ${movie.vote_average.toFixed(1)}</a>
-        <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="sticker-badge" onclick="event.stopPropagation()">IMDb ${details.imdb || '--'}</a>
-        <a href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title)}" target="_blank" class="sticker-badge" onclick="event.stopPropagation()">Rotten ${details.rt || '--'}</a>
+        <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="sticker-badge" onclick="event.stopPropagation();">TMDB ${movie.vote_average.toFixed(1)}</a>
+        <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="sticker-badge" onclick="event.stopPropagation();">IMDb ${details.imdb || '--'}</a>
+        <a href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title)}" target="_blank" class="sticker-badge" onclick="event.stopPropagation();">Rotten ${details.rt || '--'}</a>
       `;
     }
 
@@ -402,7 +414,7 @@
       document.getElementById('slot-layer').style.display = 'flex';
       document.getElementById('res-poster').classList.add('opacity-0');
       document.getElementById('res-title').textContent = 'MOVIE LOTTO';
-      document.getElementById('res-desc').textContent = '추첨하기 버튼을 눌러 당신의 인생 영화를 찾아보세요.';
+      document.getElementById('res-desc').textContent = '오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.';
       document.getElementById('badge-row-meta').innerHTML = '';
       document.getElementById('badge-row-scores').innerHTML = '<span class="sticker-badge">TMDB --</span><span class="sticker-badge">IMDb --</span><span class="sticker-badge">Rotten --</span>';
       currentMovie = null;
