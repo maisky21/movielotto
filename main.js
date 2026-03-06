@@ -17,7 +17,10 @@ const UI_TEXT = {
     noInfo: '정보 없음', 
     defaultTitle: '무비 로또', 
     defaultSubtitle: '오늘 밤, 당신을 기다리는 단 하나의 영화',
-    defaultDesc: '추첨 버튼을 눌러 당신의 운명적인 영화를 찾아보세요.' 
+    defaultDesc: '추첨 버튼을 눌러 당신의 운명적인 영화를 찾아보세요.',
+    shareTitle: '무비 로또 결과!',
+    shareMsg: '오늘 밤 제가 볼 운명의 영화는 [TITLE] 입니다! 함께 보실래요?',
+    copied: '링크가 복사되었습니다!'
   },
   'en-US': { 
     draw: 'Next Movie', 
@@ -27,11 +30,16 @@ const UI_TEXT = {
     noInfo: 'No info', 
     defaultTitle: 'MOVIE LOTTO', 
     defaultSubtitle: 'Tonight, the one and only movie waiting for you',
-    defaultDesc: 'Tap the button to find your masterpiece.' 
+    defaultDesc: 'Tap the button to find your masterpiece.',
+    shareTitle: 'Movie Lotto Result!',
+    shareMsg: 'My destiny movie for tonight is [TITLE]! Want to watch together?',
+    copied: 'Link copied to clipboard!'
   }
 };
 
 let allMovies = [];
+let genres = [];
+let selectedGenre = null;
 let currentMovie = null;
 let viewedIds = new Set();
 let isRolling = false;
@@ -39,9 +47,32 @@ let isRolling = false;
 async function init() {
   applyTheme();
   applyLanguage();
-  await fetchData();
-  // Initial draw removed to wait for user interaction or better control
-  // startDraw(); 
+  await Promise.all([fetchGenres(), fetchData()]);
+  renderGenres();
+}
+
+async function fetchGenres() {
+  try {
+    const res = await fetch(`${CONFIG.TMDB_BASE}/genre/movie/list?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`).then(r => r.json());
+    genres = res.genres || [];
+  } catch (e) { console.error('Genre fetch error:', e); }
+}
+
+function renderGenres() {
+  const container = document.getElementById('genre-filter');
+  const allLabel = CONFIG.LANG === 'ko-KR' ? '전체' : 'All';
+  
+  container.innerHTML = `<div class="genre-chip ${!selectedGenre ? 'active' : ''}" onclick="selectGenre(null)">${allLabel}</div>`;
+  genres.forEach(g => {
+    container.innerHTML += `<div class="genre-chip ${selectedGenre === g.id ? 'active' : ''}" onclick="selectGenre(${g.id})">${g.name}</div>`;
+  });
+}
+
+function selectGenre(id) {
+  if (isRolling) return;
+  selectedGenre = id;
+  renderGenres();
+  fetchData();
 }
 
 async function fetchData() {
@@ -51,25 +82,17 @@ async function fetchData() {
   btn.textContent = UI_TEXT[CONFIG.LANG].loading;
 
   try {
-    const pages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    const fetchPromises = pages.map(p => 
-      fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=${p}`)
-        .then(r => {
-          if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-          return r.json();
-        })
-    );
-    
-    const results = await Promise.all(fetchPromises);
-    allMovies = results.flatMap(r => r.results).filter(m => m.vote_count >= 100 && m.vote_average >= 6.0);
-    
-    if (allMovies.length === 0) {
-      // Fallback: If no movies meet criteria, just use whatever we got
-      allMovies = results.flatMap(r => r.results);
+    const pages = [1, 2, 3]; // Increased focus for faster loading with filters
+    let url = `${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`;
+    if (selectedGenre) {
+      url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&with_genres=${selectedGenre}&sort_by=popularity.desc`;
     }
+
+    const fetchPromises = pages.map(p => fetch(`${url}&page=${p}`).then(r => r.json()));
+    const results = await Promise.all(fetchPromises);
     
+    allMovies = results.flatMap(r => r.results).filter(m => m.vote_average >= 6.0 && m.poster_path);
     allMovies.sort(() => Math.random() - 0.5);
-    console.log(`Fetched ${allMovies.length} movies`);
   } catch (e) { 
     console.error('Fetch error:', e);
     btn.textContent = UI_TEXT[CONFIG.LANG].error;
@@ -80,49 +103,41 @@ async function fetchData() {
 }
 
 async function startDraw() {
-  if (isRolling) return;
+  if (isRolling || allMovies.length === 0) return;
   
-  const btn = document.getElementById('draw-btn');
-  
-  if (allMovies.length === 0) {
-    await fetchData();
-    if (allMovies.length === 0) return;
-  }
-
   const pool = allMovies.filter(m => !viewedIds.has(m.id));
-  if (pool.length === 0) { 
-    viewedIds.clear(); 
-    return startDraw(); 
-  }
+  if (pool.length === 0) { viewedIds.clear(); return startDraw(); }
 
   isRolling = true;
-  btn.disabled = true;
-  btn.textContent = UI_TEXT[CONFIG.LANG].drawing;
+  document.getElementById('draw-btn').disabled = true;
+  document.getElementById('draw-btn').textContent = UI_TEXT[CONFIG.LANG].drawing;
+  document.getElementById('share-bar').classList.remove('visible');
   
+  // Reset Card Flip State
+  const container = document.getElementById('poster-container');
+  container.classList.remove('flipped');
   document.getElementById('slot-layer').style.display = 'flex';
-  document.getElementById('res-poster').classList.add('opacity-0');
 
+  // Slot Animation
   const samples = [];
   for(let i=0; i<15; i++) samples.push(pool[Math.floor(Math.random() * pool.length)]);
   
   const track = document.getElementById('slot-track');
   track.style.transform = 'translateY(0)';
   track.innerHTML = samples.map(m => `
-    <div class="h-[100px] w-[70px] flex-shrink-0">
-      <img src="${m.poster_path ? CONFIG.IMG_URL + m.poster_path : 'https://via.placeholder.com/70x100?text=No+Image'}" 
-           class="w-full h-full object-cover rounded-lg"
-           onerror="this.src='https://via.placeholder.com/70x100?text=No+Image'">
+    <div class="h-[120px] w-[80px] flex-shrink-0">
+      <img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg">
     </div>
   `).join('');
 
   let step = 0;
-  const totalSteps = 20 + Math.floor(Math.random() * 10);
+  const totalSteps = 15 + Math.floor(Math.random() * 10);
   
   const animate = () => {
     step++;
-    track.style.transform = `translateY(-${(step % samples.length) * 100}px)`;
+    track.style.transform = `translateY(-${(step % samples.length) * 120}px)`;
     if (step < totalSteps) {
-      setTimeout(animate, 50 + (step * 10));
+      setTimeout(animate, 50 + (step * 15));
     } else {
       currentMovie = samples[step % samples.length];
       viewedIds.add(currentMovie.id);
@@ -133,98 +148,91 @@ async function startDraw() {
 }
 
 async function finishDraw() {
-  if (!currentMovie) {
-    isRolling = false;
-    document.getElementById('draw-btn').disabled = false;
-    document.getElementById('draw-btn').textContent = UI_TEXT[CONFIG.LANG].draw;
-    return;
-  }
-
-  try {
-    const details = await getExtraInfo(currentMovie);
-    renderUI(currentMovie, details);
-  } catch (e) {
-    console.error('Error finishing draw:', e);
-    renderUI(currentMovie, { flatrate: [], rent: [], buy: [], deepLink: '', imdbId: '', imdb: '--', rt: '--' });
-  } finally {
+  if (!currentMovie) return;
+  const details = await getExtraInfo(currentMovie);
+  renderUI(currentMovie, details);
+  
+  setTimeout(() => {
+    document.getElementById('slot-layer').style.display = 'none';
+    document.getElementById('poster-container').classList.add('flipped'); // Trigger Flip Animation
+    
     setTimeout(() => {
-      document.getElementById('slot-layer').style.display = 'none';
-      document.getElementById('res-poster').classList.remove('opacity-0');
       document.getElementById('draw-btn').disabled = false;
       document.getElementById('draw-btn').textContent = UI_TEXT[CONFIG.LANG].draw;
+      document.getElementById('share-bar').classList.add('visible');
       isRolling = false;
-    }, 400);
-  }
+    }, 800); // Wait for flip animation
+  }, 400);
 }
 
 function renderUI(movie, details) {
-  const posterImg = document.getElementById('res-poster');
-  posterImg.src = movie.poster_path ? CONFIG.IMG_URL + movie.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster';
-  
-  document.getElementById('res-title').textContent = movie.title + (movie.title !== movie.original_title ? ` (${movie.original_title})` : '');
+  document.getElementById('res-poster').src = CONFIG.IMG_URL + movie.poster_path;
+  document.getElementById('res-title').textContent = movie.title;
   document.getElementById('res-desc').textContent = movie.overview || UI_TEXT[CONFIG.LANG].noInfo;
 
   const metaRow = document.getElementById('badge-row-meta');
   metaRow.innerHTML = '';
   
   const providers = [...(details.flatrate || []), ...(details.rent || []), ...(details.buy || [])];
-  const uniqueProviders = Array.from(new Map(providers.map(p => [p.provider_id, p])).values());
+  const uniqueProviders = Array.from(new Map(providers.map(p => [p.provider_id, p])).values()).slice(0, 4);
   
-  if (uniqueProviders.length > 0) {
-    uniqueProviders.forEach(p => {
-      metaRow.innerHTML += `
-        <div class="provider-container">
-          <a href="${details.deepLink}" target="_blank" onclick="event.stopPropagation();">
-            <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-sticker" title="${p.provider_name}">
-          </a>
-          <span class="provider-name">${p.provider_name}</span>
-        </div>`;
-    });
-  } else {
-    metaRow.innerHTML = `<span class="text-[10px] text-gray-500 uppercase font-bold">${UI_TEXT[CONFIG.LANG].noInfo} OTT</span>`;
-  }
+  uniqueProviders.forEach(p => {
+    metaRow.innerHTML += `
+      <div class="flex flex-col items-center gap-1">
+        <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="w-8 h-8 rounded-lg border border-white/50 shadow-sm">
+        <span class="text-[8px] font-bold opacity-60">${p.provider_name}</span>
+      </div>`;
+  });
 
   document.getElementById('badge-row-scores').innerHTML = `
-    <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="sticker-badge" onclick="event.stopPropagation();">TMDB ${movie.vote_average.toFixed(1)}</a>
-    <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="sticker-badge" onclick="event.stopPropagation();">IMDb ${details.imdb || '--'}</a>
-    <a href="https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title)}" target="_blank" class="sticker-badge" onclick="event.stopPropagation();">Rotten ${details.rt || '--'}</a>
+    <span class="sticker-badge">TMDB ${movie.vote_average.toFixed(1)}</span>
+    <span class="sticker-badge">IMDb ${details.imdb || '--'}</span>
+    <span class="sticker-badge">Rotten ${details.rt || '--'}</span>
   `;
 }
 
 async function getExtraInfo(movie) {
-  const defaultInfo = { imdbId: '', imdb: '--', rt: '--', deepLink: `https://www.themoviedb.org/movie/${movie.id}/watch`, flatrate: [], rent: [], buy: [] };
-  
   try {
     const [ext, watch] = await Promise.all([
-      fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`).then(r => r.ok ? r.json() : {}),
-      fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`).then(r => r.ok ? r.json() : {})
+      fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json()),
+      fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json())
     ]);
-
     let imdb = null, rt = null;
     if (ext.imdb_id) {
-      try {
-        const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
-        if (omdb.Response === 'True') {
-          imdb = omdb.imdbRating;
-          rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
-        }
-      } catch (e) { console.warn('OMDb fetch failed', e); }
+      const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
+      if (omdb.Response === 'True') {
+        imdb = omdb.imdbRating;
+        rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
+      }
     }
-
     const krWatch = watch.results?.KR || {};
     return { 
-      imdbId: ext.imdb_id || '', 
-      imdb: imdb || '--', 
-      rt: rt || '--', 
-      deepLink: krWatch.link || `https://www.themoviedb.org/movie/${movie.id}/watch`,
-      flatrate: krWatch.flatrate || [], 
-      rent: krWatch.rent || [], 
-      buy: krWatch.buy || []
+      imdbId: ext.imdb_id, imdb, rt,
+      flatrate: krWatch.flatrate || [], rent: krWatch.rent || [], buy: krWatch.buy || []
     };
-  } catch (e) { 
-    console.error('getExtraInfo error', e);
-    return defaultInfo;
+  } catch (e) { return { flatrate: [], rent: [], buy: [] }; }
+}
+
+function shareResult(type) {
+  if (!currentMovie) return;
+  const msg = UI_TEXT[CONFIG.LANG].shareMsg.replace('[TITLE]', currentMovie.title);
+  const url = window.location.href;
+
+  if (type === 'kakao' || (type === 'link' && navigator.share)) {
+    if (navigator.share) {
+      navigator.share({ title: UI_TEXT[CONFIG.LANG].shareTitle, text: msg, url: url }).catch(() => {});
+    } else {
+      copyToClipboard(url + " - " + msg);
+    }
+  } else {
+    copyToClipboard(url + " - " + msg);
   }
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert(UI_TEXT[CONFIG.LANG].copied);
+  });
 }
 
 function toggleTheme() { 
@@ -246,6 +254,7 @@ function applyLanguage() {
     document.getElementById('res-title').textContent = t.defaultTitle; 
     document.getElementById('res-desc').textContent = t.defaultDesc; 
   } 
+  renderGenres();
 }
 
 async function toggleLanguage() { 
@@ -253,29 +262,28 @@ async function toggleLanguage() {
   CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; 
   localStorage.setItem('movielotto-lang', CONFIG.LANG); 
   applyLanguage(); 
-  await fetchData(); 
-  if (currentMovie) {
-    const translated = allMovies.find(m => m.id === currentMovie.id) || currentMovie;
-    const details = await getExtraInfo(translated);
-    renderUI(translated, details);
-  }
+  await Promise.all([fetchGenres(), fetchData()]); 
+  renderGenres();
 }
 
 function resetApp() {
   if (isRolling) return;
+  document.getElementById('poster-container').classList.remove('flipped');
   document.getElementById('slot-layer').style.display = 'flex';
-  document.getElementById('res-poster').classList.add('opacity-0');
   document.getElementById('res-title').textContent = UI_TEXT[CONFIG.LANG].defaultTitle;
   document.getElementById('res-desc').textContent = UI_TEXT[CONFIG.LANG].defaultDesc;
   document.getElementById('badge-row-meta').innerHTML = '';
   document.getElementById('badge-row-scores').innerHTML = '<span class="sticker-badge">TMDB --</span><span class="sticker-badge">IMDb --</span><span class="sticker-badge">Rotten --</span>';
+  document.getElementById('share-bar').classList.remove('visible');
   currentMovie = null;
 }
 
-// Global functions for HTML onclick
+// Global exposure
 window.startDraw = startDraw;
 window.toggleTheme = toggleTheme;
 window.toggleLanguage = toggleLanguage;
 window.resetApp = resetApp;
+window.selectGenre = selectGenre;
+window.shareResult = shareResult;
 
 init();
