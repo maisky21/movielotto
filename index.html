@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | New Hip & Minimal</title>
+  <title>Movie Lotto | Hip & Functional</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
     
     :root {
-      --bg-color: #fdfaf1; /* Cream */
+      --bg-color: #fdfaf1;
       --card-bg: #ffffff;
       --text-main: #1a1a1a;
       --text-sub: #666666;
       --accent: #000000;
-      --neon: #3b82f6; /* Electric Blue for light mode */
+      --neon: #3b82f6;
       --border: #eeeeee;
     }
 
     .dark-mode {
-      --bg-color: #121212; /* Matte Dark Grey */
+      --bg-color: #121212;
       --card-bg: #1e1e1e;
       --text-main: #f5f5f5;
       --text-sub: #a0a0a0;
-      --accent: #ccff00; /* Neon Lime */
+      --accent: #ccff00;
       --neon: #ccff00;
       --border: #2a2a2a;
     }
@@ -42,7 +42,6 @@
       transition: background-color 0.4s ease, color 0.4s ease;
     }
 
-    /* 힙 & 미니멀 카드 */
     .hip-card {
       width: 100%;
       max-width: 400px;
@@ -50,19 +49,18 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 20px;
+      padding: 20px 20px 40px; /* 하단 여백 확보 */
     }
 
     @media (min-width: 640px) {
-      .hip-card { height: auto; max-height: 95dvh; }
+      .hip-card { height: auto; max-height: 95dvh; padding-bottom: 40px; }
     }
 
-    /* 상단 로고 & 컨트롤 */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       flex-shrink: 0;
     }
 
@@ -75,7 +73,6 @@
       text-transform: uppercase;
     }
 
-    /* 메인 포스터 카드 - 강조 */
     .poster-box {
       flex-grow: 1;
       min-height: 0;
@@ -88,11 +85,6 @@
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .btn-draw:hover ~ .display-area .poster-box,
-    .btn-draw:active ~ .display-area .poster-box {
-      transform: scale(1.03);
-    }
-
     .poster-img {
       width: 100%;
       height: 100%;
@@ -100,7 +92,6 @@
       transition: opacity 0.5s ease;
     }
 
-    /* 슬롯 애니메이션 레이어 */
     .slot-layer {
       position: absolute;
       inset: 0;
@@ -114,11 +105,10 @@
 
     .slot-track { transition: transform 0.1s linear; }
 
-    /* 배지 시스템 (스티커 스타일) */
     .badge-row {
       display: flex;
       gap: 8px;
-      margin-top: 16px;
+      margin-top: 12px;
       flex-wrap: wrap;
       justify-content: center;
       flex-shrink: 0;
@@ -136,7 +126,6 @@
       align-items: center;
       gap: 4px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      transition: all 0.3s ease;
     }
 
     .badge-neon { border-color: var(--neon); color: var(--neon); }
@@ -144,25 +133,24 @@
     .provider-sticker {
       width: 28px; height: 28px; border-radius: 50%; border: 2px solid white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: white;
     }
 
-    /* 텍스트 정보 */
     .info-box {
-      margin-top: 20px;
+      margin-top: 16px;
       text-align: center;
       flex-shrink: 0;
     }
 
-    .title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
-    .desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding: 0 10px; }
+    .title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding: 0 10px; }
 
-    /* 넥스트 버튼 - 힙 스타일 */
     .btn-draw {
-      margin-top: 24px;
+      margin-top: 20px;
       width: 100%;
       background: var(--accent);
       color: var(--bg-color);
-      padding: 18px;
+      padding: 20px; /* 터치 영역 확대 */
       border-radius: 24px;
       font-weight: 800;
       font-size: 16px;
@@ -184,7 +172,6 @@
 <body>
 
   <div class="hip-card">
-    <!-- Header -->
     <header class="header">
       <div class="logo" onclick="resetApp()">MOVIE LOTTO</div>
       <div class="controls">
@@ -193,10 +180,8 @@
       </div>
     </header>
 
-    <!-- Main Display Area -->
     <div class="display-area flex-grow flex flex-col min-height-0">
       <div class="poster-box">
-        <!-- Slot Loader -->
         <div id="slot-layer" class="slot-layer">
           <div class="w-[160px] h-[240px] overflow-hidden rounded-2xl border border-dashed border-gray-300 flex flex-col items-center">
             <div id="slot-track" class="slot-track">
@@ -205,30 +190,23 @@
           </div>
           <p id="ui-status" class="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Syncing Destiny</p>
         </div>
-        <!-- Final Result Image -->
         <img id="res-poster" class="poster-img opacity-0" src="" alt="">
       </div>
 
-      <!-- Sticker Badges (OTT/Theater) -->
-      <div id="badge-row-meta" class="badge-row">
-        <!-- Injected OTT/Theater stickers -->
-      </div>
+      <div id="badge-row-meta" class="badge-row"></div>
 
-      <!-- Score Badges -->
       <div id="badge-row-scores" class="badge-row !mt-3">
         <span class="sticker-badge">TMDB --</span>
         <span class="sticker-badge">IMDb --</span>
         <span class="sticker-badge">Rotten --</span>
       </div>
 
-      <!-- Text Content -->
       <div class="info-box">
         <div id="res-title" class="title"></div>
         <div id="res-desc" class="desc"></div>
       </div>
     </div>
 
-    <!-- Draw Button -->
     <button id="draw-btn" class="btn-draw" onclick="startDraw()">다음 영화 뽑기</button>
   </div>
 
@@ -246,6 +224,15 @@
     const UI_TEXT = {
       'ko-KR': { status: '운명 동기화 중', draw: '다음 영화 뽑기', theater: '🎬 극장 상영 중', noInfo: '정보 없음' },
       'en-US': { status: 'Syncing Destiny', draw: 'Next Movie', theater: '🎬 In Theaters', noInfo: 'No info' }
+    };
+
+    const PROVIDER_LINKS = { 
+      'Netflix': 'https://www.netflix.com/kr/', 
+      'Disney Plus': 'https://www.disneyplus.com/ko-kr/', 
+      'Tving': 'https://www.tving.com/', 
+      'Coupang Play': 'https://www.coupangplay.com/',
+      'wavve': 'https://www.wavve.com/',
+      'Watcha': 'https://watcha.com/'
     };
 
     let allMovies = [];
@@ -321,20 +308,24 @@
       document.getElementById('res-title').textContent = movie.title + (movie.title !== movie.original_title ? ` (${movie.original_title})` : '');
       document.getElementById('res-desc').textContent = movie.overview || UI_TEXT[CONFIG.LANG].noInfo;
 
-      // Meta Badges (OTT/Theater)
       const metaRow = document.getElementById('badge-row-meta');
       metaRow.innerHTML = '';
+      
       if (details.isTheatrical) {
         metaRow.innerHTML += `<span class="sticker-badge badge-neon">${UI_TEXT[CONFIG.LANG].theater}</span>`;
       }
-      details.providers.forEach(p => {
+
+      // OTT Providers (Flatrate, Rent, Buy 모두 포함하여 한국 가용 정보 확인)
+      const providers = [...details.flatrate, ...details.rent, ...details.buy];
+      const uniqueProviders = Array.from(new Map(providers.map(p => [p.provider_id, p])).values());
+      
+      uniqueProviders.forEach(p => {
         metaRow.innerHTML += `
           <a href="${PROVIDER_LINKS[p.provider_name] || '#'}" target="_blank">
             <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-sticker" title="${p.provider_name}">
           </a>`;
       });
 
-      // Score Badges
       document.getElementById('badge-row-scores').innerHTML = `
         <a href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" class="sticker-badge">TMDB ${movie.vote_average.toFixed(1)}</a>
         <a href="https://www.imdb.com/title/${details.imdbId}" target="_blank" class="sticker-badge">IMDb ${details.imdb || '--'}</a>
@@ -349,6 +340,7 @@
           fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json()),
           fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/release_dates?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json())
         ]);
+
         let imdb = null, rt = null;
         if (ext.imdb_id) {
           const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
@@ -357,12 +349,20 @@
             rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
           }
         }
-        const isTheatrical = (rel.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
-        return { imdbId: ext.imdb_id, imdb, rt, isTheatrical, providers: watch.results?.KR?.flatrate || [] };
-      } catch (e) { return { providers: [], isTheatrical: false }; }
-    }
 
-    const PROVIDER_LINKS = { 'Netflix': 'https://www.netflix.com/kr/', 'Disney Plus': 'https://www.disneyplus.com/ko-kr/', 'Tving': 'https://www.tving.com/', 'Coupang Play': 'https://www.coupangplay.com/' };
+        const krWatch = watch.results?.KR || {};
+        const isTheatrical = (rel.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
+
+        return { 
+          imdbId: ext.imdb_id, 
+          imdb, rt, 
+          isTheatrical, 
+          flatrate: krWatch.flatrate || [],
+          rent: krWatch.rent || [],
+          buy: krWatch.buy || []
+        };
+      } catch (e) { return { flatrate: [], rent: [], buy: [], isTheatrical: false }; }
+    }
 
     function toggleTheme() { CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light'; localStorage.setItem('movielotto-theme', CONFIG.THEME); applyTheme(); }
     function applyTheme() { document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark'); document.getElementById('theme-icon').textContent = CONFIG.THEME === 'dark' ? '☀️' : '🌙'; }
