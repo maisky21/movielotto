@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Instagram One-Screen</title>
+  <title>Movie Lotto | Instagram Final Fix</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
@@ -39,12 +39,11 @@
       transition: background-color 0.3s ease;
     }
 
-    /* 한 화면에 꽉 차게 조절되는 인스타 카드 */
     .insta-card {
       background: var(--card-bg);
       width: 100%;
-      max-width: 450px;
-      height: 100dvh; /* 모바일에서는 전체 화면 */
+      max-width: 420px;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -54,115 +53,127 @@
     @media (min-width: 640px) {
       .insta-card { 
         height: auto; 
-        max-height: 92dvh; 
+        max-height: 95dvh; 
         border: 1px solid var(--border-color);
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
       }
     }
 
-    /* 상단 헤더 (고정 높이) */
+    /* 상단 헤더 */
     .card-header {
       flex-shrink: 0;
       display: flex;
       align-items: center;
-      padding: 10px 16px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border-color);
     }
 
     .avatar {
-      width: 30px; height: 30px; border-radius: 50%;
+      width: 32px; height: 32px; border-radius: 50%;
       background: linear-gradient(45deg, #f09433, #dc2743, #bc1888);
-      padding: 1.5px; margin-right: 8px;
+      padding: 2px; margin-right: 10px;
     }
     .avatar-inner {
       width: 100%; height: 100%; border-radius: 50%; background: var(--card-bg);
-      display: flex; align-items: center; justify-content: center; font-size: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px;
     }
 
-    /* 미디어 영역 (유동적 높이) */
+    /* 미디어 영역 - 짤림 방지를 위해 비율 및 최대 높이 제한 */
     .media-container {
-      flex-grow: 1; /* 남은 공간을 모두 차지 */
-      min-height: 0; /* flex 자식의 overflow 방지 필수 */
+      flex-grow: 1;
+      min-height: 0;
       background: #000;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
 
     .media-poster {
-      width: 100%;
-      height: 100%;
-      object-fit: contain; /* 짤리지 않게 contain 사용 (배경 검정) */
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
       transition: opacity 0.4s ease;
     }
 
-    /* 액션 버튼 (고정 높이) */
+    /* 액션 영역 */
     .actions {
       flex-shrink: 0;
       display: flex;
-      padding: 10px 16px;
-      gap: 14px;
+      padding: 12px 16px 8px;
+      gap: 16px;
     }
 
-    /* 평점 배지 (고정 높이) */
+    /* 평점 배지 - 절대 짤리지 않게 flex-shrink: 0 */
     .rating-badges {
       flex-shrink: 0;
       display: flex;
-      gap: 5px;
-      padding: 0 16px 8px;
+      gap: 6px;
+      padding: 0 16px 10px;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
     }
-    .badge {
-      font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px;
-      border: 1px solid var(--border-color); background: rgba(0,0,0,0.02);
-    }
-    .dark-mode .badge { background: rgba(255,255,255,0.05); }
+    .rating-badges::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
-    /* 텍스트 영역 (고정 높이 + 말줄임) */
+    .badge {
+      flex-shrink: 0;
+      font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+      border: 1px solid var(--border-color); background: rgba(0,0,0,0.03);
+      white-space: nowrap;
+    }
+    .dark-mode .badge { background: rgba(255,255,255,0.08); border-color: #333; }
+
+    /* 텍스트 영역 */
     .content-area {
       flex-shrink: 0;
-      padding: 0 16px 10px;
+      padding: 0 16px 12px;
       text-align: left;
     }
-    .movie-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-    .movie-overview { font-size: 12px; color: var(--text-sub); line-height: 1.3; }
+    .movie-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-main); }
+    .movie-overview { font-size: 13px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    /* 슬롯 애니메이션 오버레이 */
+    /* OTT 영역 */
+    .res-providers {
+      display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .provider-icon {
+      width: 28px; height: 28px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* 슬롯 애니메이션 */
     .slot-overlay {
       position: absolute; inset: 0; background: var(--card-bg); z-index: 50;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
     }
     .slot-window {
-      width: 160px; height: 240px; border-radius: 12px; overflow: hidden;
-      border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      width: 180px; height: 270px; border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--border-color); box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     }
 
-    /* 하단 버튼 (고정 높이) */
+    /* 하단 버튼 */
     .footer-btn-area {
       flex-shrink: 0;
-      padding: 0 16px 16px;
+      padding: 0 16px 20px;
     }
     .next-btn {
-      width: 100%; background: #0095f6; color: white; padding: 12px;
-      border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer;
+      width: 100%; background: #0095f6; color: white; padding: 14px;
+      border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer;
+      transition: background 0.2s;
     }
     .next-btn:active { opacity: 0.8; transform: scale(0.98); }
     .next-btn:disabled { background: #b2dffc; }
 
     .top-controls {
-      position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 100;
+      position: absolute; top: 14px; right: 16px; display: flex; gap: 10px; z-index: 100;
     }
-    .control-icon {
-      font-size: 14px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s;
-    }
-    .control-icon:hover { opacity: 1; }
+    .control-icon { font-size: 16px; cursor: pointer; opacity: 0.6; }
   </style>
 </head>
 <body>
 
   <div class="insta-card">
-    <!-- Top Controls -->
     <div class="top-controls">
       <span class="control-icon" onclick="toggleLanguage()">🌐</span>
       <span id="theme-icon" class="control-icon" onclick="toggleTheme()">🌙</span>
@@ -172,46 +183,43 @@
     <div class="card-header">
       <div class="avatar"><div class="avatar-inner">🎬</div></div>
       <div class="flex flex-col text-left">
-        <span class="text-xs font-bold">movie_lotto</span>
-        <span id="ui-header-sub" class="text-[9px] text-gray-400">Recommended for you</span>
+        <span class="text-sm font-bold">movie_lotto</span>
+        <span id="ui-header-sub" class="text-[10px] text-gray-400">Recommended for you</span>
       </div>
     </div>
 
-    <!-- Flexible Media Area -->
+    <!-- Media Area (Flexible) -->
     <div class="media-container">
       <div id="slot-overlay" class="slot-overlay">
         <div class="slot-window">
           <div id="slot-track" class="flex flex-col transition-transform duration-100 linear">
-            <div class="h-[240px] w-[160px] flex items-center justify-center text-3xl">?</div>
+            <div class="h-[270px] w-[180px] flex items-center justify-center text-4xl">?</div>
           </div>
         </div>
-        <p id="ui-status" class="text-[10px] font-bold text-gray-400 tracking-tighter uppercase">Finding your destiny...</p>
+        <p id="ui-status" class="text-xs font-bold text-gray-400 tracking-widest uppercase">Drawing Movie...</p>
       </div>
       <img id="res-poster" class="media-poster opacity-0" src="" alt="">
     </div>
 
-    <!-- Fixed Actions -->
+    <!-- Info Area (Fixed height sections to prevent overlap) -->
     <div class="actions">
-      <span id="heart-btn" class="cursor-pointer text-xl" onclick="toggleHeart()">🤍</span>
-      <span class="text-xl opacity-80">💬</span>
-      <span class="text-xl opacity-80">🚀</span>
+      <span id="heart-btn" class="cursor-pointer text-2xl" onclick="toggleHeart()">🤍</span>
+      <span class="text-2xl opacity-80">💬</span>
+      <span class="text-2xl opacity-80">🚀</span>
     </div>
 
-    <!-- Fixed Ratings -->
     <div id="rating-badges" class="rating-badges">
       <span class="badge">TMDB --</span>
       <span class="badge">IMDb --</span>
       <span class="badge">Rotten --</span>
     </div>
 
-    <!-- Fixed Content Area -->
     <div class="content-area">
       <div id="res-title" class="movie-title truncate"></div>
-      <div id="res-desc" class="movie-overview line-clamp-2"></div>
-      <div id="res-providers" class="flex gap-2 mt-3 flex-wrap"></div>
+      <div id="res-desc" class="movie-overview"></div>
+      <div id="res-providers" class="res-providers"></div>
     </div>
 
-    <!-- Fixed Footer Button -->
     <div class="footer-btn-area">
       <button id="draw-btn" class="next-btn" onclick="startDraw()">다음 영화 뽑기</button>
     </div>
@@ -230,7 +238,7 @@
 
     const UI_TEXT = {
       'ko-KR': { header: '오늘의 추천 영화', status: '운명 확인 중...', draw: '다음 영화 뽑기', noInfo: '상세 정보 없음' },
-      'en-US': { header: 'Recommended for you', status: 'Finding destiny...', draw: 'Next Movie', noInfo: 'No info' }
+      'en-US': { header: 'Recommended for you', status: 'Drawing destiny...', draw: 'Next Movie', noInfo: 'No info' }
     };
 
     let allMovies = [];
@@ -258,7 +266,6 @@
 
     async function startDraw() {
       if (isRolling || allMovies.length === 0) return;
-      
       const pool = allMovies.filter(m => !viewedIds.has(m.id));
       if (pool.length === 0) { viewedIds.clear(); return startDraw(); }
 
@@ -273,13 +280,13 @@
       
       const track = document.getElementById('slot-track');
       track.style.transform = 'translateY(0)';
-      track.innerHTML = samples.map(m => `<div class="h-[240px] w-[160px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
+      track.innerHTML = samples.map(m => `<div class="h-[270px] w-[180px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
 
       let step = 0;
       const totalSteps = 12 + Math.floor(Math.random() * 8);
       const animate = () => {
         step++;
-        track.style.transform = `translateY(-${(step % samples.length) * 240}px)`;
+        track.style.transform = `translateY(-${(step % samples.length) * 270}px)`;
         if (step < totalSteps) {
           setTimeout(animate, 40 + (step * 15));
         } else {
