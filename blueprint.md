@@ -1,37 +1,24 @@
-# Movie Lotto Project Blueprint
+# Movie Lotto Project Blueprint (Refactored)
 
 ## Project Overview
-Movie Lotto is a web application that helps users pick a movie to watch through a fun, roulette-style animation. It features a sleek, Netflix-inspired dark mode UI and is designed to integrate with the TMDB API for real-time movie data.
+Movie Lotto is a mobile-first, one-page web application designed for simplicity and ease of use. It helps users pick a movie through a vertical slot-machine style animation.
 
 ## Features & Design
-- **Netflix-Style UI:** High-contrast dark theme with vibrant red accents, utilizing Tailwind CSS for a premium feel.
-- **Roulette Animation:** A fast-paced scrolling animation of movie posters that slows down to reveal a single "winning" movie.
-- **TMDB Integration:** Ready-to-use structure for fetching popular or trending movies from the The Movie Database (TMDB).
-- **Responsive Design:** Optimized for both desktop and mobile viewing.
-- **Single-File Architecture:** All HTML, CSS (Tailwind), and JavaScript logic contained within `index.html` for simplicity.
+- **Mobile-First Design:** Optimized for one-handed operation on mobile devices. No scrolling required; all elements fit within a single viewport (`100dvh`).
+- **Clean Aesthetic:** White background with elegant black text and gold (`#D4AF37`) accents.
+- **Slot Machine Animation:** A single central slot that cycles through movie thumbnails and titles, slowing down to a stop to reveal the "winning" movie.
+- **Result Modal:** A clean, pop-up modal displaying the movie title, rating, and a one-line summary.
+- **TMDB Integration:** Fetches real-time popular movies using the TMDB API.
 
 ## Technical Stack
-- **HTML5:** Semantic structure.
-- **CSS:** Tailwind CSS (v4 via CDN) for styling and custom CSS for the roulette animation.
-- **JavaScript:** Vanilla JS for DOM manipulation, animation control, and API interaction.
-
-## Development Plan
-1. **Scaffold `index.html`:** Set up the basic structure with Tailwind CSS CDN.
-2. **Design UI:** Create the header, main roulette area, and the "Pick a Movie" button.
-3. **Implement Roulette Logic:**
-    - Create a container for movie posters.
-    - Implement a looping animation using CSS transitions/transforms.
-    - Write JS to randomize the final stop position.
-4. **TMDB Integration:**
-    - Add a configuration section for the TMDB API Key.
-    - Implement a `fetchMovies` function to get data from TMDB.
-    - Fallback to mock data if no API key is provided.
-5. **Polishing:** Add sound effects (optional/placeholder), transitions, and hover effects.
+- **HTML5/CSS3:** Modern layout with Flexbox and CSS transitions.
+- **Tailwind CSS v4:** Utility-first styling for rapid development.
+- **Vanilla JavaScript:** DOM manipulation and slot animation logic with easing.
 
 ## Current Progress
-- [x] Project Concept Defined
-- [x] Blueprint Created
-- [x] Implementation of `index.html`
-- [x] Netflix-style UI Design
-- [x] Roulette Animation Logic
-- [x] TMDB API Integration Structure
+- [x] Project Concept Defined (Simplicity & Mobile Focus)
+- [x] UI/UX Refactoring to Light Theme
+- [x] Slot Machine Animation Implementation
+- [x] Result Modal Implementation
+- [x] TMDB API Integration (API Key: `f5ac0b35...`)
+- [x] GitHub Auto-Push Configured
