@@ -141,6 +141,7 @@
 
   <script>
     const CONFIG = {
+      TMDB_API_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
       TMDB_API_BASE: 'https://api.themoviedb.org/3',
       IMAGE_BASE: 'https://image.tmdb.org/t/p/w500',
       FALLBACK_MOVIES: [
@@ -148,7 +149,7 @@
         { title: '인셉션', poster_path: 'https://image.tmdb.org/t/p/w500/edv5CZvj0Yv9upOQ6I6dfQbiyA4.jpg', overview: '타인의 꿈속에 침투하여 정보를 추출하거나 심는 작전.' },
         { title: '다크 나이트', poster_path: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDp9QmSJJmUrpup9vC2.jpg', overview: '배트맨과 조커의 운명적인 대결.' },
         { title: '기생충', poster_path: 'https://image.tmdb.org/t/p/w500/7iiTT0wYGuwcZ9u9S9GqS9GqS.jpg', overview: '전원 백수인 기택네 장남 기우가 고액 과외 면접을 가며 벌어지는 소동.' },
-        { title: '어벤져스: 엔드게임', poster_path: 'https://image.tmdb.org/t/p/w500/or06vS3STVEP1vEEwtR0pSTo9p.\jpg', overview: '타노스에 맞서 우주의 운명을 건 최후의 전투.' },
+        { title: '어벤져스: 엔드게임', poster_path: 'https://image.tmdb.org/t/p/w500/or06vS3STVEP1vEEwtR0pSTo9p.jpg', overview: '타노스에 맞서 우주의 운명을 건 최후의 전투.' },
         { title: '너의 이름은.', poster_path: 'https://image.tmdb.org/t/p/w500/6vS9L0S1W6S2w3S4W5S6S7S8S9S.jpg', overview: '꿈속에서 몸이 뒤바뀐 소년과 소녀의 기적 같은 이야기.' }
       ]
     };
@@ -165,7 +166,7 @@
 
     // 영화 데이터 가져오기
     async function fetchMovies() {
-      const apiKey = apiKeyInput.value.trim();
+      const apiKey = CONFIG.TMDB_API_KEY || apiKeyInput.value.trim();
       if (!apiKey) {
         console.warn('API Key가 없어 기본 영화 목록을 사용합니다.');
         return [...CONFIG.FALLBACK_MOVIES, ...CONFIG.FALLBACK_MOVIES, ...CONFIG.FALLBACK_MOVIES]; // 반복해서 채우기
