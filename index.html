@@ -51,7 +51,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 20px 20px 80px;
+      padding: 20px 20px 60px; /* 하단 여백 조정 */
     }
 
     .hip-card {
@@ -62,7 +62,7 @@
       position: relative;
       background: var(--card-bg);
       border-radius: 36px;
-      padding: 24px;
+      padding: 28px;
       border: 1px solid var(--border);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
       transition: transform 0.4s ease, background-color 0.4s ease;
@@ -83,7 +83,7 @@
 
     .logo {
       font-weight: 900;
-      font-size: 18px;
+      font-size: 16px;
       letter-spacing: -0.02em;
       cursor: pointer;
       color: var(--neon);
@@ -93,18 +93,18 @@
     .display-area {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px; /* 간격 확대 */
       flex-grow: 1;
       min-height: 0;
     }
 
     @media (min-width: 768px) {
-      .display-area { flex-direction: row; align-items: stretch; gap: 40px; }
+      .display-area { flex-direction: row; align-items: stretch; gap: 48px; }
     }
 
     .poster-box {
-      width: 50%;
-      height: 28dvh;
+      width: 45%; /* 모바일에서 조금 더 축소하여 텍스트 공간 확보 */
+      height: 25dvh;
       margin: 0 auto;
       flex-shrink: 0;
       position: relative;
@@ -141,50 +141,59 @@
     }
 
     .badge-row {
-      display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+      display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
     }
 
     @media (min-width: 768px) {
-      .badge-row { justify-content: flex-start; gap: 8px; }
+      .badge-row { justify-content: flex-start; gap: 12px; }
     }
 
     .sticker-badge {
-      font-size: 9px; font-weight: 800; padding: 4px 8px; border-radius: 8px;
-      background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
+      font-size: 11px; /* 1.2배 상향 */
+      font-weight: 900; /* 더 두껍게 */
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: var(--card-bg); border: 1.5px solid var(--border); color: var(--text-main);
       display: flex; align-items: center; gap: 4px; text-decoration: none;
     }
 
     .provider-container {
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
 
     .provider-sticker {
-      width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1); background: white;
+      width: 42px; height: 42px; /* 40px 이상으로 키움 */
+      border-radius: 50%; border: 2px solid white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: white;
     }
     
-    .provider-name { font-size: 6px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
+    .provider-name { font-size: 8px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; }
 
-    .title { font-size: 18px; font-weight: 900; margin-bottom: 4px; line-height: 1.2; }
-    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .title { font-size: 20px; font-weight: 900; margin-bottom: 6px; line-height: 1.2; }
+    .desc { 
+      font-size: 14px; /* 1~2pt 상향 */
+      color: var(--text-sub); 
+      line-height: 1.7; /* 줄 간격 확대 */
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; 
+    }
 
     @media (min-width: 768px) {
-      .title { font-size: 32px; margin-bottom: 12px; }
-      .desc { font-size: 15px; -webkit-line-clamp: 6; }
+      .title { font-size: 34px; margin-bottom: 16px; }
+      .desc { font-size: 16px; -webkit-line-clamp: 6; }
     }
 
     .btn-draw {
-      margin-top: 24px; 
+      margin-top: 32px; /* 간격 확대 */
       width: 100%; 
       background: var(--accent) !important; 
       color: var(--btn-text) !important;
-      padding: 18px; 
-      border-radius: 20px; 
-      font-weight: 800; 
-      font-size: 16px;
+      padding: 20px; 
+      border-radius: 24px; 
+      font-weight: 900; 
+      font-size: 17px;
       border: none; 
       cursor: pointer; 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
       transition: all 0.3s ease; 
       flex-shrink: 0;
       -webkit-appearance: none;
@@ -228,7 +237,7 @@
         </div>
 
         <div class="info-container">
-          <div class="space-y-4">
+          <div class="space-y-6"> <!-- 간격 확대 -->
             <div id="res-title" class="title">무비 로또</div>
             <p id="res-subtitle" class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">오늘 밤, 당신을 기다리는 단 하나의 영화</p>
             
@@ -241,7 +250,7 @@
             <p id="res-desc" class="desc">추첨 버튼을 눌러 당신의 운명적인 영화를 찾아보세요.</p>
           </div>
 
-          <div id="badge-row-meta" class="badge-row mt-6" onclick="event.stopPropagation()"></div>
+          <div id="badge-row-meta" class="badge-row mt-8" onclick="event.stopPropagation()"></div> <!-- 간격 확대 -->
         </div>
       </div>
 
