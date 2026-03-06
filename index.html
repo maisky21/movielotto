@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Masterpiece Focus</title>
+  <title>Movie Lotto | 1020 All-in-One</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
@@ -49,11 +49,11 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 16px 16px 100px; /* 모바일 하단 여백 100px 이상 확보 */
+      padding: 16px 16px 80px; /* 하단 세이프존 확보 */
     }
 
     @media (min-width: 768px) {
-      .hip-card { max-width: 760px; height: auto; max-height: 90dvh; padding-bottom: 40px; }
+      .hip-card { max-width: 800px; height: auto; max-height: 90dvh; padding: 32px; padding-bottom: 40px; }
     }
 
     .header {
@@ -73,7 +73,7 @@
       text-transform: uppercase;
     }
 
-    /* 메인 디스플레이 영역 */
+    /* 반응형 레이아웃 */
     .display-area {
       display: flex;
       flex-direction: column;
@@ -83,13 +83,13 @@
     }
 
     @media (min-width: 768px) {
-      .display-area { flex-direction: row; align-items: center; gap: 24px; }
+      .display-area { flex-direction: row; align-items: stretch; gap: 32px; }
     }
 
-    /* 포스터 박스 크기 조절 (모바일 우선) */
+    /* 포스터 영역 - 모바일에서 32% 고정 */
     .poster-box {
       width: 50%;
-      max-height: 280px; /* 모바일 40% 이하 제한 */
+      height: 32dvh;
       margin: 0 auto;
       flex-shrink: 0;
       position: relative;
@@ -101,25 +101,16 @@
     }
 
     @media (min-width: 768px) {
-      .poster-box { width: 300px; max-height: 450px; height: 100%; margin: 0; border-radius: 32px; }
+      .poster-box { width: 320px; height: auto; margin: 0; border-radius: 32px; }
     }
 
     .poster-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: opacity 0.5s ease;
+      width: 100%; height: 100%; object-fit: cover; transition: opacity 0.5s ease;
     }
 
     .slot-layer {
-      position: absolute;
-      inset: 0;
-      background: var(--card-bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
+      position: absolute; inset: 0; background: var(--card-bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;
     }
 
     /* 정보 컨테이너 */
@@ -133,40 +124,25 @@
     }
 
     @media (min-width: 768px) {
-      .info-container { text-align: left; align-items: flex-start; }
+      .info-container { text-align: left; justify-content: flex-start; padding-top: 10px; }
     }
 
     .badge-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; justify-content: center;
     }
 
     @media (min-width: 768px) {
-      .badge-row { justify-content: flex-start; margin-top: 12px; }
+      .badge-row { justify-content: flex-start; margin-top: 16px; gap: 10px; }
     }
 
     .sticker-badge {
-      font-size: 10px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 10px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      text-decoration: none;
+      font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 10px;
+      background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
+      display: flex; align-items: center; gap: 4px; text-decoration: none;
     }
 
     .provider-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
     }
 
     .provider-sticker {
@@ -176,34 +152,26 @@
     
     .provider-name { font-size: 7px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
 
-    .title { font-size: 17px; font-weight: 800; margin-bottom: 2px; line-height: 1.2; }
-    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .title { font-size: 17px; font-weight: 800; margin-bottom: 2px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; padding: 0 4px; }
 
     @media (min-width: 768px) {
-      .title { font-size: 26px; margin-bottom: 8px; }
-      .desc { font-size: 14px; -webkit-line-clamp: 6; }
+      .title { font-size: 28px; margin-bottom: 8px; white-space: normal; }
+      .desc { font-size: 15px; -webkit-line-clamp: 8; line-height: 1.6; }
     }
 
     .btn-draw {
-      margin-top: 24px;
-      width: 100%;
-      background: var(--accent);
-      color: var(--bg-color);
-      padding: 18px;
-      border-radius: 20px;
-      font-weight: 800;
-      font-size: 16px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      transition: all 0.3s ease;
-      flex-shrink: 0;
+      margin-top: 24px; width: 100%; background: var(--accent); color: var(--bg-color);
+      padding: 18px; border-radius: 20px; font-weight: 800; font-size: 16px;
+      border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      transition: all 0.3s ease; flex-shrink: 0;
     }
     .btn-draw:active { transform: scale(0.97); }
     .btn-draw:disabled { opacity: 0.3; }
 
     .controls { display: flex; gap: 10px; }
-    .icon-btn { font-size: 16px; cursor: pointer; opacity: 0.5; }
+    .icon-btn { font-size: 16px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
+    .icon-btn:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -234,16 +202,16 @@
       <div class="info-container">
         <div id="res-title" class="title">MOVIE LOTTO</div>
         
-        <div id="badge-row-scores" class="badge-row">
+        <div id="badge-row-scores" class="badge-row" onclick="event.stopPropagation()">
           <span class="sticker-badge">TMDB --</span>
           <span class="sticker-badge">IMDb --</span>
           <span class="sticker-badge">Rotten --</span>
         </div>
 
-        <p id="res-desc" class="desc mt-2">오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.</p>
+        <p id="res-desc" class="desc mt-3">추첨 버튼을 눌러 당신의 인생 영화를 찾아보세요.</p>
 
         <!-- OTT Badges -->
-        <div id="badge-row-meta" class="badge-row !mt-4"></div>
+        <div id="badge-row-meta" class="badge-row !mt-4" onclick="event.stopPropagation()"></div>
       </div>
     </div>
 
@@ -262,8 +230,8 @@
     };
 
     const UI_TEXT = {
-      'ko-KR': { draw: '다음 영화 뽑기', noInfo: '정보 없음' },
-      'en-US': { draw: 'Next Movie', noInfo: 'No info' }
+      'ko-KR': { draw: '다음 영화 뽑기', noInfo: '정보 없음', defaultTitle: 'MOVIE LOTTO', defaultDesc: '추첨 버튼을 눌러 당신의 인생 영화를 찾아보세요.' },
+      'en-US': { draw: 'Next Movie', noInfo: 'No info', defaultTitle: 'MOVIE LOTTO', defaultDesc: 'Tap the button to find your masterpiece.' }
     };
 
     const PROVIDER_LINKS = { 
@@ -293,7 +261,6 @@
         const res = await Promise.all(pages.map(p => 
           fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=${p}`).then(r => r.json())
         ));
-        // 명작 기준: 평점 7.0 이상
         allMovies = res.flatMap(r => r.results).filter(m => m.vote_count >= 500 && m.vote_average >= 7.0);
         allMovies.sort(() => Math.random() - 0.5);
       } catch (e) { console.error(e); }
@@ -397,7 +364,7 @@
 
     function toggleTheme() { CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light'; localStorage.setItem('movielotto-theme', CONFIG.THEME); applyTheme(); }
     function applyTheme() { document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark'); document.getElementById('theme-icon').textContent = CONFIG.THEME === 'dark' ? '☀️' : '🌙'; }
-    function applyLanguage() { const t = UI_TEXT[CONFIG.LANG]; document.getElementById('draw-btn').textContent = t.draw; }
+    function applyLanguage() { const t = UI_TEXT[CONFIG.LANG]; document.getElementById('draw-btn').textContent = t.draw; if(!currentMovie) { document.getElementById('res-title').textContent = t.defaultTitle; document.getElementById('res-desc').textContent = t.defaultDesc; } }
     
     async function toggleLanguage() { 
       CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; localStorage.setItem('movielotto-lang', CONFIG.LANG); 
@@ -413,8 +380,8 @@
       if (isRolling) return;
       document.getElementById('slot-layer').style.display = 'flex';
       document.getElementById('res-poster').classList.add('opacity-0');
-      document.getElementById('res-title').textContent = 'MOVIE LOTTO';
-      document.getElementById('res-desc').textContent = '오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.';
+      document.getElementById('res-title').textContent = UI_TEXT[CONFIG.LANG].defaultTitle;
+      document.getElementById('res-desc').textContent = UI_TEXT[CONFIG.LANG].defaultDesc;
       document.getElementById('badge-row-meta').innerHTML = '';
       document.getElementById('badge-row-scores').innerHTML = '<span class="sticker-badge">TMDB --</span><span class="sticker-badge">IMDb --</span><span class="sticker-badge">Rotten --</span>';
       currentMovie = null;
