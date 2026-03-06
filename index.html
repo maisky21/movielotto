@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무비 로또 (Movie Lotto) | 최종판</title>
+  <title>무비 로또 (Movie Lotto) | 최종판 프로</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
@@ -173,7 +173,8 @@
       border-radius: 32px;
       width: 100%;
       max-width: 360px;
-      overflow: hidden;
+      overflow-y: auto;
+      max-height: 90dvh;
       display: flex;
       flex-direction: column;
       animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -192,7 +193,24 @@
       width: 32px;
       height: 32px;
       border-radius: 8px;
+      transition: transform 0.2s;
     }
+    .provider-icon:hover { transform: scale(1.1); }
+
+    .score-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f8f9fa;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #495057;
+      transition: all 0.2s;
+    }
+    .dark-mode .score-btn { background: #333; color: #ddd; }
+    .score-btn:hover { background: #e9ecef; }
   </style>
 </head>
 <body>
@@ -221,7 +239,7 @@
 
   <div id="modal" class="modal-overlay">
     <div class="modal-content">
-      <div class="w-full h-48 md:h-64 overflow-hidden relative">
+      <div class="w-full h-48 md:h-64 overflow-hidden relative flex-shrink-0">
         <img id="result-backdrop" class="w-full h-full object-cover opacity-80" src="" alt="">
         <div class="absolute inset-0 bg-gradient-to-t from-white dark-mode:from-black via-transparent to-transparent"></div>
         <div id="theater-badge" class="absolute top-4 left-4 hidden">
@@ -229,12 +247,21 @@
         </div>
       </div>
 
-      <div class="p-6 md:p-8 pt-0 -mt-10 relative z-10 text-center">
+      <div class="p-6 md:p-8 pt-0 -mt-10 relative z-10 text-center flex-grow">
         <h2 id="result-title" class="text-xl md:text-2xl font-bold mb-2 truncate">영화 제목</h2>
-        <div class="flex items-center justify-center gap-2 mb-4 text-sm md:text-base">
-          <span class="text-gold font-bold">★ <span id="result-rating">0.0</span></span>
-          <span class="text-gray-300">|</span>
-          <span id="result-date" class="text-gray-400 font-medium">2024</span>
+        
+        <!-- Ratings Section -->
+        <div class="flex flex-wrap justify-center gap-2 mb-4">
+          <div class="flex items-center gap-1 text-sm font-bold text-gold">
+            <span>TMDB</span>
+            <span id="result-rating">0.0</span>
+          </div>
+          <a id="imdb-link" href="#" target="_blank" class="score-btn">
+            <span class="text-yellow-500">IMDb</span>
+          </a>
+          <a id="rt-link" href="#" target="_blank" class="score-btn">
+            <span class="text-red-500">Rotten</span>
+          </a>
         </div>
         
         <p id="result-desc" class="text-xs md:text-sm text-gray-500 leading-relaxed line-clamp-4 mb-6 px-2">
@@ -244,7 +271,6 @@
         <div class="mb-8">
           <p id="ui-watch" class="text-[10px] md:text-[11px] text-gray-400 font-bold mb-3 tracking-widest uppercase">WATCH NOW ON</p>
           <div id="providers-list" class="flex justify-center gap-3 flex-wrap min-h-[40px] items-center">
-            <!-- Content injected via JS -->
           </div>
         </div>
 
@@ -268,6 +294,16 @@
     const UI_TEXT = {
       'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', watch: 'WATCH NOW ON', retry: '다시 뽑기', theater: '🎬 현재 극장 상영 중!', noStream: '네이버에서 정보 확인하기' },
       'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', watch: 'WATCH NOW ON', retry: 'Spin Again', theater: '🎬 In Theaters Now!', noStream: 'Search on Naver' }
+    };
+
+    // OTT Provider Links Mapping
+    const PROVIDER_LINKS = {
+      'Netflix': 'https://www.netflix.com/kr/',
+      'Disney Plus': 'https://www.disneyplus.com/ko-kr/',
+      'wavve': 'https://www.wavve.com/',
+      'Watcha': 'https://watcha.com/',
+      'Tving': 'https://www.tving.com/',
+      'Coupang Play': 'https://www.coupangplay.com/'
     };
 
     let movies = [];
@@ -312,7 +348,8 @@
       try {
         const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.API_KEY}&language=${CONFIG.LANG}&page=1`);
         const data = await res.json();
-        movies = data.results;
+        // 평점 5.0 이상인 영화만 필터링
+        movies = data.results.filter(movie => movie.vote_average >= 5.0);
       } catch (e) { console.error('API Error', e); }
     }
 
@@ -371,26 +408,37 @@
         const pData = await pRes.json(), rData = await rRes.json();
         const providers = pData.results?.KR?.flatrate || [];
         const isTheatrical = (rData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
-        return { providers, isTheatrical };
+        const tmdbLink = pData.results?.KR?.link || '';
+        return { providers, isTheatrical, tmdbLink };
       } catch (e) {
-        return { providers: [], isTheatrical: false };
+        return { providers: [], isTheatrical: false, tmdbLink: '' };
       }
     }
 
     function showResult(movie, details) {
       document.getElementById('result-title').textContent = movie.title;
       document.getElementById('result-rating').textContent = movie.vote_average.toFixed(1);
-      document.getElementById('result-date').textContent = (movie.release_date || '').split('-')[0];
       document.getElementById('result-desc').textContent = movie.overview || (CONFIG.LANG === 'ko-KR' ? '줄거리가 없습니다.' : 'No summary.');
       document.getElementById('result-backdrop').src = CONFIG.BD_URL + (movie.backdrop_path || movie.poster_path);
       
+      // IMDb & RT Links
+      const query = encodeURIComponent(movie.title);
+      document.getElementById('imdb-link').href = `https://www.imdb.com/find?q=${query}`;
+      document.getElementById('rt-link').href = `https://www.rottentomatoes.com/search?search=${query}`;
+
       const badge = document.getElementById('theater-badge');
       badge.querySelector('span').textContent = UI_TEXT[CONFIG.LANG].theater;
       if (details.isTheatrical) badge.classList.remove('hidden'); else badge.classList.add('hidden');
 
       const pList = document.getElementById('providers-list');
       if (details.providers.length > 0) {
-        pList.innerHTML = details.providers.map(p => `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon shadow-sm" title="${p.provider_name}" alt="${p.provider_name}">`).join('');
+        pList.innerHTML = details.providers.map(p => {
+          const providerUrl = PROVIDER_LINKS[p.provider_name] || details.tmdbLink || '#';
+          return `
+            <a href="${providerUrl}" target="_blank">
+              <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon shadow-sm" title="${p.provider_name}">
+            </a>`;
+        }).join('');
       } else {
         const naverUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(movie.title + ' 영화 정보')}`;
         pList.innerHTML = `
