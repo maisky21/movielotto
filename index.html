@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무비 로또 (Movie Lotto) | 마스터 에디션</title>
+  <title>무비 로또 (Movie Lotto) | 최종 완성판</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
     
     :root {
-      --bg-color: #ffffff;
+      --bg-color: #f8f9fa;
       --card-bg: #ffffff;
       --text-main: #1a1a1a;
       --text-sub: #9ca3af;
@@ -40,29 +40,36 @@
       transition: background-color 0.3s ease;
     }
 
+    /* 반응형 카드 레이아웃 */
     .app-card {
       background: var(--card-bg);
-      width: 100%;
+      width: 90%; /* 모바일에서 꽉 차지 않게 여백 유지 */
       max-width: 420px;
-      padding: 40px 28px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 32px 20px;
       border-radius: 32px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.05);
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 28px;
+      gap: 24px;
       position: relative;
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       border: 1px solid var(--border-color);
     }
 
+    @media (min-width: 768px) {
+      .app-card { padding: 40px 32px; width: 100%; }
+    }
+
     .top-controls {
       position: absolute;
-      top: 20px;
-      right: 24px;
+      top: 16px;
+      right: 20px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
     }
 
@@ -80,14 +87,13 @@
     .control-btn:hover { opacity: 1; border-color: var(--gold); }
 
     .slot-machine {
-      width: 220px;
-      height: 330px;
+      width: 200px;
+      height: 300px;
       background: var(--slot-bg);
       border-radius: 20px;
       overflow: hidden;
       position: relative;
       border: 1px solid var(--border-color);
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
     }
 
     .slot-content {
@@ -98,15 +104,15 @@
     }
 
     .slot-item {
-      height: 330px;
-      width: 220px;
+      height: 300px;
+      width: 200px;
       display: flex;
       justify-content: center;
       align-items: center;
     }
 
     .placeholder-icon {
-      font-size: 72px;
+      font-size: 64px;
       color: var(--gold);
       animation: bounce 2s infinite;
       opacity: 0.2;
@@ -114,7 +120,7 @@
 
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
+      50% { transform: translateY(-10px); }
     }
 
     #result-info {
@@ -122,73 +128,73 @@
       width: 100%;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       animation: fadeIn 0.6s ease forwards;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .rating-badge {
       display: flex;
       align-items: center;
-      gap: 5px;
-      padding: 5px 12px;
-      border-radius: 10px;
-      font-size: 11px;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
       font-weight: 800;
       transition: all 0.2s;
       border: 1px solid rgba(0,0,0,0.03);
       text-decoration: none;
     }
-    .rating-badge:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     
     .bg-tmdb { background: rgba(1, 180, 228, 0.1); color: #01b4e4; }
     .bg-imdb { background: rgba(245, 197, 24, 0.1); color: #f5c518; }
     .bg-rotten { background: rgba(250, 17, 21, 0.1); color: #fa1115; }
 
     .provider-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      transition: transform 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    .provider-icon:hover { transform: scale(1.15); }
 
     .btn-draw {
-      padding: 16px 50px;
+      padding: 14px 40px;
       border-radius: 50px;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 17px;
       color: white;
       background: var(--gold);
-      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.25);
       border: none;
       cursor: pointer;
+      width: 100%;
       transition: all 0.3s;
     }
-    .btn-draw:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(212, 175, 55, 0.4); }
+    .btn-draw:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(212, 175, 55, 0.35); }
     .btn-draw:active { transform: translateY(0); }
-    .btn-draw:disabled { background: #e0e0e0; color: #aaa; box-shadow: none; cursor: not-allowed; }
+    .btn-draw:disabled { background: #e0e0e0; color: #aaa; box-shadow: none; }
   </style>
 </head>
 <body>
 
   <div class="app-card">
+    <!-- Top Controls -->
     <div class="top-controls">
       <button id="lang-btn" class="control-btn" onclick="toggleLanguage()">EN</button>
       <button id="theme-btn" class="control-btn" onclick="toggleTheme()">🌙</button>
     </div>
 
     <div class="space-y-1">
-      <h1 id="ui-title" class="text-2xl font-bold tracking-tight">무비 로또</h1>
-      <p id="ui-subtitle" class="text-xs text-gray-400">당신의 운명을 결정할 단 하나의 영화</p>
+      <h1 id="ui-title" class="text-xl font-bold tracking-tight">무비 로또</h1>
+      <p id="ui-subtitle" class="text-[10px] text-gray-400 uppercase tracking-widest">Pick your destiny</p>
     </div>
 
     <div class="display-area w-full flex flex-col items-center">
+      <!-- Slot View -->
       <div id="slot-view" class="slot-machine">
         <div id="slot-track" class="slot-content">
           <div class="slot-item">
@@ -197,18 +203,19 @@
         </div>
       </div>
 
-      <div id="result-info">
-        <div class="w-full h-52 md:h-64 rounded-3xl overflow-hidden relative flex-shrink-0 shadow-lg">
+      <!-- Result View -->
+      <div id="result-info" class="w-full">
+        <div class="w-full h-48 md:h-56 rounded-2xl overflow-hidden relative shadow-md">
           <img id="res-backdrop" class="w-full h-full object-cover" src="" alt="">
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
-          <div id="res-theater" class="absolute top-4 left-4 hidden">
-            <span class="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg">🎬 THEATER</span>
+          <div id="res-theater" class="absolute top-3 left-3 hidden">
+            <span class="bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-lg">🎬 THEATER</span>
           </div>
         </div>
 
-        <h2 id="res-title" class="text-2xl font-bold mt-2">영화 제목</h2>
+        <h2 id="res-title" class="text-lg font-bold mt-3 mb-1 truncate">영화 제목</h2>
         
-        <div class="flex flex-wrap justify-center gap-2 mb-2">
+        <div class="flex flex-wrap justify-center gap-1.5 mb-3">
           <div class="rating-badge bg-tmdb">
             <span>TMDB</span>
             <span id="score-tmdb">-</span>
@@ -223,11 +230,11 @@
           </a>
         </div>
 
-        <p id="res-desc" class="text-sm text-gray-500 leading-relaxed line-clamp-3 mb-2 px-4"></p>
+        <p id="res-desc" class="text-[11px] text-gray-500 leading-relaxed line-clamp-3 mb-4 px-2"></p>
 
-        <div class="w-full border-t border-dashed border-gray-100 dark:border-gray-800 pt-6">
-          <p id="ui-watch" class="text-[10px] text-gray-400 font-bold mb-4 tracking-widest uppercase">WATCH NOW ON</p>
-          <div id="res-providers" class="flex justify-center gap-4 flex-wrap min-h-[40px] items-center"></div>
+        <div class="w-full border-t border-dashed border-gray-100 dark:border-gray-800 pt-4">
+          <p id="ui-watch" class="text-[9px] text-gray-400 font-bold mb-3 tracking-widest uppercase">WATCH NOW ON</p>
+          <div id="res-providers" class="flex justify-center gap-3 flex-wrap min-h-[32px] items-center"></div>
         </div>
       </div>
     </div>
@@ -236,20 +243,24 @@
   </div>
 
   <script>
+    /**
+     * @CONFIG
+     * Centralized Configuration for API Keys and URLs
+     */
     const CONFIG = {
       TMDB_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
       OMDB_KEY: 'd4e88f94',
-      BASE_URL: 'https://api.themoviedb.org/3',
-      OMDB_URL: 'https://www.omdbapi.com/',
+      TMDB_BASE: 'https://api.themoviedb.org/3',
+      OMDB_BASE: 'https://www.omdbapi.com/',
       IMG_URL: 'https://image.tmdb.org/t/p/w500',
-      BD_URL: 'https://image.tmdb.org/t/p/w1280',
+      BD_URL: 'https://image.tmdb.org/t/p/w780',
       LANG: localStorage.getItem('movielotto-lang') || 'ko-KR',
       THEME: localStorage.getItem('movielotto-theme') || 'light'
     };
 
     const UI_TEXT = {
       'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', spinning: '운명 확인 중...', retry: '다시 뽑기', watch: 'WATCH NOW ON', noStream: '네이버에서 정보 확인하기', check: '확인' },
-      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', spinning: 'Spinning Destiny...', retry: 'Spin Again', watch: 'WATCH NOW ON', noStream: 'Search on Naver', check: 'Check' }
+      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', spinning: 'Spinning...', retry: 'Spin Again', watch: 'WATCH NOW ON', noStream: 'Search on Naver', check: 'Check' }
     };
 
     const PROVIDER_LINKS = {
@@ -295,7 +306,7 @@
 
     async function init() {
       try {
-        const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=1`);
+        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=1`);
         const data = await res.json();
         movies = data.results.filter(m => m.vote_average >= 5.0);
       } catch (e) { console.error('API Error', e); }
@@ -319,7 +330,7 @@
       const shuffled = [...movies].sort(() => Math.random() - 0.5);
       track.innerHTML = shuffled.map(movie => `
         <div class="slot-item">
-          <img src="${CONFIG.IMG_URL}${movie.poster_path}" class="w-[180px] h-[270px] rounded-xl object-cover shadow-md" alt="${movie.title}">
+          <img src="${CONFIG.IMG_URL}${movie.poster_path}" class="w-[160px] h-[240px] rounded-xl object-cover shadow-md" alt="${movie.title}">
         </div>
       `).join('');
       return shuffled;
@@ -334,15 +345,15 @@
       drawBtn.disabled = true;
       drawBtn.textContent = UI_TEXT[CONFIG.LANG].spinning;
 
-      const rollCount = 15 + Math.floor(Math.random() * 10);
+      const rollCount = 12 + Math.floor(Math.random() * 8);
       let step = 0, currentPos = 0, speed = 40;
 
       function animate() {
         step++;
         currentPos = (currentPos + 1) % currentMovies.length;
-        track.style.transform = `translateY(-${currentPos * 330}px)`;
+        track.style.transform = `translateY(-${currentPos * 300}px)`;
         if (step < rollCount) {
-          if (step > rollCount * 0.7) speed += 40;
+          if (step > rollCount * 0.7) speed += 50;
           setTimeout(animate, speed);
         } else {
           finishDraw(currentMovies[currentPos]);
@@ -352,7 +363,7 @@
     }
 
     async function finishDraw(movie) {
-      const details = await getMovieDetail(movie.id);
+      const details = await getMovieDetail(movie);
       showResult(movie, details);
       isRolling = false;
       drawBtn.disabled = false;
@@ -360,12 +371,12 @@
       isResultState = true;
     }
 
-    async function getMovieDetail(movieId) {
+    async function getMovieDetail(movie) {
       try {
         const [tmdbExtRes, tmdbWatchRes, tmdbRelRes] = await Promise.all([
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/external_ids?api_key=${CONFIG.TMDB_KEY}`),
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.TMDB_KEY}`),
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.TMDB_KEY}`)
+          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`),
+          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`),
+          fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/release_dates?api_key=${CONFIG.TMDB_KEY}`)
         ]);
         
         const extData = await tmdbExtRes.json();
@@ -373,17 +384,22 @@
         const relData = await tmdbRelRes.json();
         
         let scores = { imdb: null, rt: null };
-        if (extData.imdb_id) {
-          try {
-            const omdbRes = await fetch(`${CONFIG.OMDB_URL}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`);
-            const omdbData = await omdbRes.json();
-            if (omdbData.Response === 'True') {
-              scores.imdb = omdbData.imdbRating;
-              const rt = omdbData.Ratings?.find(r => r.Source === 'Rotten Tomatoes');
-              scores.rt = rt ? rt.Value : null;
-            }
-          } catch (e) {}
-        }
+        
+        // 평점 검색 시 TMDB original_title(영어 제목) 사용 최적화
+        const searchTitle = movie.original_title || movie.title;
+        const omdbUrl = extData.imdb_id 
+          ? `${CONFIG.OMDB_BASE}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`
+          : `${CONFIG.OMDB_BASE}?t=${encodeURIComponent(searchTitle)}&apikey=${CONFIG.OMDB_KEY}`;
+
+        try {
+          const omdbRes = await fetch(omdbUrl);
+          const omdbData = await omdbRes.json();
+          if (omdbData.Response === 'True') {
+            scores.imdb = omdbData.imdbRating;
+            const rt = omdbData.Ratings?.find(r => r.Source === 'Rotten Tomatoes');
+            scores.rt = rt ? rt.Value : null;
+          }
+        } catch (e) {}
 
         return {
           imdbId: extData.imdb_id,
@@ -406,10 +422,10 @@
       imdbS.textContent = (details.scores.imdb && details.scores.imdb !== 'N/A') ? details.scores.imdb : UI_TEXT[CONFIG.LANG].check;
       rtS.textContent = details.scores.rt || UI_TEXT[CONFIG.LANG].check;
       
-      document.getElementById('link-imdb').href = details.imdbId ? `https://www.imdb.com/title/${details.imdbId}` : `https://www.imdb.com/find?q=${encodeURIComponent(movie.title)}`;
-      document.getElementById('link-rt').href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.title)}`;
+      document.getElementById('link-imdb').href = details.imdbId ? `https://www.imdb.com/title/${details.imdbId}` : `https://www.imdb.com/find?q=${encodeURIComponent(movie.original_title || movie.title)}`;
+      document.getElementById('link-rt').href = `https://www.rottentomatoes.com/search?search=${encodeURIComponent(movie.original_title || movie.title)}`;
 
-      document.getElementById('res-desc').textContent = movie.overview || (CONFIG.LANG === 'ko-KR' ? '줄거리가 없습니다.' : 'No summary.');
+      document.getElementById('res-desc').textContent = movie.overview || (CONFIG.LANG === 'ko-KR' ? '줄거리가 없습니다.' : 'No summary available.');
       document.getElementById('res-backdrop').src = CONFIG.BD_URL + (movie.backdrop_path || movie.poster_path);
       
       const badge = document.getElementById('res-theater');
