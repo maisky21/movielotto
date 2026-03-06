@@ -10,28 +10,44 @@
     
     body {
       font-family: 'Pretendard', sans-serif;
-      background-color: #ffffff;
+      background-color: #f8f9fa; /* 연한 회색 배경 */
       color: #1a1a1a;
       height: 100dvh;
-      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    /* 중앙 카드 컨테이너 */
+    .app-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 380px;
+      padding: 32px 24px;
+      border-radius: 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      text-align: center;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      gap: 24px;
     }
 
     .gold-accent { color: #D4AF37; }
     .bg-gold { background-color: #D4AF37; }
-    .border-gold { border-color: #D4AF37; }
 
-    /* 슬롯 애니메이션 */
+    /* 슬롯머신 스타일 (포스터 카드) */
     .slot-machine {
       width: 200px;
-      height: 280px;
-      border: 2px solid #f0f0f0;
-      border-radius: 16px;
+      height: 300px;
+      background: #fafafa;
+      border-radius: 20px;
       overflow: hidden;
       position: relative;
-      background: #fafafa;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+      border: 1px solid #f0f0f0;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.03);
     }
 
     .slot-content {
@@ -42,99 +58,126 @@
     }
 
     .slot-item {
-      height: 280px;
+      height: 300px;
+      width: 200px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 20px;
-      text-align: center;
+      padding: 10px;
+    }
+
+    /* 초기 물음표 아이콘 */
+    .placeholder-icon {
+      font-size: 64px;
+      color: #e5e7eb;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
 
     .slot-thumbnail {
-      width: 120px;
-      height: 180px;
-      border-radius: 8px;
+      width: 160px;
+      height: 240px;
+      border-radius: 12px;
       object-fit: cover;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     }
 
-    /* 결과 모달 */
+    /* 버튼 스타일 */
+    .btn-draw {
+      padding: 14px 40px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 17px;
+      color: white;
+      background: #D4AF37;
+      transition: all 0.3s;
+      box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-draw:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(212, 175, 55, 0.4);
+    }
+
+    .btn-draw:active {
+      transform: translateY(0);
+    }
+
+    .btn-draw:disabled {
+      background: #e5e7eb;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* 모달 스타일 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 100;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
+      padding: 20px;
     }
 
     .modal-content {
       background: white;
-      padding: 24px;
-      border-radius: 20px;
-      width: 90%;
+      padding: 32px 24px;
+      border-radius: 28px;
+      width: 100%;
       max-width: 340px;
       text-align: center;
-      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    @keyframes popIn {
-      from { transform: scale(0.8); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    @keyframes popUp {
+      from { transform: translateY(20px) scale(0.9); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
     }
-
-    .btn-main {
-      transition: all 0.2s;
-      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-    }
-    .btn-main:active { transform: scale(0.95); }
-    .btn-main:disabled { background-color: #ccc; box-shadow: none; }
   </style>
 </head>
-<body class="p-6">
-  <!-- Header -->
-  <header class="text-center mt-4">
-    <h1 class="text-xl font-bold tracking-tight">오늘의 영화 무비 로또</h1>
-  </header>
+<body>
 
-  <!-- Main Roulette Area -->
-  <main class="flex-grow flex flex-col items-center justify-center gap-8">
+  <div class="app-card">
+    <div class="space-y-1">
+      <h1 class="text-xl font-bold tracking-tight">무비 로또</h1>
+      <p class="text-xs text-gray-400">오늘 당신의 운명적인 영화는?</p>
+    </div>
+
+    <!-- Slot Machine (Center Poster) -->
     <div class="slot-machine">
       <div id="slot-track" class="slot-content">
-        <!-- Slot items will be injected here -->
         <div class="slot-item">
-          <div class="w-12 h-12 border-4 border-gray-100 border-t-gold rounded-full animate-spin"></div>
+          <div class="placeholder-icon">?</div>
         </div>
       </div>
     </div>
-    
-    <p class="text-sm text-gray-400">버튼을 눌러 운명을 확인하세요</p>
-  </main>
 
-  <!-- Control Button -->
-  <footer class="pb-8">
-    <button id="draw-btn" class="w-full py-4 bg-gold text-white rounded-2xl font-bold text-lg btn-main">
-      운명의 영화 뽑기
-    </button>
-  </footer>
+    <button id="draw-btn" class="btn-draw">추첨하기</button>
+  </div>
 
   <!-- Result Modal -->
   <div id="modal" class="modal-overlay">
     <div class="modal-content">
-      <div class="inline-block px-3 py-1 bg-gold/10 text-gold text-xs font-bold rounded-full mb-3">오늘의 추천</div>
+      <div class="inline-block px-3 py-1 bg-gold/10 text-gold text-[10px] font-extrabold rounded-full mb-4 tracking-widest">SELECTED MOVIE</div>
       <h2 id="result-title" class="text-xl font-bold mb-2">영화 제목</h2>
       <div class="flex items-center justify-center gap-1 mb-4">
-        <span class="text-gold">★</span>
-        <span id="result-rating" class="text-sm font-medium">8.5</span>
+        <span class="text-gold text-sm">★</span>
+        <span id="result-rating" class="text-sm font-bold">8.5</span>
       </div>
-      <p id="result-desc" class="text-sm text-gray-500 leading-relaxed mb-6">
-        영화에 대한 짧은 요약이 여기에 표시됩니다.
+      <p id="result-desc" class="text-xs text-gray-500 leading-relaxed mb-8 line-clamp-4 px-2">
+        영화 요약이 여기에 표시됩니다.
       </p>
-      <button onclick="closeModal()" class="w-full py-3 border border-gray-100 rounded-xl font-medium text-gray-500 hover:bg-gray-50">
+      <button onclick="closeModal()" class="w-full py-3 bg-gray-50 text-gray-500 rounded-2xl text-sm font-bold hover:bg-gray-100 transition">
         다시 뽑기
       </button>
     </div>
@@ -144,7 +187,7 @@
     const CONFIG = {
       API_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
       BASE_URL: 'https://api.themoviedb.org/3',
-      IMG_URL: 'https://image.tmdb.org/t/p/w200'
+      IMG_URL: 'https://image.tmdb.org/t/p/w400'
     };
 
     let movies = [];
@@ -158,52 +201,49 @@
         const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.API_KEY}&language=ko-KR&page=1`);
         const data = await res.json();
         movies = data.results;
-        renderSlot(movies);
       } catch (e) {
-        console.error('Data fetch error', e);
-        // Fallback or error UI
+        console.error('API Error', e);
       }
     }
 
-    function renderSlot(movieList) {
-      track.innerHTML = movieList.map(movie => `
+    function renderSlotItems() {
+      // 셔플된 리스트를 만들어 룰렛 효과 극대화
+      const shuffled = [...movies].sort(() => Math.random() - 0.5);
+      track.innerHTML = shuffled.map(movie => `
         <div class="slot-item">
           <img src="${CONFIG.IMG_URL}${movie.poster_path}" class="slot-thumbnail" alt="${movie.title}">
-          <span class="text-sm font-bold truncate w-full">${movie.title}</span>
         </div>
       `).join('');
+      return shuffled;
     }
 
     function startDraw() {
       if (isRolling || movies.length === 0) return;
+      
+      const currentMovies = renderSlotItems();
       isRolling = true;
       drawBtn.disabled = true;
 
-      const itemCount = movies.length;
-      const rollCount = 30 + Math.floor(Math.random() * 20); // 30~50 items skip
-      const winnerIndex = Math.floor(Math.random() * itemCount);
-      
-      let currentPos = 0;
-      let speed = 50;
-      const totalSteps = rollCount;
+      const itemCount = currentMovies.length;
+      const rollCount = 20 + Math.floor(Math.random() * 20);
       let step = 0;
+      let currentPos = 0;
+      let speed = 40;
 
       function animate() {
         step++;
         currentPos = (currentPos + 1) % itemCount;
-        track.style.transform = `translateY(-${currentPos * 280}px)`;
+        track.style.transform = `translateY(-${currentPos * 300}px)`;
 
-        if (step < totalSteps) {
-          // 점진적으로 느려지게 (감속 효과)
-          if (step > totalSteps * 0.7) speed += 15;
+        if (step < rollCount) {
+          if (step > rollCount * 0.7) speed += 20;
           setTimeout(animate, speed);
         } else {
-          // 종료
           setTimeout(() => {
-            showResult(movies[currentPos]);
+            showResult(currentMovies[currentPos]);
             isRolling = false;
             drawBtn.disabled = false;
-          }, 500);
+          }, 400);
         }
       }
       animate();
@@ -212,12 +252,15 @@
     function showResult(movie) {
       document.getElementById('result-title').textContent = movie.title;
       document.getElementById('result-rating').textContent = movie.vote_average.toFixed(1);
-      document.getElementById('result-desc').textContent = movie.overview || '상세 줄거리 정보가 없습니다.';
+      document.getElementById('result-desc').textContent = movie.overview || '상세 정보가 없습니다.';
       modal.style.display = 'flex';
     }
 
     function closeModal() {
       modal.style.display = 'none';
+      // 리셋: 물음표 상태로
+      track.style.transform = 'translateY(0)';
+      track.innerHTML = '<div class="slot-item"><div class="placeholder-icon">?</div></div>';
     }
 
     drawBtn.addEventListener('click', startDraw);
