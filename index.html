@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무비 로또 (Movie Lotto) | 다국어 & 다크모드</title>
+  <title>무비 로또 (Movie Lotto) | 최종판</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
@@ -18,7 +18,6 @@
       --modal-bg: #ffffff;
     }
 
-    /* 다크모드 변수 */
     .dark-mode {
       --bg-color: #121212;
       --card-bg: #1e1e1e;
@@ -62,7 +61,6 @@
       .app-card { max-width: 480px; padding: 48px 40px; }
     }
 
-    /* 상단 토글 버튼 영역 */
     .top-controls {
       position: absolute;
       top: 16px;
@@ -200,7 +198,6 @@
 <body>
 
   <div class="app-card">
-    <!-- Top Controls -->
     <div class="top-controls">
       <button id="lang-btn" class="control-btn" onclick="toggleLanguage()">EN</button>
       <button id="theme-btn" class="control-btn" onclick="toggleTheme()">🌙</button>
@@ -222,14 +219,13 @@
     <button id="draw-btn" class="btn-draw cursor-pointer active:scale-95 transition">추첨하기</button>
   </div>
 
-  <!-- Result Modal -->
   <div id="modal" class="modal-overlay">
     <div class="modal-content">
       <div class="w-full h-48 md:h-64 overflow-hidden relative">
         <img id="result-backdrop" class="w-full h-full object-cover opacity-80" src="" alt="">
         <div class="absolute inset-0 bg-gradient-to-t from-white dark-mode:from-black via-transparent to-transparent"></div>
         <div id="theater-badge" class="absolute top-4 left-4 hidden">
-          <span class="bg-red-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">🎬 THEATER</span>
+          <span class="bg-red-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-lg">🎬 THEATER</span>
         </div>
       </div>
 
@@ -247,8 +243,8 @@
 
         <div class="mb-8">
           <p id="ui-watch" class="text-[10px] md:text-[11px] text-gray-400 font-bold mb-3 tracking-widest uppercase">WATCH NOW ON</p>
-          <div id="providers-list" class="flex justify-center gap-3 flex-wrap min-h-[32px]">
-            <span class="text-xs text-gray-300 italic">-</span>
+          <div id="providers-list" class="flex justify-center gap-3 flex-wrap min-h-[40px] items-center">
+            <!-- Content injected via JS -->
           </div>
         </div>
 
@@ -270,14 +266,13 @@
     };
 
     const UI_TEXT = {
-      'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', watch: 'WATCH NOW ON', retry: '다시 뽑기', theater: '🎬 현재 극장 상영 중!', noStream: '정보 없음' },
-      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', watch: 'WATCH NOW ON', retry: 'Spin Again', theater: '🎬 In Theaters Now!', noStream: 'No info' }
+      'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', watch: 'WATCH NOW ON', retry: '다시 뽑기', theater: '🎬 현재 극장 상영 중!', noStream: '네이버에서 정보 확인하기' },
+      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', watch: 'WATCH NOW ON', retry: 'Spin Again', theater: '🎬 In Theaters Now!', noStream: 'Search on Naver' }
     };
 
     let movies = [];
     let isRolling = false;
 
-    // 초기화 및 테마 적용
     function applyTheme() {
       if (CONFIG.THEME === 'dark') {
         document.body.classList.add('dark-mode');
@@ -309,8 +304,8 @@
       CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR';
       localStorage.setItem('movielotto-lang', CONFIG.LANG);
       applyLanguage();
-      await init(); // 언어 변경 시 영화 목록 재로딩
-      closeModal(); // 모달 닫기
+      await init();
+      closeModal();
     }
 
     async function init() {
@@ -321,7 +316,6 @@
       } catch (e) { console.error('API Error', e); }
     }
 
-    // --- 기존 룰렛 로직 ---
     const track = document.getElementById('slot-track');
     const drawBtn = document.getElementById('draw-btn');
     const modal = document.getElementById('modal');
@@ -369,14 +363,18 @@
     }
 
     async function getMovieDetail(movieId) {
-      const [pRes, rRes] = await Promise.all([
-        fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.API_KEY}`),
-        fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.API_KEY}`)
-      ]);
-      const pData = await pRes.json(), rData = await rRes.json();
-      const providers = pData.results?.KR?.flatrate || [];
-      const isTheatrical = (rData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
-      return { providers, isTheatrical };
+      try {
+        const [pRes, rRes] = await Promise.all([
+          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.API_KEY}`),
+          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.API_KEY}`)
+        ]);
+        const pData = await pRes.json(), rData = await rRes.json();
+        const providers = pData.results?.KR?.flatrate || [];
+        const isTheatrical = (rData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
+        return { providers, isTheatrical };
+      } catch (e) {
+        return { providers: [], isTheatrical: false };
+      }
     }
 
     function showResult(movie, details) {
@@ -392,9 +390,14 @@
 
       const pList = document.getElementById('providers-list');
       if (details.providers.length > 0) {
-        pList.innerHTML = details.providers.map(p => `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}">`).join('');
+        pList.innerHTML = details.providers.map(p => `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon shadow-sm" title="${p.provider_name}" alt="${p.provider_name}">`).join('');
       } else {
-        pList.innerHTML = `<span class="text-xs text-gray-300 italic">${UI_TEXT[CONFIG.LANG].noStream}</span>`;
+        const naverUrl = `https://search.naver.com/search.naver?query=${encodeURIComponent(movie.title + ' 영화 정보')}`;
+        pList.innerHTML = `
+          <a href="${naverUrl}" target="_blank" class="text-[10px] bg-gray-100 dark-mode:bg-gray-800 text-gray-500 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition font-bold flex items-center gap-1">
+            ${UI_TEXT[CONFIG.LANG].noStream}
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 22 3 22 10"/><line x1="10" y1="14" x2="22" y2="2"/></svg>
+          </a>`;
       }
       modal.style.display = 'flex';
     }
@@ -409,6 +412,7 @@
     applyTheme();
     applyLanguage();
     init();
+    window.addEventListener('resize', () => { if (!isRolling) closeModal(); });
   </script>
 </body>
 </html>
