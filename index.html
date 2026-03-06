@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Masterpiece Edition</title>
+  <title>Movie Lotto | Responsive Info-First</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
@@ -44,23 +44,23 @@
 
     .hip-card {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       height: 100dvh;
       display: flex;
       flex-direction: column;
       position: relative;
-      padding: 20px 20px 80px; /* 모바일 하단 여백 80px 확보 */
+      padding: 16px 16px 80px; /* 모바일 하단 여백 확보 */
     }
 
     @media (min-width: 640px) {
-      .hip-card { height: auto; max-height: 95dvh; padding-bottom: 60px; }
+      .hip-card { max-width: 720px; height: auto; max-height: 90dvh; padding-bottom: 40px; }
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       flex-shrink: 0;
     }
 
@@ -73,16 +73,35 @@
       text-transform: uppercase;
     }
 
-    .poster-box {
+    /* 메인 디스플레이 영역 (반응형) */
+    .display-area {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
       flex-grow: 1;
       min-height: 0;
+    }
+
+    @media (min-width: 640px) {
+      .display-area { flex-direction: row; align-items: center; gap: 24px; }
+    }
+
+    /* 포스터 박스 크기 조절 */
+    .poster-box {
+      width: 55%; /* 모바일에서 55% */
+      max-height: 220px;
+      margin: 0 auto;
+      flex-shrink: 0;
       position: relative;
-      border-radius: 40px;
+      border-radius: 24px;
       overflow: hidden;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    @media (min-width: 640px) {
+      .poster-box { width: 280px; max-height: 420px; height: 100%; margin: 0; border-radius: 32px; }
     }
 
     .poster-img {
@@ -103,29 +122,42 @@
       z-index: 10;
     }
 
-    .slot-track { transition: transform 0.1s linear; }
+    /* 정보 컨테이너 */
+    .info-container {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      min-height: 0;
+      text-align: center;
+    }
+
+    @media (min-width: 640px) {
+      .info-container { text-align: left; align-items: flex-start; }
+    }
 
     .badge-row {
       display: flex;
-      gap: 10px;
-      margin-top: 16px;
+      gap: 8px;
+      margin-top: 12px;
       flex-wrap: wrap;
       justify-content: center;
-      flex-shrink: 0;
+    }
+
+    @media (min-width: 640px) {
+      .badge-row { justify-content: flex-start; }
     }
 
     .sticker-badge {
       font-size: 10px;
       font-weight: 800;
-      padding: 6px 12px;
-      border-radius: 20px;
+      padding: 4px 10px;
+      border-radius: 12px;
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 4px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
       text-decoration: none;
     }
 
@@ -133,44 +165,31 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 2px;
     }
 
     .provider-sticker {
-      width: 28px; height: 28px; border-radius: 50%; border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      background: white;
-      transition: transform 0.2s ease;
+      width: 26px; height: 28px; border-radius: 50%; border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;
     }
-    .provider-sticker:hover { transform: scale(1.1); }
     
-    .provider-name {
-      font-size: 8px;
-      font-weight: 700;
-      color: var(--text-sub);
-      text-transform: uppercase;
-      max-width: 40px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    .provider-name { font-size: 7px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
 
-    .info-box {
-      margin-top: 16px;
-      text-align: center;
-      flex-shrink: 0;
-    }
+    .title { font-size: 18px; font-weight: 800; margin-bottom: 4px; line-height: 1.2; }
+    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 
-    .title { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
-    .desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding: 0 10px; }
+    @media (min-width: 640px) {
+      .title { font-size: 24px; margin-bottom: 8px; }
+      .desc { font-size: 14px; -webkit-line-clamp: 6; }
+    }
 
     .btn-draw {
-      margin-top: 30px;
+      margin-top: 20px;
       width: 100%;
       background: var(--accent);
       color: var(--bg-color);
-      padding: 20px;
-      border-radius: 24px;
+      padding: 18px;
+      border-radius: 20px;
       font-weight: 800;
       font-size: 16px;
       border: none;
@@ -179,13 +198,11 @@
       transition: all 0.3s ease;
       flex-shrink: 0;
     }
-    
-    .btn-draw:active { transform: scale(0.96); }
-    .btn-draw:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-draw:active { transform: scale(0.97); }
+    .btn-draw:disabled { opacity: 0.3; }
 
-    .controls { display: flex; gap: 12px; }
-    .icon-btn { font-size: 18px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; }
-    .icon-btn:hover { opacity: 1; }
+    .controls { display: flex; gap: 10px; }
+    .icon-btn { font-size: 16px; cursor: pointer; opacity: 0.5; }
   </style>
 </head>
 <body>
@@ -199,32 +216,32 @@
       </div>
     </header>
 
-    <div class="display-area flex-grow flex flex-col min-height-0">
+    <div class="display-area">
+      <!-- Media Area -->
       <div class="poster-box">
         <div id="slot-layer" class="slot-layer">
-          <div class="w-[160px] h-[240px] overflow-hidden rounded-2xl border border-dashed border-gray-300 flex flex-col items-center">
-            <div id="slot-track" class="slot-track">
-              <div class="h-[240px] flex items-center justify-center text-5xl opacity-20">?</div>
+          <div class="w-[100px] h-[150px] overflow-hidden rounded-xl border border-dashed border-gray-300 flex flex-col items-center">
+            <div id="slot-track" class="transition-transform duration-100 linear">
+              <div class="h-[150px] flex items-center justify-center text-3xl opacity-20">?</div>
             </div>
           </div>
-          <p id="ui-status" class="mt-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Filtering Masterpieces</p>
         </div>
         <img id="res-poster" class="poster-img opacity-0" src="" alt="">
       </div>
 
-      <!-- OTT Badges -->
-      <div id="badge-row-meta" class="badge-row"></div>
+      <!-- Info Container -->
+      <div class="info-container">
+        <div id="res-title" class="title">영화 제목</div>
+        
+        <div id="badge-row-scores" class="badge-row">
+          <span class="sticker-badge">TMDB --</span>
+          <span class="sticker-badge">IMDb --</span>
+          <span class="sticker-badge">Rotten --</span>
+        </div>
 
-      <!-- Score Badges -->
-      <div id="badge-row-scores" class="badge-row !mt-3">
-        <span class="sticker-badge">TMDB --</span>
-        <span class="sticker-badge">IMDb --</span>
-        <span class="sticker-badge">Rotten --</span>
-      </div>
+        <p id="res-desc" class="desc mt-3">추첨하기 버튼을 눌러 당신의 인생 영화를 찾아보세요.</p>
 
-      <div class="info-box">
-        <div id="res-title" class="title"></div>
-        <div id="res-desc" class="desc"></div>
+        <div id="badge-row-meta" class="badge-row !mt-4"></div>
       </div>
     </div>
 
@@ -243,8 +260,8 @@
     };
 
     const UI_TEXT = {
-      'ko-KR': { status: '명작 필터링 중', draw: '다음 영화 뽑기', noInfo: '정보 없음' },
-      'en-US': { status: 'Filtering Masterpieces', draw: 'Next Movie', noInfo: 'No info' }
+      'ko-KR': { draw: '다음 영화 뽑기', noInfo: '정보 없음' },
+      'en-US': { draw: 'Next Movie', noInfo: 'No info' }
     };
 
     let allMovies = [];
@@ -261,12 +278,10 @@
 
     async function fetchData() {
       try {
-        // 1페이지부터 10페이지까지 확장 (데이터 다양성 확보)
         const pages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         const res = await Promise.all(pages.map(p => 
           fetch(`${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&page=${p}`).then(r => r.json())
         ));
-        // 평점 7.0 이상 명작들만 필터링
         allMovies = res.flatMap(r => r.results).filter(m => m.vote_count >= 500 && m.vote_average >= 7.0);
         allMovies.sort(() => Math.random() - 0.5);
       } catch (e) { console.error(e); }
@@ -287,13 +302,13 @@
       
       const track = document.getElementById('slot-track');
       track.style.transform = 'translateY(0)';
-      track.innerHTML = samples.map(m => `<div class="h-[240px] w-[160px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-xl"></div>`).join('');
+      track.innerHTML = samples.map(m => `<div class="h-[150px] w-[100px] flex-shrink-0"><img src="${CONFIG.IMG_URL}${m.poster_path}" class="w-full h-full object-cover rounded-lg"></div>`).join('');
 
       let step = 0;
       const totalSteps = 10 + Math.floor(Math.random() * 5);
       const animate = () => {
         step++;
-        track.style.transform = `translateY(-${(step % samples.length) * 240}px)`;
+        track.style.transform = `translateY(-${(step % samples.length) * 150}px)`;
         if (step < totalSteps) {
           setTimeout(animate, 50 + (step * 20));
         } else {
@@ -326,7 +341,6 @@
       const metaRow = document.getElementById('badge-row-meta');
       metaRow.innerHTML = '';
       
-      // OTT Providers 딥링크 (results.KR.link 사용)
       const providers = [...details.flatrate, ...details.rent, ...details.buy];
       const uniqueProviders = Array.from(new Map(providers.map(p => [p.provider_id, p])).values());
       
@@ -353,7 +367,6 @@
           fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json()),
           fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/watch/providers?api_key=${CONFIG.TMDB_KEY}`).then(r => r.json())
         ]);
-
         let imdb = null, rt = null;
         if (ext.imdb_id) {
           const omdb = await fetch(`${CONFIG.OMDB_BASE}?i=${ext.imdb_id}&apikey=${CONFIG.OMDB_KEY}`).then(r => r.json());
@@ -362,28 +375,21 @@
             rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
           }
         }
-
         const krWatch = watch.results?.KR || {};
         return { 
-          imdbId: ext.imdb_id, 
-          imdb, rt, 
-          deepLink: krWatch.link || `https://www.themoviedb.org/movie/${movie.id}/watch`,
-          flatrate: krWatch.flatrate || [],
-          rent: krWatch.rent || [],
-          buy: krWatch.buy || []
+          imdbId: ext.imdb_id, imdb, rt, deepLink: krWatch.link || `https://www.themoviedb.org/movie/${movie.id}/watch`,
+          flatrate: krWatch.flatrate || [], rent: krWatch.rent || [], buy: krWatch.buy || []
         };
       } catch (e) { return { flatrate: [], rent: [], buy: [], deepLink: '' }; }
     }
 
     function toggleTheme() { CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light'; localStorage.setItem('movielotto-theme', CONFIG.THEME); applyTheme(); }
     function applyTheme() { document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark'); document.getElementById('theme-icon').textContent = CONFIG.THEME === 'dark' ? '☀️' : '🌙'; }
-    function applyLanguage() { const t = UI_TEXT[CONFIG.LANG]; document.getElementById('ui-status').textContent = t.status; document.getElementById('draw-btn').textContent = t.draw; }
+    function applyLanguage() { const t = UI_TEXT[CONFIG.LANG]; document.getElementById('draw-btn').textContent = t.draw; }
     
     async function toggleLanguage() { 
-      CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; 
-      localStorage.setItem('movielotto-lang', CONFIG.LANG); 
-      applyLanguage(); 
-      await fetchData(); 
+      CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; localStorage.setItem('movielotto-lang', CONFIG.LANG); 
+      applyLanguage(); await fetchData(); 
       if (currentMovie) {
         const translated = allMovies.find(m => m.id === currentMovie.id) || currentMovie;
         const details = await getExtraInfo(translated);
@@ -395,8 +401,8 @@
       if (isRolling) return;
       document.getElementById('slot-layer').style.display = 'flex';
       document.getElementById('res-poster').classList.add('opacity-0');
-      document.getElementById('res-title').textContent = '';
-      document.getElementById('res-desc').textContent = '';
+      document.getElementById('res-title').textContent = 'MOVIE LOTTO';
+      document.getElementById('res-desc').textContent = '추첨하기 버튼을 눌러 당신의 인생 영화를 찾아보세요.';
       document.getElementById('badge-row-meta').innerHTML = '';
       document.getElementById('badge-row-scores').innerHTML = '<span class="sticker-badge">TMDB --</span><span class="sticker-badge">IMDb --</span><span class="sticker-badge">Rotten --</span>';
       currentMovie = null;
