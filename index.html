@@ -415,7 +415,11 @@
       slotView.style.display = 'none';
       resultInfo.style.display = 'flex';
 
-      document.getElementById('res-title').textContent = movie.title;
+      // 한글 제목 (원제목) 형식으로 표시
+      const displayTitle = movie.title === movie.original_title 
+        ? movie.title 
+        : `${movie.title} (${movie.original_title})`;
+      document.getElementById('res-title').textContent = displayTitle;
       document.getElementById('score-tmdb').textContent = movie.vote_average.toFixed(1);
       
       const imdbS = document.getElementById('score-imdb'), rtS = document.getElementById('score-rt');
