@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Movie Lotto | Perfect Contrast</title>
+  <title>무비 로또 | 오늘 밤, 당신을 기다리는 단 하나의 영화</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700;900&display=swap');
@@ -13,8 +13,8 @@
       --card-bg: #ffffff;
       --text-main: #1a1a1a;
       --text-sub: #666666;
-      --accent: #000000; /* Light 모드 버튼 배경: 검정 */
-      --btn-text: #ffffff; /* Light 모드 버튼 글자: 흰색 */
+      --accent: #000000;
+      --btn-text: #ffffff;
       --neon: #3b82f6;
       --border: #eeeeee;
     }
@@ -24,8 +24,8 @@
       --card-bg: #1e1e1e;
       --text-main: #f5f5f5;
       --text-sub: #a0a0a0;
-      --accent: #ccff00; /* Dark 모드 버튼 배경: 형광 연두 */
-      --btn-text: #000000; /* Dark 모드 버튼 글자: 검정 */
+      --accent: #ccff00;
+      --btn-text: #000000;
       --neon: #ccff00;
       --border: #2a2a2a;
     }
@@ -51,7 +51,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 20px 20px 80px; /* 하단 세이프존 확보 */
+      padding: 20px 20px 80px;
     }
 
     .hip-card {
@@ -83,7 +83,7 @@
 
     .logo {
       font-weight: 900;
-      font-size: 16px;
+      font-size: 18px;
       letter-spacing: -0.02em;
       cursor: pointer;
       color: var(--neon);
@@ -173,7 +173,6 @@
       .desc { font-size: 15px; -webkit-line-clamp: 6; }
     }
 
-    /* 버튼 스타일 수정: 대비 및 모바일 최적화 */
     .btn-draw {
       margin-top: 24px; 
       width: 100%; 
@@ -188,7 +187,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       transition: all 0.3s ease; 
       flex-shrink: 0;
-      -webkit-appearance: none; /* 모바일 브라우저 기본 스타일 방지 */
+      -webkit-appearance: none;
     }
     
     .btn-draw:hover {
@@ -209,7 +208,7 @@
   <div class="app-wrapper">
     <div class="hip-card">
       <header class="header">
-        <div class="logo" onclick="resetApp()">MOVIE LOTTO</div>
+        <div class="logo" onclick="resetApp()">무비 로또</div>
         <div class="controls">
           <span class="icon-btn" onclick="toggleLanguage()">🌐</span>
           <span id="theme-icon" class="icon-btn" onclick="toggleTheme()">🌙</span>
@@ -230,7 +229,8 @@
 
         <div class="info-container">
           <div class="space-y-4">
-            <div id="res-title" class="title">MOVIE LOTTO</div>
+            <div id="res-title" class="title">무비 로또</div>
+            <p id="res-subtitle" class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">오늘 밤, 당신을 기다리는 단 하나의 영화</p>
             
             <div id="badge-row-scores" class="badge-row" onclick="event.stopPropagation()">
               <span class="sticker-badge">TMDB --</span>
@@ -238,7 +238,7 @@
               <span class="sticker-badge">Rotten --</span>
             </div>
 
-            <p id="res-desc" class="desc">오늘 당신의 운명을 결정할 명작 영화를 찾아보세요.</p>
+            <p id="res-desc" class="desc">추첨 버튼을 눌러 당신의 운명적인 영화를 찾아보세요.</p>
           </div>
 
           <div id="badge-row-meta" class="badge-row mt-6" onclick="event.stopPropagation()"></div>
@@ -261,8 +261,20 @@
     };
 
     const UI_TEXT = {
-      'ko-KR': { draw: '다음 영화 뽑기', noInfo: '정보 없음', defaultTitle: 'MOVIE LOTTO', defaultDesc: '추첨 버튼을 눌러 당신의 인생 영화를 찾아보세요.' },
-      'en-US': { draw: 'Next Movie', noInfo: 'No info', defaultTitle: 'MOVIE LOTTO', defaultDesc: 'Tap the button to find your masterpiece.' }
+      'ko-KR': { 
+        draw: '다음 영화 뽑기', 
+        noInfo: '정보 없음', 
+        defaultTitle: '무비 로또', 
+        defaultSubtitle: '오늘 밤, 당신을 기다리는 단 하나의 영화',
+        defaultDesc: '추첨 버튼을 눌러 당신의 운명적인 영화를 찾아보세요.' 
+      },
+      'en-US': { 
+        draw: 'Next Movie', 
+        noInfo: 'No info', 
+        defaultTitle: 'MOVIE LOTTO', 
+        defaultSubtitle: 'Tonight, the one and only movie waiting for you',
+        defaultDesc: 'Tap the button to find your masterpiece.' 
+      }
     };
 
     const PROVIDER_LINKS = { 
@@ -395,7 +407,15 @@
 
     function toggleTheme() { CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light'; localStorage.setItem('movielotto-theme', CONFIG.THEME); applyTheme(); }
     function applyTheme() { document.body.classList.toggle('dark-mode', CONFIG.THEME === 'dark'); document.getElementById('theme-icon').textContent = CONFIG.THEME === 'dark' ? '☀️' : '🌙'; }
-    function applyLanguage() { const t = UI_TEXT[CONFIG.LANG]; document.getElementById('draw-btn').textContent = t.draw; if(!currentMovie) { document.getElementById('res-title').textContent = t.defaultTitle; document.getElementById('res-desc').textContent = t.defaultDesc; } }
+    function applyLanguage() { 
+      const t = UI_TEXT[CONFIG.LANG]; 
+      document.getElementById('draw-btn').textContent = t.draw; 
+      document.getElementById('res-subtitle').textContent = t.defaultSubtitle;
+      if(!currentMovie) { 
+        document.getElementById('res-title').textContent = t.defaultTitle; 
+        document.getElementById('res-desc').textContent = t.defaultDesc; 
+      } 
+    }
     
     async function toggleLanguage() { 
       CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR'; localStorage.setItem('movielotto-lang', CONFIG.LANG); 
