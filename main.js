@@ -21,7 +21,8 @@ const UI_TEXT = {
     shareTitle: '무비 로또 결과!',
     shareMsg: '오늘 밤 제가 볼 운명의 영화는 [TITLE] 입니다! 함께 보실래요?',
     copied: '링크가 복사되었습니다!',
-    safeMode: '검증된 명작 추천 중...'
+    genreEmpty: '해당 장르에 명작이 적네요! 다른 장르나 전체로 돌려보세요.',
+    timeout: '연결이 지연되어 초기화합니다. 다시 시도해주세요.'
   },
   'en-US': { 
     draw: 'Next Movie', 
@@ -35,7 +36,8 @@ const UI_TEXT = {
     shareTitle: 'Movie Lotto Result!',
     shareMsg: 'My destiny movie for tonight is [TITLE]! Want to watch together?',
     copied: 'Link copied to clipboard!',
-    safeMode: 'Safe Mode: Loading Masterpieces...'
+    genreEmpty: 'Not many masterpieces here! Try another genre or "All".',
+    timeout: 'Connection timed out. Resetting...'
   }
 };
 
@@ -46,15 +48,27 @@ let currentMovie = null;
 let viewedIds = new Set();
 let isRolling = false;
 let dataFetched = false;
+let watchdogTimer = null;
 
 async function init() {
+  // Force Reset Button State on Load
+  const btn = document.getElementById('draw-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = UI_TEXT[CONFIG.LANG].draw;
+  }
+
   applyTheme();
   applyLanguage();
-  await fetchGenres();
-  // We don't wait for fetchData in init to speed up first load, 
-  // startDraw will handle it if data isn't ready.
-  fetchData(); 
-  renderGenres();
+  
+  try {
+    await fetchGenres();
+    renderGenres();
+    // Background fetch, don't block UI
+    fetchData(); 
+  } catch (e) {
+    console.error('Init failed:', e);
+  }
 }
 
 async function fetchGenres() {
@@ -80,26 +94,24 @@ function selectGenre(id) {
   selectedGenre = id;
   renderGenres();
   dataFetched = false;
+  allMovies = [];
   fetchData();
 }
 
-async function fetchData(retryCount = 0) {
-  if (dataFetched && allMovies.length > 0) return true;
-  
-  const btn = document.getElementById('draw-btn');
-  const originalText = UI_TEXT[CONFIG.LANG].draw;
+async function fetchData(ratingThreshold = 7.0, retryCount = 0) {
+  if (dataFetched && allMovies.length > 0 && !selectedGenre) return true;
   
   try {
-    // 3 Second Timeout Pattern
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     let url = `${CONFIG.TMDB_BASE}/movie/popular?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`;
     if (selectedGenre) {
       url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&with_genres=${selectedGenre}&sort_by=popularity.desc`;
     }
 
-    const pages = [1, 2, 3, 4, 5];
+    // Limit to 3 pages for faster filtering as requested
+    const pages = [1, 2, 3];
     const fetchPromises = pages.map(p => 
       fetch(`${url}&page=${p}`, { signal: controller.signal }).then(r => r.json())
     );
@@ -107,24 +119,25 @@ async function fetchData(retryCount = 0) {
     const results = await Promise.all(fetchPromises);
     clearTimeout(timeoutId);
 
-    // Filter by Rating 7.0+ as requested
-    allMovies = results.flatMap(r => r.results).filter(m => m.vote_average >= 7.0 && m.poster_path);
+    allMovies = results.flatMap(r => r.results || []).filter(m => m.vote_average >= ratingThreshold && m.poster_path);
     
-    // SAFE MODE: If no 7.0+ movies found, fallback to high popularity regardless of rating (but still prioritize quality)
+    // If no movies found at 7.0, automatically lower to 6.5 once
+    if (allMovies.length === 0 && ratingThreshold > 6.5) {
+      console.warn(`No movies found at ${ratingThreshold}, trying 6.5...`);
+      return fetchData(6.5);
+    }
+
     if (allMovies.length === 0) {
-      console.warn('Safe Mode Triggered: No 7.0+ movies found.');
-      allMovies = results.flatMap(r => r.results).filter(m => m.vote_average >= 6.0 && m.poster_path);
-      if (allMovies.length === 0) allMovies = results.flatMap(r => r.results);
+      // Still no movies? Fallback to whatever is available in the genre
+      allMovies = results.flatMap(r => r.results || []).filter(m => m.poster_path);
     }
 
     allMovies.sort(() => Math.random() - 0.5);
     dataFetched = true;
     return true;
   } catch (e) { 
-    console.error('Fetch error or timeout:', e);
-    if (retryCount < 2) {
-      return fetchData(retryCount + 1);
-    }
+    console.error('Fetch error:', e);
+    if (retryCount < 1) return fetchData(ratingThreshold, retryCount + 1);
     return false;
   }
 }
@@ -136,27 +149,38 @@ async function startDraw() {
   btn.disabled = true;
   btn.textContent = UI_TEXT[CONFIG.LANG].drawing;
 
-  // Ensure data is ready before starting animation
+  // 5 Second Watchdog Timer to prevent getting stuck
+  watchdogTimer = setTimeout(() => {
+    console.error('Watchdog: Drawing stuck for 5s. Force resetting...');
+    alert(UI_TEXT[CONFIG.LANG].timeout);
+    resetApp();
+    recoverButtonState();
+  }, 5000);
+
   const success = await fetchData();
   if (!success || allMovies.length === 0) {
+    clearTimeout(watchdogTimer);
     btn.disabled = false;
-    btn.textContent = UI_TEXT[CONFIG.LANG].error;
-    setTimeout(() => { btn.textContent = UI_TEXT[CONFIG.LANG].draw; }, 2000);
+    btn.textContent = UI_TEXT[CONFIG.LANG].draw;
+    alert(UI_TEXT[CONFIG.LANG].genreEmpty);
     return;
   }
 
   const pool = allMovies.filter(m => !viewedIds.has(m.id));
-  if (pool.length === 0) { viewedIds.clear(); return startDraw(); }
+  if (pool.length === 0) { 
+    viewedIds.clear(); 
+    // Small delay to prevent recursion stack
+    setTimeout(startDraw, 100);
+    return;
+  }
 
   isRolling = true;
   document.getElementById('share-bar').classList.remove('visible');
   
-  // Reset Card Flip State
   const container = document.getElementById('poster-container');
   container.classList.remove('flipped');
   document.getElementById('slot-layer').style.display = 'flex';
 
-  // Slot Animation Setup
   const samples = [];
   for(let i=0; i<15; i++) samples.push(pool[Math.floor(Math.random() * pool.length)]);
   
@@ -169,13 +193,13 @@ async function startDraw() {
   `).join('');
 
   let step = 0;
-  const totalSteps = 20 + Math.floor(Math.random() * 10);
+  const totalSteps = 15 + Math.floor(Math.random() * 5);
   
   const animate = () => {
     step++;
     track.style.transform = `translateY(-${(step % samples.length) * 120}px)`;
     if (step < totalSteps) {
-      setTimeout(animate, 40 + (step * 10)); // Faster initial, slower towards end
+      setTimeout(animate, 50 + (step * 10));
     } else {
       currentMovie = samples[step % samples.length];
       viewedIds.add(currentMovie.id);
@@ -187,21 +211,24 @@ async function startDraw() {
 
 async function finishDraw() {
   if (!currentMovie) {
+    clearTimeout(watchdogTimer);
     recoverButtonState();
     return;
   }
 
   try {
-    // Parallel Fetch extra info
+    // RACE CONDITION PREVENTION: Ensure all data arrives before ending animation
     const details = await getExtraInfo(currentMovie);
+    
+    // Clear watchdog as we got the data
+    clearTimeout(watchdogTimer);
+    
     renderUI(currentMovie, details);
     
-    // Final Confirmation Logic: Wait for UI to update, then reveal
     setTimeout(() => {
       document.getElementById('slot-layer').style.display = 'none';
       document.getElementById('poster-container').classList.add('flipped'); 
       
-      // Complete state recovery after flip animation
       setTimeout(() => {
         recoverButtonState();
         document.getElementById('share-bar').classList.add('visible');
@@ -209,14 +236,17 @@ async function finishDraw() {
     }, 400);
   } catch (e) {
     console.error('Finish draw error:', e);
+    clearTimeout(watchdogTimer);
     recoverButtonState();
   }
 }
 
 function recoverButtonState() {
   const btn = document.getElementById('draw-btn');
-  btn.disabled = false;
-  btn.textContent = UI_TEXT[CONFIG.LANG].draw;
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = UI_TEXT[CONFIG.LANG].draw;
+  }
   isRolling = false;
 }
 
@@ -264,17 +294,14 @@ async function getExtraInfo(movie) {
           imdb = omdb.imdbRating;
           rt = omdb.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
         }
-      } catch (e) { console.warn('OMDb fetch failed, skipping scores.'); }
+      } catch (e) { console.warn('OMDb scores skipped.'); }
     }
     const krWatch = watch.results?.KR || {};
     return { 
       imdbId: ext.imdb_id, imdb, rt,
       flatrate: krWatch.flatrate || [], rent: krWatch.rent || [], buy: krWatch.buy || []
     };
-  } catch (e) { 
-    console.error('getExtraInfo fatal error:', e);
-    return { flatrate: [], rent: [], buy: [] }; 
-  }
+  } catch (e) { return { flatrate: [], rent: [], buy: [] }; }
 }
 
 function shareResult(type) {
@@ -293,17 +320,11 @@ function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
     alert(UI_TEXT[CONFIG.LANG].copied);
   }).catch(() => {
-    // Fallback for non-secure contexts
     const textArea = document.createElement("textarea");
     textArea.value = text;
     document.body.appendChild(textArea);
     textArea.select();
-    try {
-      document.execCommand('copy');
-      alert(UI_TEXT[CONFIG.LANG].copied);
-    } catch (err) {
-      console.error('Fallback copy failed', err);
-    }
+    try { document.execCommand('copy'); alert(UI_TEXT[CONFIG.LANG].copied); } catch (err) {}
     document.body.removeChild(textArea);
   });
 }
@@ -321,7 +342,8 @@ function applyTheme() {
 
 function applyLanguage() { 
   const t = UI_TEXT[CONFIG.LANG]; 
-  document.getElementById('draw-btn').textContent = isRolling ? t.drawing : t.draw; 
+  const btn = document.getElementById('draw-btn');
+  if (btn) btn.textContent = isRolling ? t.drawing : t.draw; 
   document.getElementById('res-subtitle').textContent = t.defaultSubtitle;
   if(!currentMovie) { 
     document.getElementById('res-title').textContent = t.defaultTitle; 
@@ -342,6 +364,7 @@ async function toggleLanguage() {
 
 function resetApp() {
   if (isRolling) return;
+  if (watchdogTimer) clearTimeout(watchdogTimer);
   document.getElementById('poster-container').classList.remove('flipped');
   document.getElementById('slot-layer').style.display = 'flex';
   document.getElementById('res-title').textContent = UI_TEXT[CONFIG.LANG].defaultTitle;
@@ -350,6 +373,8 @@ function resetApp() {
   document.getElementById('badge-row-scores').innerHTML = '<span class="sticker-badge">TMDB --</span><span class="sticker-badge">IMDb --</span><span class="sticker-badge">Rotten --</span>';
   document.getElementById('share-bar').classList.remove('visible');
   currentMovie = null;
+  isRolling = false;
+  recoverButtonState();
 }
 
 // Global exposure
