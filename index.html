@@ -3,59 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>무비 로또 (Movie Lotto) | 반응형 최종판</title>
+  <title>무비 로또 (Movie Lotto) | 다국어 & 다크모드</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;700&display=swap');
     
+    :root {
+      --bg-color: #f1f3f5;
+      --card-bg: #ffffff;
+      --text-main: #1a1a1a;
+      --text-sub: #9ca3af;
+      --slot-bg: #fafafa;
+      --border-color: #eeeeee;
+      --modal-bg: #ffffff;
+    }
+
+    /* 다크모드 변수 */
+    .dark-mode {
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
+      --text-main: #ffffff;
+      --text-sub: #888888;
+      --slot-bg: #2a2a2a;
+      --border-color: #333333;
+      --modal-bg: #242424;
+    }
+
     body {
       font-family: 'Pretendard', sans-serif;
-      background-color: #f1f3f5;
-      color: #1a1a1a;
+      background-color: var(--bg-color);
+      color: var(--text-main);
       min-height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
       margin: 0;
       padding: 16px;
+      transition: background-color 0.3s ease;
     }
 
-    /* 중앙 카드 컨테이너 - 반응형 너비 설정 */
     .app-card {
-      background: #ffffff;
+      background: var(--card-bg);
       width: 100%;
-      max-width: 360px; /* 기본 모바일 */
+      max-width: 360px;
       padding: 32px 24px;
       border-radius: 32px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 24px;
-      transition: max-width 0.3s ease;
+      position: relative;
+      transition: all 0.3s ease;
     }
 
-    /* 태블릿 및 PC에서 카드 크기 확대 */
     @media (min-width: 768px) {
       .app-card { max-width: 480px; padding: 48px 40px; }
     }
-    @media (min-width: 1024px) {
-      .app-card { max-width: 520px; }
+
+    /* 상단 토글 버튼 영역 */
+    .top-controls {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
+
+    .control-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover { background: var(--border-color); }
 
     .gold-accent { color: #D4AF37; }
     .bg-gold { background-color: #D4AF37; }
 
-    /* 슬롯머신 - 반응형 크기 */
     .slot-machine {
       width: 200px;
       height: 300px;
-      background: #fafafa;
+      background: var(--slot-bg);
       border-radius: 20px;
       overflow: hidden;
       position: relative;
-      border: 1px solid #eee;
+      border: 1px solid var(--border-color);
     }
 
     @media (min-width: 768px) {
@@ -69,7 +110,6 @@
       transition: transform 0.1s linear;
     }
 
-    /* 슬롯 아이템 높이는 JS에서 동적으로 처리하거나 미디어 쿼리로 고정 */
     .slot-item {
       height: 300px;
       width: 100%;
@@ -84,12 +124,9 @@
 
     .placeholder-icon {
       font-size: 64px;
-      color: #ddd;
+      color: var(--text-sub);
       animation: bounce 2s infinite;
-    }
-
-    @media (min-width: 768px) {
-      .placeholder-icon { font-size: 80px; }
+      opacity: 0.3;
     }
 
     @keyframes bounce {
@@ -102,14 +139,13 @@
       height: 240px;
       border-radius: 12px;
       object-fit: cover;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
 
     @media (min-width: 768px) {
       .slot-thumbnail { width: 220px; height: 330px; }
     }
 
-    /* 버튼 스타일 */
     .btn-draw {
       padding: 14px 44px;
       border-radius: 50px;
@@ -117,19 +153,10 @@
       font-size: 18px;
       color: white;
       background: #D4AF37;
-      transition: all 0.3s;
       box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
       border: none;
     }
 
-    @media (min-width: 768px) {
-      .btn-draw { padding: 18px 60px; font-size: 20px; }
-    }
-
-    .btn-draw:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(212, 175, 55, 0.3); }
-    .btn-draw:active { transform: translateY(0); }
-
-    /* 모달 (결과창) */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -143,7 +170,8 @@
     }
 
     .modal-content {
-      background: white;
+      background: var(--modal-bg);
+      color: var(--text-main);
       border-radius: 32px;
       width: 100%;
       max-width: 360px;
@@ -166,30 +194,21 @@
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      object-fit: cover;
-    }
-
-    @media (min-width: 768px) {
-      .provider-icon { width: 40px; height: 40px; }
-    }
-
-    .badge-theater {
-      background: #ef4444;
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 20px;
-      display: inline-block;
     }
   </style>
 </head>
 <body>
 
   <div class="app-card">
+    <!-- Top Controls -->
+    <div class="top-controls">
+      <button id="lang-btn" class="control-btn" onclick="toggleLanguage()">EN</button>
+      <button id="theme-btn" class="control-btn" onclick="toggleTheme()">🌙</button>
+    </div>
+
     <div class="space-y-1">
-      <h1 class="text-2xl md:text-3xl font-bold tracking-tight">무비 로또</h1>
-      <p class="text-xs md:text-sm text-gray-400">당신의 운명을 결정할 단 하나의 영화</p>
+      <h1 id="ui-title" class="text-2xl md:text-3xl font-bold tracking-tight">무비 로또</h1>
+      <p id="ui-subtitle" class="text-xs md:text-sm text-gray-400">당신의 운명을 결정할 단 하나의 영화</p>
     </div>
 
     <div class="slot-machine">
@@ -200,22 +219,20 @@
       </div>
     </div>
 
-    <button id="draw-btn" class="btn-draw cursor-pointer">추첨하기</button>
+    <button id="draw-btn" class="btn-draw cursor-pointer active:scale-95 transition">추첨하기</button>
   </div>
 
   <!-- Result Modal -->
   <div id="modal" class="modal-overlay">
     <div class="modal-content">
-      <!-- Top Image Section -->
       <div class="w-full h-48 md:h-64 overflow-hidden relative">
-        <img id="result-backdrop" class="w-full h-full object-cover opacity-90" src="" alt="">
-        <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+        <img id="result-backdrop" class="w-full h-full object-cover opacity-80" src="" alt="">
+        <div class="absolute inset-0 bg-gradient-to-t from-white dark-mode:from-black via-transparent to-transparent"></div>
         <div id="theater-badge" class="absolute top-4 left-4 hidden">
-          <span class="badge-theater">🎬 현재 극장 상영 중!</span>
+          <span class="bg-red-500 text-white text-[10px] font-extrabold px-3 py-1 rounded-full">🎬 THEATER</span>
         </div>
       </div>
 
-      <!-- Info Section -->
       <div class="p-6 md:p-8 pt-0 -mt-10 relative z-10 text-center">
         <h2 id="result-title" class="text-xl md:text-2xl font-bold mb-2 truncate">영화 제목</h2>
         <div class="flex items-center justify-center gap-2 mb-4 text-sm md:text-base">
@@ -228,15 +245,14 @@
           영화 줄거리가 여기에 표시됩니다.
         </p>
 
-        <!-- Providers (OTT) Section -->
         <div class="mb-8">
-          <p class="text-[10px] md:text-[11px] text-gray-400 font-bold mb-3 tracking-widest">WATCH NOW ON</p>
+          <p id="ui-watch" class="text-[10px] md:text-[11px] text-gray-400 font-bold mb-3 tracking-widest uppercase">WATCH NOW ON</p>
           <div id="providers-list" class="flex justify-center gap-3 flex-wrap min-h-[32px]">
-            <span class="text-xs text-gray-300 italic">No stream info available</span>
+            <span class="text-xs text-gray-300 italic">-</span>
           </div>
         </div>
 
-        <button onclick="closeModal()" class="w-full py-4 bg-gray-900 text-white rounded-2xl text-sm md:text-base font-bold active:scale-95 transition">
+        <button id="ui-retry" onclick="closeModal()" class="w-full py-4 bg-gray-900 text-white rounded-2xl text-sm md:text-base font-bold active:scale-95 transition">
           다시 뽑기
         </button>
       </div>
@@ -248,44 +264,69 @@
       API_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
       BASE_URL: 'https://api.themoviedb.org/3',
       IMG_URL: 'https://image.tmdb.org/t/p/w500',
-      BD_URL: 'https://image.tmdb.org/t/p/w1280'
+      BD_URL: 'https://image.tmdb.org/t/p/w1280',
+      LANG: localStorage.getItem('movielotto-lang') || 'ko-KR',
+      THEME: localStorage.getItem('movielotto-theme') || 'light'
+    };
+
+    const UI_TEXT = {
+      'ko-KR': { title: '무비 로또', subtitle: '당신의 운명을 결정할 단 하나의 영화', draw: '추첨하기', watch: 'WATCH NOW ON', retry: '다시 뽑기', theater: '🎬 현재 극장 상영 중!', noStream: '정보 없음' },
+      'en-US': { title: 'Movie Lotto', subtitle: 'Pick your destiny with a single movie', draw: 'Spin Now', watch: 'WATCH NOW ON', retry: 'Spin Again', theater: '🎬 In Theaters Now!', noStream: 'No info' }
     };
 
     let movies = [];
     let isRolling = false;
-    const track = document.getElementById('slot-track');
-    const drawBtn = document.getElementById('draw-btn');
-    const modal = document.getElementById('modal');
 
-    // 화면 크기에 따른 슬롯 높이 계산
-    function getSlotHeight() {
-      return window.innerWidth >= 768 ? 390 : 300;
+    // 초기화 및 테마 적용
+    function applyTheme() {
+      if (CONFIG.THEME === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-btn').textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('theme-btn').textContent = '🌙';
+      }
+    }
+
+    function applyLanguage() {
+      const texts = UI_TEXT[CONFIG.LANG];
+      document.getElementById('ui-title').textContent = texts.title;
+      document.getElementById('ui-subtitle').textContent = texts.subtitle;
+      document.getElementById('draw-btn').textContent = texts.draw;
+      document.getElementById('ui-watch').textContent = texts.watch;
+      document.getElementById('ui-retry').textContent = texts.retry;
+      document.getElementById('lang-btn').textContent = CONFIG.LANG === 'ko-KR' ? 'EN' : 'KO';
+      document.documentElement.lang = CONFIG.LANG.split('-')[0];
+    }
+
+    function toggleTheme() {
+      CONFIG.THEME = CONFIG.THEME === 'light' ? 'dark' : 'light';
+      localStorage.setItem('movielotto-theme', CONFIG.THEME);
+      applyTheme();
+    }
+
+    async function toggleLanguage() {
+      CONFIG.LANG = CONFIG.LANG === 'ko-KR' ? 'en-US' : 'ko-KR';
+      localStorage.setItem('movielotto-lang', CONFIG.LANG);
+      applyLanguage();
+      await init(); // 언어 변경 시 영화 목록 재로딩
+      closeModal(); // 모달 닫기
     }
 
     async function init() {
       try {
-        const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.API_KEY}&language=ko-KR&page=1`);
+        const res = await fetch(`${CONFIG.BASE_URL}/movie/popular?api_key=${CONFIG.API_KEY}&language=${CONFIG.LANG}&page=1`);
         const data = await res.json();
         movies = data.results;
       } catch (e) { console.error('API Error', e); }
     }
 
-    async function getMovieDetail(movieId) {
-      try {
-        const [providersRes, releasesRes] = await Promise.all([
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.API_KEY}`),
-          fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.API_KEY}`)
-        ]);
-        const providersData = await providersRes.json();
-        const releasesData = await releasesRes.json();
-        const krProviders = providersData.results?.KR?.flatrate || [];
-        const krReleases = releasesData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || [];
-        const isTheatrical = krReleases.some(d => d.type === 3);
-        return { providers: krProviders, isTheatrical };
-      } catch (e) {
-        return { providers: [], isTheatrical: false };
-      }
-    }
+    // --- 기존 룰렛 로직 ---
+    const track = document.getElementById('slot-track');
+    const drawBtn = document.getElementById('draw-btn');
+    const modal = document.getElementById('modal');
+
+    function getSlotHeight() { return window.innerWidth >= 768 ? 390 : 300; }
 
     function renderSlotItems() {
       const shuffled = [...movies].sort(() => Math.random() - 0.5);
@@ -299,22 +340,17 @@
 
     async function startDraw() {
       if (isRolling || movies.length === 0) return;
-      
       const currentMovies = renderSlotItems();
-      const slotHeight = getSlotHeight();
+      const h = getSlotHeight();
       isRolling = true;
       drawBtn.disabled = true;
-
       const rollCount = 20 + Math.floor(Math.random() * 20);
-      let step = 0;
-      let currentPos = 0;
-      let speed = 40;
+      let step = 0, currentPos = 0, speed = 40;
 
       function animate() {
         step++;
         currentPos = (currentPos + 1) % currentMovies.length;
-        track.style.transform = `translateY(-${currentPos * slotHeight}px)`;
-
+        track.style.transform = `translateY(-${currentPos * h}px)`;
         if (step < rollCount) {
           if (step > rollCount * 0.7) speed += 25;
           setTimeout(animate, speed);
@@ -332,26 +368,34 @@
       drawBtn.disabled = false;
     }
 
+    async function getMovieDetail(movieId) {
+      const [pRes, rRes] = await Promise.all([
+        fetch(`${CONFIG.BASE_URL}/movie/${movieId}/watch/providers?api_key=${CONFIG.API_KEY}`),
+        fetch(`${CONFIG.BASE_URL}/movie/${movieId}/release_dates?api_key=${CONFIG.API_KEY}`)
+      ]);
+      const pData = await pRes.json(), rData = await rRes.json();
+      const providers = pData.results?.KR?.flatrate || [];
+      const isTheatrical = (rData.results?.find(r => r.iso_3166_1 === 'KR')?.release_dates || []).some(d => d.type === 3);
+      return { providers, isTheatrical };
+    }
+
     function showResult(movie, details) {
       document.getElementById('result-title').textContent = movie.title;
       document.getElementById('result-rating').textContent = movie.vote_average.toFixed(1);
       document.getElementById('result-date').textContent = (movie.release_date || '').split('-')[0];
-      document.getElementById('result-desc').textContent = movie.overview || '상세 줄거리 정보가 제공되지 않습니다.';
+      document.getElementById('result-desc').textContent = movie.overview || (CONFIG.LANG === 'ko-KR' ? '줄거리가 없습니다.' : 'No summary.');
       document.getElementById('result-backdrop').src = CONFIG.BD_URL + (movie.backdrop_path || movie.poster_path);
       
       const badge = document.getElementById('theater-badge');
-      if (details.isTheatrical) badge.classList.remove('hidden');
-      else badge.classList.add('hidden');
+      badge.querySelector('span').textContent = UI_TEXT[CONFIG.LANG].theater;
+      if (details.isTheatrical) badge.classList.remove('hidden'); else badge.classList.add('hidden');
 
-      const providersList = document.getElementById('providers-list');
+      const pList = document.getElementById('providers-list');
       if (details.providers.length > 0) {
-        providersList.innerHTML = details.providers.map(p => `
-          <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}" alt="${p.provider_name}">
-        `).join('');
+        pList.innerHTML = details.providers.map(p => `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}">`).join('');
       } else {
-        providersList.innerHTML = '<span class="text-xs text-gray-300 italic">No stream info available</span>';
+        pList.innerHTML = `<span class="text-xs text-gray-300 italic">${UI_TEXT[CONFIG.LANG].noStream}</span>`;
       }
-
       modal.style.display = 'flex';
     }
 
@@ -362,12 +406,9 @@
     }
 
     drawBtn.addEventListener('click', startDraw);
+    applyTheme();
+    applyLanguage();
     init();
-
-    // 창 크기 조절 시 리셋 (애니메이션 좌표 정합성 유지)
-    window.addEventListener('resize', () => {
-      if (!isRolling) closeModal();
-    });
   </script>
 </body>
 </html>
