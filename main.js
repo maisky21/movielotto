@@ -107,7 +107,6 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
-    // Reset video player
     trailerContainer.innerHTML = '';
     trailerContainer.style.display = 'none';
     playOverlay.style.display = 'flex';
@@ -136,7 +135,6 @@ async function handleDrawClick() {
             const candidates = moviePool.filter(m => !state.viewedIds.has(m.id)).sort(() => Math.random() - 0.5);
             
             for (const candidate of candidates) {
-                // Fetch basic and video info from TMDB
                 const [ott, omdb, fullInfo] = await Promise.all([
                     fetchOTT(candidate.id),
                     fetchOMDb(candidate),
@@ -172,7 +170,6 @@ async function handleDrawClick() {
 
         state.viewedIds.add(selectedMovie.id);
 
-        // Extract Trailer
         const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
         state.currentTrailerId = trailer?.key || null;
 
@@ -241,21 +238,33 @@ async function performFinalSpin(targetMovie, pool) {
 
 async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
-    document.getElementById('res-title').textContent = movie.title;
+    
+    // Movie Title with IMDb Link
+    const titleEl = document.getElementById('res-title');
+    titleEl.innerHTML = omdb?.imdbId 
+        ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
+        : movie.title;
+
     document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
     
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
+    // Credits with Fallback logic and IMDb search links
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
     const directorName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
-    
-    const castList = credits?.cast?.slice(0, 3).map(c => c.name || c.original_name) || [];
-    const castString = castList.length > 0 ? castList.join(', ') : '정보 없음';
+    const directorHtml = directorObj 
+        ? `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(directorName)}" target="_blank">${directorName}</a>`
+        : directorName;
+    document.getElementById('res-director').innerHTML = `감독: ${directorHtml}`;
 
-    document.getElementById('res-director').textContent = `감독: ${directorName}`;
-    document.getElementById('res-cast').textContent = `출연: ${castString}`;
+    const castList = credits?.cast?.slice(0, 3).map(c => {
+        const name = c.name || c.original_name;
+        return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(name)}" target="_blank">${name}</a>`;
+    }) || [];
+    const castHtml = castList.length > 0 ? castList.join(', ') : '정보 없음';
+    document.getElementById('res-cast').innerHTML = `출연: ${castHtml}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
@@ -288,17 +297,13 @@ async function showResult(movie, omdb, credits, ott) {
         ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">OTT 정보 없음</span>';
     }
 
-    // Toggle play button visibility based on trailer availability
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
-
     slotView.style.display = 'none';
     resultView.style.display = 'flex';
 }
 
 function playTrailer() {
     if (!state.currentTrailerId) return;
-
-    // Use autoplay=1&mute=0 as requested
     trailerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${state.currentTrailerId}?autoplay=1&mute=0&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
@@ -332,11 +337,15 @@ async function fetchOMDb(movie) {
             const rt = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value;
             return {
                 imdbRating: data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : null,
-                rtRating: rt || null
+                rtRating: rt || null,
+                imdbId: extData.imdb_id || data.imdbID
             };
         }
         return null;
-    } catch (e) { return null; }
+    } catch (e) { 
+        console.error("OMDb fetch error", e);
+        return null; 
+    }
 }
 
 async function fetchFullInfo(movieId) {
@@ -349,11 +358,8 @@ async function fetchFullInfo(movieId) {
 function resetApp() {
     if (state.isDrawing) return;
     state.viewedIds.clear();
-    
-    // Clear video
     trailerContainer.innerHTML = '';
     trailerContainer.style.display = 'none';
-    
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
     startInfiniteSpin();

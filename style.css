@@ -340,10 +340,19 @@ body {
     font-weight: 900;
     line-height: 1.1;
     margin-bottom: 4px;
+}
+
+.movie-title a {
+    text-decoration: none;
+    color: inherit;
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+.movie-title a:hover {
+    text-decoration: underline;
 }
 
 .credits-info {
@@ -355,6 +364,16 @@ body {
     font-weight: 700;
     opacity: 0.8;
     line-height: 1.3;
+}
+
+.credit-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.credit-link:hover {
+    text-decoration: underline;
 }
 
 .movie-overview {
