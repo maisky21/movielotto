@@ -1,28 +1,27 @@
-# Movie Lotto Project Blueprint
+# Movie Lotto Project Blueprint (Refactored Engine)
 
 ## Project Overview
-Movie Lotto is a modern, high-performance web application that provides a "lottery-style" movie recommendation experience. It uses a sophisticated slot-machine animation and 3D card flipping to reveal hand-picked, high-rated movies to the user.
+Movie Lotto is a "lottery-style" movie recommendation app. This refactored version uses a consolidated engine for better performance, reliable data fetching, and a smoother slot machine experience.
 
-## Features & Design
-- **Expressive Typography:** Uses the 'Pretendard' font family for a premium, readable feel.
-- **Dynamic Theming:** Supports both Light and Dark modes with smooth transitions.
-- **Multilingual Support:** Fully localized in both Korean (ko-KR) and English (en-US).
-- **Genre Filtering:** Real-time genre chips fetched from TMDB allowing users to narrow down recommendations.
-- **Slot Machine & 3D Flip:** A dual-stage reveal process starting with a slot machine animation followed by a dramatic 3D card flip reveal.
-- **Result Sharing:** Integrated sharing bar for URL copying and native system sharing (Web Share API) for viral potential.
-- **Rich Metadata:** Displays ratings from TMDB, IMDb, and Rotten Tomatoes, plus streaming provider information (OTT).
-- **Responsive Layout:** Works seamlessly across mobile, tablet, and desktop viewports.
+## Features & Design (New Requirements)
+- **Consolidated Engine:** A robust `async/await` logic that prevents "stuck" states by expanding genre searches if high-rated (7.0+) movies are scarce.
+- **Slot Machine 2.0:** A visual-first slot machine animation where posters fly by before revealing the final choice. The "Next Movie" button transforms into "Drawing..." and is disabled during the process.
+- **Deep Linking & Interaction:** OTT icons now link directly to the movie's streaming page. `stopPropagation()` is applied to prevent accidental redraws when clicking OTT links.
+- **High-Contrast Theme:**
+    - **Light Mode:** Black button with white text for maximum legibility.
+    - **Dark Mode:** Fluorescent green (Neon) button with black text.
+- **Mobile-First (iPhone 12 Optimized):** Large, readable text in the main display box (yellow highlight style) and oversized icons for easy touch interaction.
+- **Reset Logic:** Clicking the top logo resets the application state instantly.
 
 ## Technical Stack
-- **HTML5/CSS3:** Modern baseline features including 3D Transforms, CSS Variables, and Flexbox.
-- **Tailwind CSS v4:** Used via CDN for rapid, expressive styling.
-- **Vanilla JavaScript (ES Modules):** Clean, modular logic separated into `main.js`.
-- **TMDB API:** Primary source for movie data, genres, and streaming providers.
-- **OMDb API:** Secondary source for IMDb and Rotten Tomatoes ratings.
+- **HTML5/CSS3:** Vanilla CSS for maximum control and performance.
+- **JavaScript (ES Modules):** Clean, modular code in `main.js`.
+- **TMDB API:** Movie data, genres, and watch providers.
+- **OMDb API:** IMDb and Rotten Tomatoes ratings.
 
-## Current Progress & Bug Fixes
-- [x] **Genre Filter Chips:** Implemented dynamic genre loading and filtering logic.
-- [x] **3D Card Flip Animation:** Added 'Lotto Card' back design and 3D transition for movie reveal.
-- [x] **Share Bar Implementation:** Added native share and link copy buttons above the draw button.
-- [x] **Logic Separation:** All logic moved to `main.js`.
-- [x] **Global Function Exposure:** All interactive functions exposed for HTML event handlers.
+## Implementation Steps
+1. [ ] **UI Refactor:** Implement the new high-contrast CSS and mobile-centric layout.
+2. [ ] **Animation Engine:** Build the vertical scrolling slot machine using CSS transitions and JS orchestration.
+3. [ ] **Data Logic:** Implement the smart filtering and genre expansion logic.
+4. [ ] **Interaction Fixes:** Apply `stopPropagation` and deep link logic to OTT providers.
+5. [ ] **Validation:** Test on mobile viewports and verify dark/light mode contrast.

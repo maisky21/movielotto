@@ -1,1 +1,307 @@
-/* Add styles here */
+:root {
+    --bg: #f9f9f9;
+    --card-bg: #ffffff;
+    --text: #111111;
+    --sub-text: #666666;
+    --accent: #000000;
+    --btn-text: #ffffff;
+    --yellow: #ffea00;
+    --border: #e0e0e0;
+    --chip-bg: #eeeeee;
+}
+
+body.dark-mode {
+    --bg: #000000;
+    --card-bg: #121212;
+    --text: #ffffff;
+    --sub-text: #aaaaaa;
+    --accent: #ccff00; /* Neon Green */
+    --btn-text: #000000;
+    --yellow: #ffea00;
+    --border: #222222;
+    --chip-bg: #1a1a1a;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.3s, color 0.3s;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 420px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    position: relative;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    flex-shrink: 0;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    cursor: pointer;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Genre Nav */
+.genre-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    scrollbar-width: none;
+    flex-shrink: 0;
+}
+
+.genre-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.genre-chip {
+    padding: 8px 16px;
+    background: var(--chip-bg);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid var(--border);
+}
+
+.genre-chip.active {
+    background: var(--text);
+    color: var(--card-bg);
+    border-color: var(--text);
+}
+
+/* Main Card */
+.main-card {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    min-height: 0;
+}
+
+/* Slot Machine */
+.slot-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.slot-window {
+    width: 260px;
+    height: 380px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #000;
+    border: 4px solid var(--accent);
+    position: relative;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.slot-track {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.slot-item {
+    width: 100%;
+    height: 380px; /* Match slot-window height */
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.slot-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.slot-item.placeholder {
+    font-size: 80px;
+    background: #1a1a1a;
+}
+
+/* Result View */
+.result-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.poster-display {
+    width: 100%;
+    height: 50%;
+    border-radius: 24px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.poster-display img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.movie-info-box {
+    margin-top: 16px;
+    background: var(--yellow);
+    border-radius: 24px;
+    padding: 24px;
+    color: #000; /* Text is always black in yellow box */
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.rating-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.rating-badge {
+    background: #000;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.movie-title {
+    font-size: 32px; /* Large font size */
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+
+.movie-overview {
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 500;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.ott-section {
+    margin-top: auto;
+}
+
+.ott-label {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.ott-list {
+    display: flex;
+    gap: 16px;
+}
+
+.ott-link {
+    display: block;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+}
+
+.ott-link:active {
+    transform: scale(0.9);
+}
+
+.ott-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Footer & Button */
+.footer {
+    padding: 16px 0;
+    flex-shrink: 0;
+}
+
+.draw-btn {
+    width: 100%;
+    padding: 20px;
+    border: none;
+    border-radius: 20px;
+    background-color: var(--accent);
+    color: var(--btn-text);
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+}
+
+.draw-btn:active {
+    transform: scale(0.98);
+}
+
+.draw-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+}
+
+/* Responsive Hacks for iPhone 12 Mini/Regular */
+@media (max-height: 700px) {
+    .slot-window { height: 320px; }
+    .movie-title { font-size: 24px; }
+    .movie-overview { font-size: 14px; }
+}
