@@ -239,7 +239,7 @@ async function performFinalSpin(targetMovie, pool) {
 async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     
-    // Movie Title with IMDb Link
+    // Movie Title with IMDb Link (Unique ID leads to English detail page)
     const titleEl = document.getElementById('res-title');
     titleEl.innerHTML = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
@@ -251,17 +251,20 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    // Credits with Fallback logic and IMDb search links
+    // Credits with Korean display and English search query fallback
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
-    const directorName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
+    const directorDisplayName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
+    const directorSearchName = directorObj ? (directorObj.original_name || directorObj.name) : '';
+    
     const directorHtml = directorObj 
-        ? `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(directorName)}" target="_blank">${directorName}</a>`
-        : directorName;
+        ? `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(directorSearchName)}" target="_blank">${directorDisplayName}</a>`
+        : directorDisplayName;
     document.getElementById('res-director').innerHTML = `감독: ${directorHtml}`;
 
     const castList = credits?.cast?.slice(0, 3).map(c => {
-        const name = c.name || c.original_name;
-        return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(name)}" target="_blank">${name}</a>`;
+        const displayName = c.name || c.original_name;
+        const searchName = c.original_name || c.name;
+        return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank">${displayName}</a>`;
     }) || [];
     const castHtml = castList.length > 0 ? castList.join(', ') : '정보 없음';
     document.getElementById('res-cast').innerHTML = `출연: ${castHtml}`;
