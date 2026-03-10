@@ -239,7 +239,7 @@ async function performFinalSpin(targetMovie, pool) {
 async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     
-    // Movie Title with IMDb Link (Unique ID leads to English detail page)
+    // Movie Title with IMDb Link
     const titleEl = document.getElementById('res-title');
     titleEl.innerHTML = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
@@ -251,23 +251,40 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    // Credits with Korean display and English search query fallback
+    // Director & Cast with Direct IMDb Profile Link Logic
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
-    const directorDisplayName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
-    const directorSearchName = directorObj ? (directorObj.original_name || directorObj.name) : '';
-    
-    const directorHtml = directorObj 
-        ? `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(directorSearchName)}" target="_blank">${directorDisplayName}</a>`
-        : directorDisplayName;
-    document.getElementById('res-director').innerHTML = `감독: ${directorHtml}`;
+    const topCast = credits?.cast?.slice(0, 3) || [];
 
-    const castList = credits?.cast?.slice(0, 3).map(c => {
-        const displayName = c.name || c.original_name;
-        const searchName = c.original_name || c.name;
-        return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank">${displayName}</a>`;
-    }) || [];
-    const castHtml = castList.length > 0 ? castList.join(', ') : '정보 없음';
-    document.getElementById('res-cast').innerHTML = `출연: ${castHtml}`;
+    // Fetch IMDb IDs for people in parallel
+    const peopleToFetch = [
+        ...(directorObj ? [directorObj] : []),
+        ...topCast
+    ];
+
+    const personImdbData = await Promise.all(peopleToFetch.map(async p => {
+        const imdbId = await fetchPersonImdbId(p.id);
+        return { id: p.id, imdbId };
+    }));
+
+    const getPersonLink = (p) => {
+        const data = personImdbData.find(d => d.id === p.id);
+        const displayName = p.name || p.original_name;
+        const searchName = p.original_name || p.name;
+        if (data?.imdbId) {
+            return `<a class="credit-link" href="https://www.imdb.com/name/${data.imdbId}/" target="_blank">${displayName}</a>`;
+        } else {
+            return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank">${displayName}</a>`;
+        }
+    };
+
+    const directorDisplayName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
+    document.getElementById('res-director').innerHTML = directorObj 
+        ? `감독: ${getPersonLink(directorObj)}`
+        : `감독: ${directorDisplayName}`;
+
+    const castHtmls = topCast.map(p => getPersonLink(p));
+    const castString = castHtmls.length > 0 ? castHtmls.join(', ') : '정보 없음';
+    document.getElementById('res-cast').innerHTML = `출연: ${castString}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
@@ -356,6 +373,14 @@ async function fetchFullInfo(movieId) {
         const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&append_to_response=videos,credits`);
         return await res.json();
     } catch (e) { return {}; }
+}
+
+async function fetchPersonImdbId(personId) {
+    try {
+        const res = await fetch(`${CONFIG.TMDB_BASE}/person/${personId}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
+        const data = await res.json();
+        return data.imdb_id || null;
+    } catch (e) { return null; }
 }
 
 function resetApp() {
