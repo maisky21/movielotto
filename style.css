@@ -133,7 +133,7 @@ body {
     align-items: center;
     position: relative;
     min-height: 0;
-    margin-bottom: 150px;
+    margin-bottom: 140px; /* Adjusted for larger content */
 }
 
 .film-strip-bg {
@@ -212,66 +212,67 @@ body {
 
 .poster-display {
     width: 100%;
-    height: 50%;
+    height: 65%; /* Substantially Enlarged */
     border-radius: 32px;
     overflow: hidden;
     flex-shrink: 0;
     background: #000;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 15px 30px rgba(0,0,0,0.3); /* Multi-layer shadow */
 }
 
-.poster-display img { width: 100%; height: 100%; object-fit: contain; }
+.poster-display img { width: 100%; height: 100%; object-fit: cover; } /* Maintain cover for quality */
 .trailer-container { position: absolute; inset: 0; z-index: 5; display: none; }
 .trailer-container iframe { width: 100%; height: 100%; border: none; }
 .play-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 10; pointer-events: none; }
 .play-icon { font-size: 60px; color: #fff; opacity: 0.7; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
 
-/* INFO CARD */
+/* INFO CARD (SLIM & COMPACT) */
 .movie-info-box {
-    margin-top: 16px;
+    margin-top: 10px; /* Reduced gap */
     background: var(--yellow);
-    border-radius: 32px;
-    padding: 20px 20px 32px 20px;
+    border-radius: 28px;
+    padding: 14px 18px 18px 18px; /* Slimmed padding */
     color: #000;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-.rating-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-.rating-badge { background: #000; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; }
+.rating-row { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.rating-badge { background: #000; color: #fff; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 900; }
 
-.movie-title { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+.movie-title { font-size: 20px; font-weight: 900; margin-bottom: 2px; line-height: 1.2; }
 .movie-title a { text-decoration: none; color: inherit; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .movie-title a:hover { text-decoration: underline; }
 
-.credits-info { margin-bottom: 8px; font-size: 11px; font-weight: 700; opacity: 0.85; }
+.credits-info { margin-bottom: 6px; font-size: 11px; font-weight: 700; opacity: 0.8; }
 .credit-link { text-decoration: none; color: inherit; }
 .credit-link:hover { text-decoration: underline; }
 
 .movie-overview {
-    font-size: 13px;
-    line-height: 1.4;
-    margin-bottom: 12px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    margin-bottom: 10px;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 3; /* Limit to 3 lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    opacity: 0.9;
+    opacity: 0.85;
 }
 
-.ott-section { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; }
-.ott-list { display: flex; gap: 10px; flex-wrap: wrap; }
-.ott-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.ott-link { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; display: block; border: 1px solid rgba(0,0,0,0.1); }
+.ott-section { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; padding-top: 4px; }
+.ott-list { display: flex; gap: 8px; flex-wrap: wrap; }
+.ott-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ott-link { width: 30px; height: 30px; border-radius: 7px; overflow: hidden; display: block; border: 1px solid rgba(0,0,0,0.08); }
 .ott-link img { width: 100%; height: 100%; object-fit: cover; }
 
 .share-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: #000;
     border: none;
@@ -279,24 +280,25 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 18px;
+    font-size: 16px;
     transition: transform 0.2s, background 0.2s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
 .share-btn:active { transform: scale(0.9); }
 .share-btn.copied { background: var(--neon); }
 
 .ott-name {
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 900;
     text-align: center;
-    max-width: 45px;
+    max-width: 40px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     letter-spacing: -0.2px;
     color: #000;
+    opacity: 0.7;
 }
 
 /* FOOTER */
@@ -308,7 +310,7 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     background-color: var(--bg);
 }
 
@@ -343,21 +345,21 @@ body {
 
 .legal-footer {
     text-align: center;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
 }
 
 .legal-links {
     display: flex;
     justify-content: center;
     gap: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .legal-links a {
     color: var(--legal-text);
     text-decoration: none;
     font-weight: 600;
-    font-size: 11.5px;
+    font-size: 11px;
     transition: color 0.2s;
 }
 
@@ -366,11 +368,22 @@ body {
 }
 
 .copyright {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--legal-text);
     opacity: 0.5;
     font-weight: 700;
     letter-spacing: 0.5px;
+}
+
+/* PC OPTIMIZATION (min-width: 1024px) */
+@media (min-width: 1024px) {
+    .main-card {
+        margin-bottom: 160px;
+        gap: 15px; /* Fine-tune vertical spacing */
+    }
+    .poster-display {
+        height: 60%; /* Balanced for larger screens */
+    }
 }
 
 /* MOBILE OPTIMIZATION (max-width: 768px) */
@@ -378,33 +391,33 @@ body {
     .app-container { padding: 0 16px; }
     
     .poster-display {
-        width: 75%;
+        width: 85%; /* Expanded width as requested */
         height: auto;
         aspect-ratio: 2 / 3;
         margin: 0 auto;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.6); /* DEEPER SHADOW */
+        box-shadow: 0 15px 40px rgba(0,0,0,0.6); /* Deep shadow for depth */
     }
 
     .movie-info-box {
         margin-top: 12px;
-        padding: 16px 16px 20px 16px;
-        border-radius: 28px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        padding: 14px 16px 16px 16px;
+        border-radius: 24px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     }
 
-    .movie-title { font-size: 20px; }
+    .movie-title { font-size: 19px; }
     
     .movie-overview {
-        font-size: 12.5px;
-        -webkit-line-clamp: 3; /* FORCE 3 LINES ON MOBILE */
-        margin-bottom: 10px;
+        font-size: 12px;
+        -webkit-line-clamp: 3;
+        margin-bottom: 8px;
     }
 
-    .ott-link { width: 32px; height: 32px; }
-    .ott-name { font-size: 8.5px; letter-spacing: -0.4px; }
+    .ott-link { width: 28px; height: 30px; }
+    .ott-name { font-size: 8px; letter-spacing: -0.4px; }
 
     .main-card { margin-bottom: 130px; }
-    .footer { bottom: 12px; gap: 14px; }
+    .footer { bottom: 12px; gap: 12px; }
     .draw-btn { padding: 16px; font-size: 16px; }
 }
 
@@ -412,9 +425,9 @@ body {
 @media (max-height: 700px) {
     .slot-window { height: 280px; width: 220px; }
     .slot-item { height: 280px; }
-    .poster-display { width: 65%; aspect-ratio: 2 / 3; }
-    .movie-title { font-size: 18px; }
+    .poster-display { width: 75%; aspect-ratio: 2 / 3; }
+    .movie-title { font-size: 17px; }
     .movie-overview { -webkit-line-clamp: 2; }
     .main-card { margin-bottom: 110px; }
-    .footer { bottom: 8px; gap: 10px; }
+    .footer { bottom: 8px; gap: 8px; }
 }
