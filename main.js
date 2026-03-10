@@ -15,22 +15,22 @@ const GENRE_EXPANSION = {
     35: [10751, 14], // Comedy -> Family, Fantasy
 };
 
-// CINEMATIC SFX Assets
+// REFINED CINEMATIC SFX Assets
 const SFX = {
     CLICK: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // Soft Deep Thud
-    SPIN: new Audio('https://assets.mixkit.co/active_storage/sfx/111/111-preview.mp3'),   // Projector Hum/Static
-    REVEAL: new Audio('https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3') // Ambient Cinematic Pad
+    SPIN: new Audio('https://assets.mixkit.co/active_storage/sfx/111/111-preview.mp3'),   // Projector Hum
+    REVEAL: new Audio('https://assets.mixkit.co/active_storage/sfx/2630/2630-preview.mp3'), // Subtle Bass Drop / Cinematic Hit
+    START: new Audio('https://assets.mixkit.co/active_storage/sfx/2628/2628-preview.mp3')  // Soft Deep Bell / Cinematic Swish
 };
 
-// Set volumes to be subtle (0.1 ~ 0.2)
-SFX.CLICK.volume = 0.15;
-SFX.SPIN.volume = 0.1;
-SFX.REVEAL.volume = 0.2;
+// Set volumes to be very subtle (0.15)
+Object.values(SFX).forEach(audio => {
+    audio.volume = 0.15;
+});
 SFX.SPIN.loop = true;
 
 /**
  * Smoothly fades out an audio element
- * @param {HTMLAudioElement} audio 
  */
 function fadeOut(audio, duration = 500) {
     const startVolume = audio.volume;
@@ -45,7 +45,7 @@ function fadeOut(audio, duration = 500) {
             requestAnimationFrame(update);
         } else {
             audio.pause();
-            audio.volume = startVolume; // Reset for next use
+            audio.volume = startVolume; 
         }
     }
     requestAnimationFrame(update);
@@ -71,6 +71,14 @@ async function init() {
     applyTheme();
     await fetchGenres();
     renderGenres();
+    
+    // Play subtle start sound on first user interaction or load
+    window.addEventListener('click', () => {
+        if (!state.startSoundPlayed) {
+            SFX.START.play().catch(() => {});
+            state.startSoundPlayed = true;
+        }
+    }, { once: true });
 }
 
 async function fetchGenres() {
@@ -140,7 +148,7 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
-    // SFX: Soft Deep Thud
+    // SFX: Soft Thud
     SFX.CLICK.currentTime = 0;
     SFX.CLICK.play().catch(() => {});
 
@@ -204,7 +212,7 @@ async function handleDrawClick() {
 
         await performFinalSpin(selectedMovie, moviePool);
         
-        // SFX: Fade out Projector & Play Reveal Pad
+        // SFX: Fade out Projector & Play Subtle Bass Drop
         fadeOut(SFX.SPIN, 400);
         SFX.REVEAL.currentTime = 0;
         SFX.REVEAL.play().catch(() => {});
@@ -375,6 +383,10 @@ function resetApp() {
     slotView.style.display = 'flex';
     startInfiniteSpin();
     updateButtonState(false);
+    
+    // Play start sound on reset
+    SFX.START.currentTime = 0;
+    SFX.START.play().catch(() => {});
 }
 
 function toggleTheme() {
