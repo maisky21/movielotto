@@ -29,7 +29,8 @@ const I18N = {
         about: "서비스 소개",
         contact: "문의하기",
         privacy: "개인정보처리방침",
-        terms: "이용약관"
+        terms: "이용약관",
+        brand: "시네 로또"
     },
     EN: {
         hero: "The one movie that will decide your fate",
@@ -44,7 +45,8 @@ const I18N = {
         about: "About",
         contact: "Contact",
         privacy: "Privacy",
-        terms: "Terms"
+        terms: "Terms",
+        brand: "Cine Lotto"
     }
 };
 
@@ -490,7 +492,6 @@ function updateLangUI() {
     document.getElementById('trust-msg').textContent = labels.trust;
     drawBtn.textContent = labels.draw;
     
-    // LEGAL LINKS UPDATE
     document.getElementById('link-about').textContent = labels.about;
     document.getElementById('link-contact').textContent = labels.contact;
     document.getElementById('link-privacy').textContent = labels.privacy;
