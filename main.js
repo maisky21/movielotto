@@ -144,6 +144,12 @@ function startInfiniteSpin() {
     slotTrack.style.transform = 'translateY(0)';
     
     slotTrack.innerHTML = '';
+    // Add the ticket as the starting visual, then placeholders
+    const ticketDiv = document.createElement('div');
+    ticketDiv.className = 'slot-item placeholder';
+    ticketDiv.innerHTML = '<span class="ticket-icon">🎟️</span>';
+    slotTrack.appendChild(ticketDiv);
+
     for(let i=0; i<10; i++) {
         const div = document.createElement('div');
         div.className = 'slot-item placeholder';

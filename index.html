@@ -6,7 +6,7 @@
     <title>무비 로또 | 오늘 밤, 당신을 기다리는 단 하나의 영화</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-mode"> <!-- Default to dark mode -->
+<body class="dark-mode">
     <div class="app-container">
         <header class="header">
             <h1 class="logo" onclick="resetApp()">MOVIE LOTTO</h1>
@@ -24,9 +24,14 @@
             <div id="slot-view" class="slot-container">
                 <div class="slot-window">
                     <div id="slot-track" class="slot-track">
-                        <!-- Posters will be injected here -->
-                        <div class="slot-item placeholder">🎰</div>
+                        <div class="slot-item placeholder">
+                            <span class="ticket-icon">🎟️</span>
+                        </div>
                     </div>
+                </div>
+                <div class="hero-text-area">
+                    <p class="mystery-phrase">당신의 운명을 결정할 단 하나의 영화</p>
+                    <p class="trust-badge">평점 7.0 이상의 명작만 엄선</p>
                 </div>
             </div>
 
