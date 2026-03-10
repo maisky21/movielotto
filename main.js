@@ -239,6 +239,7 @@ async function performFinalSpin(targetMovie, pool) {
 async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     
+    // Movie Title with IMDb Link
     const titleEl = document.getElementById('res-title');
     titleEl.innerHTML = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
@@ -250,27 +251,44 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
+    // Director & Cast with Direct IMDb Profile Link Logic
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
-    const directorDisplayName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
-    const directorSearchName = directorObj ? (directorObj.original_name || directorObj.name) : '';
-    
-    const directorHtml = directorObj 
-        ? `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(directorSearchName)}" target="_blank">${directorDisplayName}</a>`
-        : directorDisplayName;
-    document.getElementById('res-director').innerHTML = `감독: ${directorHtml}`;
+    const topCast = credits?.cast?.slice(0, 3) || [];
 
-    const castList = credits?.cast?.slice(0, 3).map(c => {
-        const displayName = c.name || c.original_name;
-        const searchName = c.original_name || c.name;
-        return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank">${displayName}</a>`;
-    }) || [];
-    const castHtml = castList.length > 0 ? castList.join(', ') : '정보 없음';
-    document.getElementById('res-cast').innerHTML = `출연: ${castHtml}`;
+    const peopleToFetch = [
+        ...(directorObj ? [directorObj] : []),
+        ...topCast
+    ];
+
+    const personImdbData = await Promise.all(peopleToFetch.map(async p => {
+        const imdbId = await fetchPersonImdbId(p.id);
+        return { id: p.id, imdbId };
+    }));
+
+    const getPersonLink = (p) => {
+        const data = personImdbData.find(d => d.id === p.id);
+        const displayName = p.name || p.original_name;
+        const searchName = p.original_name || p.name;
+        if (data?.imdbId) {
+            return `<a class="credit-link" href="https://www.imdb.com/name/${data.imdbId}/" target="_blank">${displayName}</a>`;
+        } else {
+            return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank">${displayName}</a>`;
+        }
+    };
+
+    const directorDisplayName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
+    document.getElementById('res-director').innerHTML = directorObj 
+        ? `감독: ${getPersonLink(directorObj)}`
+        : `감독: ${directorDisplayName}`;
+
+    const castHtmls = topCast.map(p => getPersonLink(p));
+    const castString = castHtmls.length > 0 ? castHtmls.join(', ') : '정보 없음';
+    document.getElementById('res-cast').innerHTML = `출연: ${castHtmls.join(', ') || '정보 없음'}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     
-    // STRICT KR ONLY
+    // STRICT KR ONLY FILTERING
     const krData = ott?.KR || {};
     const providers = [
         ...(krData.flatrate || []),
@@ -284,18 +302,17 @@ async function showResult(movie, omdb, credits, ott) {
             item.className = 'ott-item';
             
             const link = document.createElement('a');
-            // AGGRESSIVE DEEP LINKING
-            link.href = getAggressiveOttLink(p.provider_id, movie.title, movie.original_title);
+            // USE AGGRESSIVE DEEP LINKING
+            link.href = getKROttDeepLink(p.provider_id, movie.title, movie.original_title);
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
             link.className = 'ott-link';
             link.onclick = (e) => {
                 e.stopPropagation();
-                // If on mobile, try to force app scheme before the HTTP link takes over
+                // Attempt to trigger app scheme for mobile users
                 if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                    const scheme = getAppScheme(p.provider_id, movie.title);
+                    const scheme = getKROttAppScheme(p.provider_id, movie.title);
                     if (scheme) {
-                        const timer = setTimeout(() => {}, 2000);
                         window.location.href = scheme;
                     }
                 }
@@ -320,14 +337,13 @@ async function showResult(movie, omdb, credits, ott) {
 }
 
 /**
- * Optimized Search-based Deep Links for Web/Universal Links
+ * Generates Direct Content Detail/Search Links for KR OTT
  */
-function getAggressiveOttLink(providerId, title, originalTitle) {
+function getKROttDeepLink(providerId, title, originalTitle) {
     const encodedTitle = encodeURIComponent(title);
-    const encodedOrig = encodeURIComponent(originalTitle);
     
     const OTT_MAP = {
-        8: `https://www.netflix.com/search?q=${encodedTitle}`, // Netflix
+        8: `https://www.netflix.com/search?q=${encodedTitle}`, // Netflix (Direct detail needs content ID, using optimized search)
         337: `https://www.disneyplus.com/ko-kr/search?q=${encodedTitle}`, // Disney+ KR
         97: `https://watcha.com/search?query=${encodedTitle}`, // Watcha
         356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`, // Wavve
@@ -335,22 +351,23 @@ function getAggressiveOttLink(providerId, title, originalTitle) {
         350: `https://www.tving.com/search?keyword=${encodedTitle}`, // TVING
         2: `https://tv.apple.com/kr/search?term=${encodedTitle}`, // Apple TV KR
         3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`, // Google Play
-        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`, // Prime Video
+        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}` // Prime Video
     };
 
     return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT+보러가기`;
 }
 
 /**
- * Protocol Schemes for Mobile App Forcing
+ * Mobile App Schemes for Immediate Transition
  */
-function getAppScheme(providerId, title) {
+function getKROttAppScheme(providerId, title) {
     const encodedTitle = encodeURIComponent(title);
     const SCHEME_MAP = {
-        8: `nflx://www.netflix.com/Browse?q=${encodedTitle}`, // Netflix App
-        337: `disneyplus://`, // Disney+ App Open
-        356: `wavve://`, // Wavve App Open
-        350: `tving://`, // TVING App Open
+        8: `nflx://www.netflix.com/Browse?q=${encodedTitle}`, // Netflix App Search
+        337: `disneyplus://`, // Disney+ App
+        356: `wavve://`, // Wavve App
+        350: `tving://`, // TVING App
+        97: `watcha://` // Watcha App
     };
     return SCHEME_MAP[providerId] || null;
 }
