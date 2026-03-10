@@ -15,6 +15,14 @@ const GENRE_EXPANSION = {
     35: [10751, 14], // Comedy -> Family, Fantasy
 };
 
+// SFX Assets
+const SFX = {
+    CLICK: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
+    SPIN: new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3'),
+    REVEAL: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3')
+};
+SFX.SPIN.loop = true;
+
 let state = {
     genres: [],
     selectedGenre: null,
@@ -74,7 +82,6 @@ function selectGenre(id) {
 }
 
 async function getMovies(genreId, expanded = false) {
-    // Randomize page between 1 and 50 to increase diversity
     const randomPage = Math.floor(Math.random() * 50) + 1;
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}`;
     
@@ -89,7 +96,6 @@ async function getMovies(genreId, expanded = false) {
     try {
         const res = await fetch(url);
         const data = await res.json();
-        // Return all with posters, we will filter by OR condition in handleDrawClick
         let results = (data.results || []).filter(m => m.poster_path);
 
         if (results.length < 5 && !expanded && genreId) {
@@ -106,6 +112,10 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
+    // SFX: Click
+    SFX.CLICK.currentTime = 0;
+    SFX.CLICK.play().catch(() => {});
+
     state.isDrawing = true;
     updateButtonState(true);
     
@@ -113,6 +123,10 @@ async function handleDrawClick() {
     slotView.style.display = 'flex';
     
     startInfiniteSpin();
+    
+    // SFX: Spin Start
+    SFX.SPIN.currentTime = 0;
+    SFX.SPIN.play().catch(() => {});
 
     try {
         let selectedMovie = null;
@@ -123,7 +137,6 @@ async function handleDrawClick() {
         let moviePool = [];
         let retryCount = 0;
 
-        // Loop until we find a movie satisfying the OR condition
         while (!selectedMovie && retryCount < 10) {
             moviePool = await getMovies(state.selectedGenre);
             const candidates = moviePool.filter(m => !state.viewedIds.has(m.id)).sort(() => Math.random() - 0.5);
@@ -139,7 +152,6 @@ async function handleDrawClick() {
                 const imdbScore = parseFloat(omdb?.imdbRating) || 0;
                 const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
 
-                // OR Condition: TMDB 7.0 OR IMDb 7.0 OR RT 70%
                 if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
                     selectedMovie = candidate;
                     selectedOmdb = omdb;
@@ -151,7 +163,6 @@ async function handleDrawClick() {
             retryCount++;
         }
 
-        // Final fallback if absolutely nothing found in 10 tries (highly unlikely)
         if (!selectedMovie) {
             selectedMovie = moviePool[0];
             [selectedOtt, selectedOmdb, selectedCredits] = await Promise.all([
@@ -164,9 +175,16 @@ async function handleDrawClick() {
         state.viewedIds.add(selectedMovie.id);
 
         await performFinalSpin(selectedMovie, moviePool);
+        
+        // SFX: Spin Stop & Reveal
+        SFX.SPIN.pause();
+        SFX.REVEAL.currentTime = 0;
+        SFX.REVEAL.play().catch(() => {});
+
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
+        SFX.SPIN.pause();
         alert("영화를 불러오는데 실패했습니다. 다시 시도해주세요.");
         resetApp();
     } finally {
@@ -231,12 +249,10 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-title').textContent = movie.title;
     document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
     
-    // Rating Badges - Ensure exact matching for Rotten Tomatoes
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    // Credits with Fallback logic
     const directorObj = credits.crew?.find(c => c.job === 'Director');
     const directorName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
     
@@ -306,7 +322,6 @@ async function fetchOMDb(movie) {
         const data = await res.json();
         
         if (data.Response === 'True') {
-            // Precise matching for Rotten Tomatoes source
             const rt = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value;
             return {
                 imdbRating: data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : null,
@@ -314,10 +329,7 @@ async function fetchOMDb(movie) {
             };
         }
         return null;
-    } catch (e) { 
-        console.error("OMDb fetch error", e);
-        return null; 
-    }
+    } catch (e) { return null; }
 }
 
 async function fetchCredits(movieId) {

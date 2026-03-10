@@ -50,6 +50,7 @@ body {
     flex-direction: column;
     padding: 12px 20px;
     position: relative;
+    z-index: 1;
 }
 
 /* Header */
@@ -118,7 +119,27 @@ body {
     align-items: center;
     position: relative;
     min-height: 0;
-    max-height: calc(100% - 140px);
+}
+
+/* Cinematic Background - Film Strip */
+.film-strip-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+        transparent,
+        transparent 80px,
+        rgba(0,0,0,0.5) 80px,
+        rgba(0,0,0,0.5) 82px
+    );
+    animation: slideUp 10s linear infinite;
+    z-index: -1;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(0); }
+    to { transform: translateY(-82px); }
 }
 
 /* Slot Window / Hero Area */
@@ -173,6 +194,12 @@ body {
 .ticket-icon {
     font-size: 70px;
     filter: drop-shadow(0 0 10px var(--neon));
+    animation: ticketGlow 3s infinite ease-in-out;
+}
+
+@keyframes ticketGlow {
+    0%, 100% { filter: drop-shadow(0 0 10px var(--neon)); transform: scale(1); opacity: 0.8; }
+    50% { filter: drop-shadow(0 0 25px var(--neon)); transform: scale(1.05); opacity: 1; }
 }
 
 /* Typography */
@@ -190,6 +217,15 @@ body {
     font-weight: 900;
     color: var(--neon);
     opacity: 0.7;
+}
+
+.animate-fade-up {
+    animation: fadeUp 1.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Result View */
@@ -336,7 +372,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--text); /* Changes with theme */
+    color: var(--text);
 }
 
 /* Footer & Button */
