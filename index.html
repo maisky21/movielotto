@@ -11,6 +11,7 @@
         <header class="header">
             <h1 class="logo" onclick="resetApp()">MOVIE LOTTO</h1>
             <div class="controls">
+                <button id="lang-toggle" class="icon-btn" onclick="toggleLanguage()">KO</button>
                 <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()">☀️</button>
             </div>
         </header>
@@ -33,8 +34,8 @@
                     </div>
                 </div>
                 <div class="hero-text-area">
-                    <p class="mystery-phrase animate-fade-up">당신의 운명을 결정할 단 하나의 영화</p>
-                    <p class="trust-badge animate-fade-up">평점 7.0 이상의 명작만 엄선</p>
+                    <p id="hero-msg" class="mystery-phrase animate-fade-up">당신의 운명을 결정할 단 하나의 영화</p>
+                    <p id="trust-msg" class="trust-badge animate-fade-up">평점 7.0 이상의 명작만 엄선</p>
                 </div>
             </div>
 
@@ -59,7 +60,7 @@
                     
                     <div class="credits-info">
                         <span id="res-director" class="credit-text">감독: --</span>
-                        <span style="margin: 0 6px; opacity: 0.3;">|</span>
+                        <span id="credit-divider" style="margin: 0 6px; opacity: 0.3;">|</span>
                         <span id="res-cast" class="credit-text">출연: --</span>
                     </div>
 

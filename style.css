@@ -5,17 +5,18 @@
     --sub-text: #666666;
     --accent: #000000;
     --btn-text: #ffffff;
-    --neon: #99FF00; /* Neon Lime */
+    --neon: #99FF00;
+    --yellow: #ffea00;
     --border: #efefef;
     --chip-bg: #f0f0f0;
 }
 
 body.dark-mode {
-    --bg: #000000; /* Pure Black */
+    --bg: #000000;
     --card-bg: #121212;
     --text: #EAEAEA;
     --sub-text: #A8A8A8;
-    --accent: #99FF00; /* Neon Lime */
+    --accent: #99FF00;
     --btn-text: #000000;
     --neon: #99FF00;
     --border: #262626;
@@ -68,14 +69,27 @@ body {
     color: var(--text);
 }
 
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .icon-btn {
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 18px;
     cursor: pointer;
+    font-weight: 800;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
 }
 
-/* Genre Nav - Story Style */
+/* Genre Nav */
 .genre-nav {
     display: flex;
     gap: 10px;
@@ -117,10 +131,9 @@ body {
     align-items: center;
     position: relative;
     min-height: 0;
-    margin-bottom: 80px; /* Space for floating button */
+    margin-bottom: 90px;
 }
 
-/* Cinematic Background */
 .film-strip-bg {
     position: absolute;
     inset: 0;
@@ -141,7 +154,7 @@ body {
     to { transform: translateY(-102px); }
 }
 
-/* Hero Area */
+/* Slot View */
 .slot-container {
     width: 100%;
     display: flex;
@@ -153,7 +166,7 @@ body {
 .slot-window {
     width: 280px;
     height: 400px;
-    border-radius: 48px; /* rounded-3xl equivalent+ */
+    border-radius: 48px;
     overflow: hidden;
     background: #000;
     border: 1px solid var(--border);
@@ -161,34 +174,13 @@ body {
     box-shadow: 0 20px 60px rgba(0,0,0,0.8);
 }
 
-.slot-track {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.slot-item {
-    width: 100%;
-    height: 400px; 
-    flex-shrink: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.slot-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.slot-item.placeholder {
-    background: #000;
-}
+.slot-track { display: flex; flex-direction: column; width: 100%; }
+.slot-item { width: 100%; height: 400px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+.slot-item img { width: 100%; height: 100%; object-fit: cover; }
+.slot-item.placeholder { background: #000; }
 
 .ticket-icon {
     font-size: 100px;
-    /* PINK-VIOLET GRADIENT GLOW */
     filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.4)) drop-shadow(0 0 10px rgba(138, 43, 226, 0.6));
     animation: ticketPulse 4s infinite ease-in-out;
 }
@@ -199,21 +191,10 @@ body {
 }
 
 .hero-text-area { text-align: center; }
-.mystery-phrase {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: var(--text);
-    opacity: 0.9;
-}
-.trust-badge {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--neon);
-    letter-spacing: 0.5px;
-}
+.mystery-phrase { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text); opacity: 0.9; }
+.trust-badge { font-size: 11px; font-weight: 800; color: var(--neon); letter-spacing: 0.5px; }
 
-/* Result UI - Instagram Feed Style */
+/* Result View */
 .result-container {
     width: 100%;
     height: 100%;
@@ -229,7 +210,7 @@ body {
 
 .poster-display {
     width: 100%;
-    height: 55%; /* Large poster */
+    height: 50%;
     border-radius: 32px;
     overflow: hidden;
     flex-shrink: 0;
@@ -239,79 +220,69 @@ body {
     box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 
-.poster-display img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
+.poster-display img { width: 100%; height: 100%; object-fit: contain; }
 .trailer-container { position: absolute; inset: 0; z-index: 5; display: none; }
 .trailer-container iframe { width: 100%; height: 100%; border: none; }
 .play-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 10; pointer-events: none; }
 .play-icon { font-size: 60px; color: #fff; opacity: 0.7; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
 
+/* INFO CARD - HIGH CONTRAST YELLOW */
 .movie-info-box {
-    margin-top: 20px;
-    padding: 0 4px;
-    color: var(--text);
+    margin-top: 16px;
+    background: var(--yellow);
+    border-radius: 32px;
+    padding: 20px 20px 32px 20px; /* INCREASED BOTTOM PADDING */
+    color: #000; /* ALWAYS BLACK ON YELLOW BOX */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
-.rating-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
+.rating-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.rating-badge { background: #000; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 900; }
 
-.rating-badge {
-    background: var(--chip-bg);
-    color: var(--text);
-    padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 800;
-    border: 1px solid var(--border);
-}
-
-.movie-title {
-    font-size: 24px;
-    font-weight: 900;
-    margin-bottom: 6px;
-}
-
-.movie-title a { text-decoration: none; color: inherit; }
+.movie-title { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+.movie-title a { text-decoration: none; color: inherit; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .movie-title a:hover { text-decoration: underline; }
 
-.credits-info { margin-bottom: 10px; }
-.credit-text { font-size: 12px; font-weight: 600; opacity: 0.7; }
+.credits-info { margin-bottom: 8px; font-size: 11px; font-weight: 700; opacity: 0.85; }
 .credit-link { text-decoration: none; color: inherit; }
 .credit-link:hover { text-decoration: underline; }
 
 .movie-overview {
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 12px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
-.ott-section { margin-top: auto; padding-bottom: 10px; }
-.ott-list { display: flex; gap: 12px; }
+.ott-section { margin-top: auto; }
+.ott-list { display: flex; gap: 10px; flex-wrap: wrap; } /* PREVENT CUT OFF */
 .ott-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.ott-link { width: 36px; height: 36px; border-radius: 10px; overflow: hidden; display: block; border: 1px solid var(--border); }
+.ott-link { width: 34px; height: 34px; border-radius: 8px; overflow: hidden; display: block; border: 1px solid rgba(0,0,0,0.1); }
 .ott-link img { width: 100%; height: 100%; object-fit: cover; }
-.ott-name { font-size: 9px; font-weight: 700; color: var(--sub-text); max-width: 45px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Floating Draw Button */
+.ott-name {
+    font-size: 9px;
+    font-weight: 900;
+    text-align: center;
+    max-width: 45px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+    color: #000; /* ALWAYS BLACK ON YELLOW BOX */
+}
+
+/* Floating Footer */
 .footer {
     position: absolute;
-    bottom: 30px;
+    bottom: 24px;
     left: 20px;
     right: 20px;
     z-index: 100;
@@ -319,9 +290,9 @@ body {
 
 .draw-btn {
     width: 100%;
-    padding: 20px;
+    padding: 18px;
     border: none;
-    border-radius: 100px; /* Pill style */
+    border-radius: 100px;
     background-color: var(--accent);
     color: var(--btn-text);
     font-size: 17px;
@@ -331,13 +302,16 @@ body {
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.draw-btn:active {
-    transform: scale(0.94); /* "Press down" feel */
+.draw-btn:active { transform: scale(0.94); }
+
+@media (max-width: 640px) {
+    .ott-name { font-size: 8.5px; letter-spacing: -0.4px; }
 }
 
 @media (max-height: 700px) {
     .slot-window { height: 320px; width: 240px; }
     .slot-item { height: 320px; }
     .poster-display { height: 45%; }
-    .movie-title { font-size: 20px; }
+    .movie-title { font-size: 18px; }
+    .movie-overview { -webkit-line-clamp: 2; }
 }

@@ -15,6 +15,31 @@ const GENRE_EXPANSION = {
     35: [10751, 14], // Comedy -> Family, Fantasy
 };
 
+const I18N = {
+    KO: {
+        hero: "당신의 운명을 결정할 단 하나의 영화",
+        trust: "평점 7.0 이상의 명작만 엄선",
+        director: "감독",
+        cast: "출연",
+        noOtt: "국내 스트리밍 정보 없음",
+        draw: "다음 영화 뽑기",
+        drawing: "추첨 중...",
+        all: "전체",
+        fail: "영화를 불러오는데 실패했습니다. 다시 시도해주세요."
+    },
+    EN: {
+        hero: "The one movie that will decide your fate",
+        trust: "Only masterpieces rated 7.0 or higher",
+        director: "Director",
+        cast: "Cast",
+        noOtt: "Not available in KR",
+        draw: "Next Movie",
+        drawing: "Drawing...",
+        all: "All",
+        fail: "Failed to load movie. Please try again."
+    }
+};
+
 let state = {
     genres: [],
     selectedGenre: null,
@@ -22,6 +47,7 @@ let state = {
     viewedIds: new Set(),
     isDrawing: false,
     theme: localStorage.getItem('theme') || 'dark',
+    lang: localStorage.getItem('lang') || 'KO',
     currentTrailerId: null
 };
 
@@ -31,18 +57,20 @@ const slotTrack = document.getElementById('slot-track');
 const slotView = document.getElementById('slot-view');
 const resultView = document.getElementById('result-view');
 const themeToggle = document.getElementById('theme-toggle');
+const langToggle = document.getElementById('lang-toggle');
 const trailerContainer = document.getElementById('trailer-container');
 const playOverlay = document.getElementById('play-overlay');
 
 async function init() {
     applyTheme();
+    updateLangUI();
     await fetchGenres();
     renderGenres();
 }
 
 async function fetchGenres() {
     try {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/genre/movie/list?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`);
+        const res = await fetch(`${CONFIG.TMDB_BASE}/genre/movie/list?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}`);
         const data = await res.json();
         state.genres = data.genres || [];
     } catch (e) {
@@ -56,7 +84,7 @@ function renderGenres() {
     
     const allChip = document.createElement('div');
     allChip.className = `genre-chip ${!state.selectedGenre ? 'active' : ''}`;
-    allChip.textContent = '전체';
+    allChip.textContent = I18N[state.lang].all;
     allChip.onclick = () => selectGenre(null);
     container.appendChild(allChip);
 
@@ -78,7 +106,7 @@ function selectGenre(id) {
 
 async function getMovies(genreId, expanded = false) {
     const randomPage = Math.floor(Math.random() * 50) + 1;
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}`;
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}`;
     
     if (genreId) {
         let genreIds = [genreId];
@@ -177,7 +205,7 @@ async function handleDrawClick() {
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
-        alert("영화를 불러오는데 실패했습니다. 다시 시도해주세요.");
+        alert(I18N[state.lang].fail);
         resetApp();
     } finally {
         state.isDrawing = false;
@@ -187,7 +215,7 @@ async function handleDrawClick() {
 
 function updateButtonState(drawing) {
     drawBtn.disabled = drawing;
-    drawBtn.textContent = drawing ? "추첨 중..." : "다음 영화 뽑기";
+    drawBtn.textContent = drawing ? I18N[state.lang].drawing : I18N[state.lang].draw;
 }
 
 function startInfiniteSpin() {
@@ -225,7 +253,7 @@ async function performFinalSpin(targetMovie, pool) {
     });
 
     return new Promise(resolve => {
-        const itemHeight = 400; // Updated to match new Instagram Style height
+        const itemHeight = 400; 
         const totalDist = (sequenceCount - 1) * itemHeight;
         
         slotTrack.style.transition = 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)';
@@ -245,13 +273,13 @@ async function showResult(movie, omdb, credits, ott) {
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
         : movie.title;
 
-    document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
+    document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    // Director & Cast with Profile Links
+    // Director & Cast
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
     const topCast = credits?.cast?.slice(0, 3) || [];
 
@@ -276,13 +304,14 @@ async function showResult(movie, omdb, credits, ott) {
         }
     };
 
-    const directorDisplayName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
+    const labels = I18N[state.lang];
+    const directorName = directorObj ? (directorObj.name || directorObj.original_name) : (state.lang === 'KO' ? '정보 없음' : 'N/A');
     document.getElementById('res-director').innerHTML = directorObj 
-        ? `감독: ${getPersonLink(directorObj)}`
-        : `감독: ${directorDisplayName}`;
+        ? `${labels.director}: ${getPersonLink(directorObj)}`
+        : `${labels.director}: ${directorName}`;
 
     const castHtmls = topCast.map(p => getPersonLink(p));
-    document.getElementById('res-cast').innerHTML = `출연: ${castHtmls.join(', ') || '정보 없음'}`;
+    document.getElementById('res-cast').innerHTML = `${labels.cast}: ${castHtmls.join(', ') || (state.lang === 'KO' ? '정보 없음' : 'N/A')}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
@@ -304,7 +333,6 @@ async function showResult(movie, omdb, credits, ott) {
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
             link.className = 'ott-link';
-            link.title = p.provider_name;
             link.onclick = (e) => {
                 e.stopPropagation();
                 if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -323,7 +351,7 @@ async function showResult(movie, omdb, credits, ott) {
             ottList.appendChild(item);
         });
     } else {
-        ottList.innerHTML = '<span style="color:rgba(128,128,128,0.4); font-weight:800; font-size:10px;">국내 스트리밍 정보 없음</span>';
+        ottList.innerHTML = `<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">${labels.noOtt}</span>`;
     }
 
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
@@ -393,7 +421,7 @@ async function fetchOMDb(movie) {
 
 async function fetchFullInfo(movieId) {
     try {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&append_to_response=videos,credits`);
+        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&append_to_response=videos,credits`);
         return await res.json();
     } catch (e) { return {}; }
 }
@@ -428,9 +456,25 @@ function applyTheme() {
     themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
 }
 
+function toggleLanguage() {
+    state.lang = state.lang === 'KO' ? 'EN' : 'KO';
+    localStorage.setItem('lang', state.lang);
+    updateLangUI();
+    fetchGenres().then(() => renderGenres());
+}
+
+function updateLangUI() {
+    const labels = I18N[state.lang];
+    langToggle.textContent = state.lang;
+    document.getElementById('hero-msg').textContent = labels.hero;
+    document.getElementById('trust-msg').textContent = labels.trust;
+    drawBtn.textContent = labels.draw;
+}
+
 window.handleDrawClick = handleDrawClick;
 window.resetApp = resetApp;
 window.toggleTheme = toggleTheme;
+window.toggleLanguage = toggleLanguage;
 window.selectGenre = selectGenre;
 window.playTrailer = playTrailer;
 
