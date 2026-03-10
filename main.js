@@ -288,9 +288,14 @@ async function showResult(movie, omdb, credits, ott) {
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     
-    // STRICT KR ONLY FILTERING
+    // FORCED KR ONLY
     const krData = ott?.KR || {};
-    const providers = (krData.flatrate || []).slice(0, 4);
+    // Combine flatrate and rent/buy options but prioritize streaming
+    const providers = [
+        ...(krData.flatrate || []),
+        ...(krData.rent || [])
+    ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i) // Unique
+    .slice(0, 4);
 
     if (providers.length > 0) {
         providers.forEach(p => {
@@ -298,9 +303,9 @@ async function showResult(movie, omdb, credits, ott) {
             item.className = 'ott-item';
             
             const link = document.createElement('a');
-            // IMPROVED DEEP LINK LOGIC FOR KR
             link.href = getKROttDeepLink(p.provider_id, movie.title);
             link.target = '_blank';
+            link.rel = 'noopener noreferrer';
             link.className = 'ott-link';
             link.onclick = (e) => e.stopPropagation(); 
             link.innerHTML = `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">`;
@@ -323,8 +328,7 @@ async function showResult(movie, omdb, credits, ott) {
 }
 
 /**
- * Generates direct search/detail URLs for popular KR OTT providers
- * Optimized for both Web and Mobile (Universal Links)
+ * Refined KR OTT Deep Links
  */
 function getKROttDeepLink(providerId, title) {
     const encodedTitle = encodeURIComponent(title);
@@ -335,10 +339,10 @@ function getKROttDeepLink(providerId, title) {
         97: `https://watcha.com/search?query=${encodedTitle}`, // Watcha
         356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`, // Wavve
         444: `https://www.coupangplay.com/search?q=${encodedTitle}`, // Coupang Play
+        350: `https://www.tving.com/search?keyword=${encodedTitle}`, // TVING (Added)
         2: `https://tv.apple.com/kr/search?term=${encodedTitle}`, // Apple TV KR
         3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`, // Google Play
         119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`, // Prime Video
-        // Add TVING if mapping exists (Provider ID usually varies or missing in standard TMDB lists)
     };
 
     return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT+보러가기`;
