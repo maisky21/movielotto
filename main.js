@@ -288,6 +288,7 @@ async function showResult(movie, omdb, credits, ott) {
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     
+    // STRICT KR ONLY FILTERING
     const krData = ott?.KR || {};
     const providers = (krData.flatrate || []).slice(0, 4);
 
@@ -297,8 +298,8 @@ async function showResult(movie, omdb, credits, ott) {
             item.className = 'ott-item';
             
             const link = document.createElement('a');
-            // USE DIRECT SEARCH LINK INSTEAD OF TMDB PROVIDER PAGE
-            link.href = getDirectOttLink(p.provider_id, movie.title);
+            // IMPROVED DEEP LINK LOGIC FOR KR
+            link.href = getKROttDeepLink(p.provider_id, movie.title);
             link.target = '_blank';
             link.className = 'ott-link';
             link.onclick = (e) => e.stopPropagation(); 
@@ -313,7 +314,7 @@ async function showResult(movie, omdb, credits, ott) {
             ottList.appendChild(item);
         });
     } else {
-        ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">OTT 정보 없음</span>';
+        ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">국내 스트리밍 정보 없음</span>';
     }
 
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
@@ -322,24 +323,25 @@ async function showResult(movie, omdb, credits, ott) {
 }
 
 /**
- * Generates direct search URLs for popular OTT providers in Korea
+ * Generates direct search/detail URLs for popular KR OTT providers
+ * Optimized for both Web and Mobile (Universal Links)
  */
-function getDirectOttLink(providerId, title) {
+function getKROttDeepLink(providerId, title) {
     const encodedTitle = encodeURIComponent(title);
     
-    // TMDB Provider IDs
     const OTT_MAP = {
         8: `https://www.netflix.com/search?q=${encodedTitle}`, // Netflix
-        337: `https://www.disneyplus.com/search?q=${encodedTitle}`, // Disney+
+        337: `https://www.disneyplus.com/ko-kr/search?q=${encodedTitle}`, // Disney+ KR
         97: `https://watcha.com/search?query=${encodedTitle}`, // Watcha
         356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`, // Wavve
         444: `https://www.coupangplay.com/search?q=${encodedTitle}`, // Coupang Play
-        2: `https://tv.apple.com/kr/search?term=${encodedTitle}`, // Apple TV
+        2: `https://tv.apple.com/kr/search?term=${encodedTitle}`, // Apple TV KR
         3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`, // Google Play
-        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}` // Prime Video
+        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`, // Prime Video
+        // Add TVING if mapping exists (Provider ID usually varies or missing in standard TMDB lists)
     };
 
-    return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+보러가기`;
+    return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT+보러가기`;
 }
 
 function playTrailer() {
