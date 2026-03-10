@@ -38,8 +38,12 @@
 
             <!-- Result View (Hidden by default) -->
             <div id="result-view" class="result-container" style="display: none;">
-                <div class="poster-display">
+                <div id="poster-area" class="poster-display" onclick="playTrailer()">
                     <img id="res-poster" src="" alt="Movie Poster">
+                    <div id="trailer-container" class="trailer-container"></div>
+                    <div id="play-overlay" class="play-overlay">
+                        <span class="play-icon">▶</span>
+                    </div>
                 </div>
                 <div class="movie-info-box">
                     <div class="rating-row">

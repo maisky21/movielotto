@@ -21,7 +21,8 @@ let state = {
     movies: [],
     viewedIds: new Set(),
     isDrawing: false,
-    theme: localStorage.getItem('theme') || 'dark'
+    theme: localStorage.getItem('theme') || 'dark',
+    currentTrailerId: null
 };
 
 // UI Elements
@@ -30,6 +31,8 @@ const slotTrack = document.getElementById('slot-track');
 const slotView = document.getElementById('slot-view');
 const resultView = document.getElementById('result-view');
 const themeToggle = document.getElementById('theme-toggle');
+const trailerContainer = document.getElementById('trailer-container');
+const playOverlay = document.getElementById('play-overlay');
 
 async function init() {
     applyTheme();
@@ -104,6 +107,12 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
+    // Reset video player
+    trailerContainer.innerHTML = '';
+    trailerContainer.style.display = 'none';
+    playOverlay.style.display = 'flex';
+    state.currentTrailerId = null;
+
     state.isDrawing = true;
     updateButtonState(true);
     
@@ -117,6 +126,7 @@ async function handleDrawClick() {
         let selectedOmdb = null;
         let selectedCredits = null;
         let selectedOtt = null;
+        let selectedVideos = null;
         
         let moviePool = [];
         let retryCount = 0;
@@ -126,10 +136,11 @@ async function handleDrawClick() {
             const candidates = moviePool.filter(m => !state.viewedIds.has(m.id)).sort(() => Math.random() - 0.5);
             
             for (const candidate of candidates) {
-                const [ott, omdb, credits] = await Promise.all([
+                // Fetch basic and video info from TMDB
+                const [ott, omdb, fullInfo] = await Promise.all([
                     fetchOTT(candidate.id),
                     fetchOMDb(candidate),
-                    fetchCredits(candidate.id)
+                    fetchFullInfo(candidate.id)
                 ]);
 
                 const tmdbScore = candidate.vote_average || 0;
@@ -139,8 +150,9 @@ async function handleDrawClick() {
                 if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
                     selectedMovie = candidate;
                     selectedOmdb = omdb;
-                    selectedCredits = credits;
+                    selectedCredits = fullInfo.credits;
                     selectedOtt = ott;
+                    selectedVideos = fullInfo.videos;
                     break;
                 }
             }
@@ -149,14 +161,20 @@ async function handleDrawClick() {
 
         if (!selectedMovie) {
             selectedMovie = moviePool[0];
-            [selectedOtt, selectedOmdb, selectedCredits] = await Promise.all([
+            const fullInfo = await fetchFullInfo(selectedMovie.id);
+            [selectedOtt, selectedOmdb] = await Promise.all([
                 fetchOTT(selectedMovie.id),
-                fetchOMDb(selectedMovie),
-                fetchCredits(selectedMovie.id)
+                fetchOMDb(selectedMovie)
             ]);
+            selectedCredits = fullInfo.credits;
+            selectedVideos = fullInfo.videos;
         }
 
         state.viewedIds.add(selectedMovie.id);
+
+        // Extract Trailer
+        const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
+        state.currentTrailerId = trailer?.key || null;
 
         await performFinalSpin(selectedMovie, moviePool);
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
@@ -230,10 +248,10 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    const directorObj = credits.crew?.find(c => c.job === 'Director');
+    const directorObj = credits?.crew?.find(c => c.job === 'Director');
     const directorName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
     
-    const castList = credits.cast?.slice(0, 3).map(c => c.name || c.original_name) || [];
+    const castList = credits?.cast?.slice(0, 3).map(c => c.name || c.original_name) || [];
     const castString = castList.length > 0 ? castList.join(', ') : '정보 없음';
 
     document.getElementById('res-director').textContent = `감독: ${directorName}`;
@@ -270,8 +288,24 @@ async function showResult(movie, omdb, credits, ott) {
         ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">OTT 정보 없음</span>';
     }
 
+    // Toggle play button visibility based on trailer availability
+    playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
+
     slotView.style.display = 'none';
     resultView.style.display = 'flex';
+}
+
+function playTrailer() {
+    if (!state.currentTrailerId) {
+        // Fallback: search on youtube if no direct ID found
+        const title = document.getElementById('res-title').textContent;
+        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' 예고편')}`, '_blank');
+        return;
+    }
+
+    trailerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${state.currentTrailerId}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    trailerContainer.style.display = 'block';
+    playOverlay.style.display = 'none';
 }
 
 async function fetchOTT(movieId) {
@@ -309,17 +343,21 @@ async function fetchOMDb(movie) {
     } catch (e) { return null; }
 }
 
-async function fetchCredits(movieId) {
+async function fetchFullInfo(movieId) {
     try {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}/credits?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`);
-        const data = await res.json();
-        return data;
-    } catch (e) { return { cast: [], crew: [] }; }
+        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&append_to_response=videos,credits`);
+        return await res.json();
+    } catch (e) { return {}; }
 }
 
 function resetApp() {
     if (state.isDrawing) return;
     state.viewedIds.clear();
+    
+    // Clear video
+    trailerContainer.innerHTML = '';
+    trailerContainer.style.display = 'none';
+    
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
     startInfiniteSpin();
@@ -341,5 +379,6 @@ window.handleDrawClick = handleDrawClick;
 window.resetApp = resetApp;
 window.toggleTheme = toggleTheme;
 window.selectGenre = selectGenre;
+window.playTrailer = playTrailer;
 
 init();

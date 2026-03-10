@@ -254,12 +254,55 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    cursor: pointer;
 }
 
 .poster-display img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+.trailer-container {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+}
+
+.trailer-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    z-index: 10;
+    transition: background 0.3s;
+}
+
+.poster-display:hover .play-overlay {
+    background: rgba(0,0,0,0.4);
+}
+
+.play-icon {
+    font-size: 50px;
+    color: #fff;
+    opacity: 0.8;
+    transition: transform 0.2s, opacity 0.2s;
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+}
+
+.poster-display:hover .play-icon {
+    transform: scale(1.2);
+    opacity: 1;
 }
 
 .movie-info-box {
