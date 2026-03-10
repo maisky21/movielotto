@@ -20,9 +20,11 @@
         </nav>
 
         <main class="main-card">
-            <!-- Slot Machine View -->
+            <!-- Cinematic Background Layer -->
+            <div class="film-strip-bg"></div>
+
+            <!-- Hero / Slot View -->
             <div id="slot-view" class="slot-container">
-                <div class="film-strip-bg"></div> <!-- CINEMATIC BACKGROUND -->
                 <div class="slot-window">
                     <div id="slot-track" class="slot-track">
                         <div class="slot-item placeholder">
@@ -36,7 +38,7 @@
                 </div>
             </div>
 
-            <!-- Result View (Hidden by default) -->
+            <!-- Result View (Instagram Feed Style) -->
             <div id="result-view" class="result-container" style="display: none;">
                 <div id="poster-area" class="poster-display" onclick="playTrailer()">
                     <img id="res-poster" src="" alt="Movie Poster">
@@ -45,23 +47,25 @@
                         <span class="play-icon">▶</span>
                     </div>
                 </div>
+                
                 <div class="movie-info-box">
                     <div class="rating-row">
                         <span id="res-rating-tmdb" class="rating-badge">TMDB --</span>
                         <span id="res-rating-imdb" class="rating-badge">IMDb --</span>
                         <span id="res-rating-rt" class="rating-badge">Rotten --</span>
                     </div>
+                    
                     <h2 id="res-title" class="movie-title">영화 제목</h2>
                     
                     <div class="credits-info">
-                        <p id="res-director" class="credit-text">감독: --</p>
-                        <p id="res-cast" class="credit-text">출연: --</p>
+                        <span id="res-director" class="credit-text">감독: --</span>
+                        <span style="margin: 0 6px; opacity: 0.3;">|</span>
+                        <span id="res-cast" class="credit-text">출연: --</span>
                     </div>
 
                     <p id="res-overview" class="movie-overview">영화 설명이 여기에 표시됩니다.</p>
                     
                     <div class="ott-section">
-                        <p class="ott-label">WATCH NOW</p>
                         <div id="ott-list" class="ott-list">
                             <!-- OTT icons injected here -->
                         </div>
