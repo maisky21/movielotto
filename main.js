@@ -195,14 +195,21 @@ async function showResult(movie) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     document.getElementById('res-title').textContent = movie.title;
     document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
+    
+    // Rating Badges
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
+    document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    // Credits Update
-    const director = credits.crew?.find(c => c.job === 'Director')?.name || '정보 없음';
-    const cast = credits.cast?.slice(0, 4).map(c => c.name).join(', ') || '정보 없음';
-    document.getElementById('res-director').textContent = `감독: ${director}`;
-    document.getElementById('res-cast').textContent = `출연: ${cast}`;
+    // Credits with Fallback logic
+    const directorObj = credits.crew?.find(c => c.job === 'Director');
+    const directorName = directorObj ? (directorObj.name || directorObj.original_name) : '정보 없음';
+    
+    const castList = credits.cast?.slice(0, 3).map(c => c.name || c.original_name) || [];
+    const castString = castList.length > 0 ? castList.join(', ') : '정보 없음';
+
+    document.getElementById('res-director').textContent = `감독: ${directorName}`;
+    document.getElementById('res-cast').textContent = `출연: ${castString}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
@@ -213,17 +220,26 @@ async function showResult(movie) {
 
     if (providers.length > 0) {
         providers.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'ott-item';
+            
             const link = document.createElement('a');
             link.href = deepLink || `https://www.themoviedb.org/movie/${movie.id}/watch`;
             link.target = '_blank';
             link.className = 'ott-link';
-            link.title = p.provider_name;
             link.onclick = (e) => e.stopPropagation(); 
             link.innerHTML = `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">`;
-            ottList.appendChild(link);
+            
+            const name = document.createElement('span');
+            name.className = 'ott-name';
+            name.textContent = p.provider_name;
+            
+            item.appendChild(link);
+            item.appendChild(name);
+            ottList.appendChild(item);
         });
     } else {
-        ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:11px;">OTT 정보 없음</span>';
+        ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">OTT 정보 없음</span>';
     }
 
     slotView.style.display = 'none';
@@ -245,14 +261,28 @@ async function fetchOMDb(tmdbId) {
         if (!extData.imdb_id) return null;
 
         const res = await fetch(`${CONFIG.OMDB_BASE}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`);
-        return await res.json();
+        const data = await res.json();
+        
+        if (data.Response === 'True') {
+            const rt = data.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
+            return {
+                imdbRating: data.imdbRating,
+                rtRating: rt || null
+            };
+        }
+        return null;
     } catch (e) { return null; }
 }
 
 async function fetchCredits(movieId) {
     try {
+        // Fetch with Korean first
         const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}/credits?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`);
-        return await res.json();
+        const data = await res.json();
+        
+        // If names are empty or suspicious (not Korean/English), fallback might be needed but TMDB usually handles name translations well.
+        // We use name (translated) and original_name as fallback in showResult.
+        return data;
     } catch (e) { return { cast: [], crew: [] }; }
 }
 

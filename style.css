@@ -209,7 +209,7 @@ body {
 
 .poster-display {
     width: 100%;
-    height: 50%; /* Flexible height */
+    height: 50%;
     max-height: 45vh;
     border-radius: 32px;
     overflow: hidden;
@@ -223,14 +223,14 @@ body {
 .poster-display img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* ENTIRE POSTER VISIBLE */
+    object-fit: contain;
 }
 
 .movie-info-box {
     margin-top: 12px;
     background: var(--yellow);
     border-radius: 28px;
-    padding: 14px 18px; /* Compact padding */
+    padding: 14px 18px;
     color: #000;
     flex-grow: 1;
     display: flex;
@@ -241,21 +241,23 @@ body {
 
 .rating-row {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     margin-bottom: 6px;
+    flex-wrap: wrap;
 }
 
 .rating-badge {
     background: #000;
     color: #fff;
-    padding: 3px 8px;
+    padding: 3px 6px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
+    white-space: nowrap;
 }
 
 .movie-title {
-    font-size: 22px; /* Reduced font size */
+    font-size: 20px;
     font-weight: 900;
     line-height: 1.1;
     margin-bottom: 4px;
@@ -266,7 +268,7 @@ body {
 }
 
 .credits-info {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .credit-text {
@@ -277,11 +279,11 @@ body {
 }
 
 .movie-overview {
-    font-size: 12.5px;
-    line-height: 1.4; /* Adjusted line height */
-    margin-bottom: 12px;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 8px;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Max 3 lines */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
     opacity: 0.85;
@@ -301,7 +303,14 @@ body {
 
 .ott-list {
     display: flex;
-    gap: 10px;
+    gap: 8px;
+}
+
+.ott-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
 .ott-link {
@@ -309,6 +318,25 @@ body {
     height: 32px;
     border-radius: 8px;
     overflow: hidden;
+    display: block;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.ott-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ott-name {
+    font-size: 8px;
+    font-weight: 900;
+    text-align: center;
+    width: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text); /* Changes with theme */
 }
 
 /* Footer & Button */
@@ -326,10 +354,16 @@ body {
     color: var(--btn-text);
     font-size: 17px;
     font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.draw-btn:active {
+    transform: scale(0.98);
 }
 
 @media (max-height: 660px) {
-    .slot-window { height: 300px; width: 210px; }
+    .slot-window { height: 280px; width: 200px; }
     .movie-title { font-size: 18px; }
     .movie-overview { font-size: 11px; -webkit-line-clamp: 2; }
 }
