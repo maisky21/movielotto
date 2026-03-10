@@ -133,7 +133,7 @@ body {
     align-items: center;
     position: relative;
     min-height: 0;
-    margin-bottom: 140px; /* INCREASED FOR LEGAL FOOTER */
+    margin-bottom: 150px; /* SPACE FOR FLOATING ACTION + LEGAL FOOTER */
 }
 
 .film-strip-bg {
@@ -281,16 +281,17 @@ body {
     color: #000;
 }
 
-/* Footer & Legal */
+/* FOOTER - INSTAGRAM STYLE RECOVERY */
 .footer {
     position: absolute;
-    bottom: 12px;
+    bottom: 16px;
     left: 20px;
     right: 20px;
     z-index: 100;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+    background-color: var(--bg); /* Deep Black in dark mode */
 }
 
 .draw-btn {
@@ -311,30 +312,34 @@ body {
 
 .legal-footer {
     text-align: center;
-    font-size: 10px;
-    color: var(--legal-text);
+    padding-bottom: 8px;
 }
 
 .legal-links {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 6px;
+    gap: 16px; /* SPACE INSTEAD OF PIPES */
+    margin-bottom: 8px;
 }
 
 .legal-links a {
     color: var(--legal-text);
     text-decoration: none;
     font-weight: 600;
+    font-size: 11.5px; /* REFINED SIZE */
     transition: color 0.2s;
 }
 
 .legal-links a:hover {
-    color: var(--text);
+    color: var(--text); /* WHITE ON HOVER */
 }
 
 .copyright {
-    opacity: 0.6;
+    font-size: 10px;
+    color: var(--legal-text);
+    opacity: 0.5;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 @media (max-width: 640px) {
@@ -348,5 +353,5 @@ body {
     .movie-title { font-size: 18px; }
     .movie-overview { -webkit-line-clamp: 2; }
     .main-card { margin-bottom: 120px; }
-    .footer { gap: 10px; bottom: 8px; }
+    .footer { gap: 12px; bottom: 10px; }
 }
