@@ -48,7 +48,8 @@ let state = {
     isDrawing: false,
     theme: localStorage.getItem('theme') || 'dark',
     lang: localStorage.getItem('lang') || 'KO',
-    currentTrailerId: null
+    currentTrailerId: null,
+    currentMovie: null // To track currently displayed movie for instant translation
 };
 
 // UI Elements
@@ -197,6 +198,7 @@ async function handleDrawClick() {
         }
 
         state.viewedIds.add(selectedMovie.id);
+        state.currentMovie = selectedMovie; // Save for translation toggle
 
         const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
         state.currentTrailerId = trailer?.key || null;
@@ -437,6 +439,7 @@ async function fetchPersonImdbId(personId) {
 function resetApp() {
     if (state.isDrawing) return;
     state.viewedIds.clear();
+    state.currentMovie = null; // Clear tracking
     trailerContainer.innerHTML = '';
     trailerContainer.style.display = 'none';
     resultView.style.display = 'none';
@@ -456,11 +459,27 @@ function applyTheme() {
     themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
 }
 
-function toggleLanguage() {
+async function toggleLanguage() {
     state.lang = state.lang === 'KO' ? 'EN' : 'KO';
     localStorage.setItem('lang', state.lang);
     updateLangUI();
-    fetchGenres().then(() => renderGenres());
+    
+    // RE-FETCH GENRES
+    await fetchGenres();
+    renderGenres();
+
+    // RE-FETCH CURRENT MOVIE DATA IF VISIBLE
+    if (state.currentMovie && resultView.style.display !== 'none') {
+        const [ott, omdb, fullInfo] = await Promise.all([
+            fetchOTT(state.currentMovie.id),
+            fetchOMDb(state.currentMovie),
+            fetchFullInfo(state.currentMovie.id)
+        ]);
+        
+        // Update display with translated data
+        const movieWithNewLang = fullInfo; // fullInfo from fetchFullInfo has the new language
+        await showResult(movieWithNewLang, omdb, fullInfo.credits, ott);
+    }
 }
 
 function updateLangUI() {
