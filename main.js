@@ -73,8 +73,10 @@ function selectGenre(id) {
     renderGenres();
 }
 
-async function getMovies(genreId, ratingThreshold = 6.5, expanded = false) {
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&sort_by=popularity.desc&include_adult=false&vote_count.gte=100`;
+async function getMovies(genreId, expanded = false) {
+    // Randomize page between 1 and 50 to increase diversity
+    const randomPage = Math.floor(Math.random() * 50) + 1;
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}`;
     
     if (genreId) {
         let genreIds = [genreId];
@@ -87,17 +89,14 @@ async function getMovies(genreId, ratingThreshold = 6.5, expanded = false) {
     try {
         const res = await fetch(url);
         const data = await res.json();
-        // Lower initial threshold to catch movies that might have higher IMDb/RT scores
-        let filtered = (data.results || []).filter(m => m.vote_average >= ratingThreshold && m.poster_path);
+        // Return all with posters, we will filter by OR condition in handleDrawClick
+        let results = (data.results || []).filter(m => m.poster_path);
 
-        if (filtered.length < 5 && ratingThreshold > 5.5) {
-            return await getMovies(genreId, ratingThreshold - 0.5, expanded);
-        }
-        if (filtered.length < 5 && !expanded && genreId) {
-            return await getMovies(genreId, 6.0, true);
+        if (results.length < 5 && !expanded && genreId) {
+            return await getMovies(genreId, true);
         }
 
-        return filtered;
+        return results;
     } catch (e) {
         console.error("Movie fetch error", e);
         return [];
@@ -116,45 +115,45 @@ async function handleDrawClick() {
     startInfiniteSpin();
 
     try {
-        const moviePool = await getMovies(state.selectedGenre);
-        let unviewed = moviePool.filter(m => !state.viewedIds.has(m.id));
-        if (unviewed.length === 0) {
-            state.viewedIds.clear();
-            unviewed = moviePool;
-        }
-
-        // Selection loop to satisfy OR condition: [TMDB 7.0] OR [IMDb 7.0] OR [RT 70%]
         let selectedMovie = null;
         let selectedOmdb = null;
         let selectedCredits = null;
         let selectedOtt = null;
         
-        // Try up to 5 times to find a match from the pool
-        const attempts = unviewed.sort(() => Math.random() - 0.5).slice(0, 5);
-        
-        for (const candidate of attempts) {
-            const [ott, omdb, credits] = await Promise.all([
-                fetchOTT(candidate.id),
-                fetchOMDb(candidate),
-                fetchCredits(candidate.id)
-            ]);
+        let moviePool = [];
+        let retryCount = 0;
 
-            const tmdbScore = candidate.vote_average;
-            const imdbScore = parseFloat(omdb?.imdbRating) || 0;
-            const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
+        // Loop until we find a movie satisfying the OR condition
+        while (!selectedMovie && retryCount < 10) {
+            moviePool = await getMovies(state.selectedGenre);
+            const candidates = moviePool.filter(m => !state.viewedIds.has(m.id)).sort(() => Math.random() - 0.5);
+            
+            for (const candidate of candidates) {
+                const [ott, omdb, credits] = await Promise.all([
+                    fetchOTT(candidate.id),
+                    fetchOMDb(candidate),
+                    fetchCredits(candidate.id)
+                ]);
 
-            if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
-                selectedMovie = candidate;
-                selectedOmdb = omdb;
-                selectedCredits = credits;
-                selectedOtt = ott;
-                break;
+                const tmdbScore = candidate.vote_average || 0;
+                const imdbScore = parseFloat(omdb?.imdbRating) || 0;
+                const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
+
+                // OR Condition: TMDB 7.0 OR IMDb 7.0 OR RT 70%
+                if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
+                    selectedMovie = candidate;
+                    selectedOmdb = omdb;
+                    selectedCredits = credits;
+                    selectedOtt = ott;
+                    break;
+                }
             }
+            retryCount++;
         }
 
-        // Fallback if no candidate meets criteria in 5 tries
+        // Final fallback if absolutely nothing found in 10 tries (highly unlikely)
         if (!selectedMovie) {
-            selectedMovie = attempts[0];
+            selectedMovie = moviePool[0];
             [selectedOtt, selectedOmdb, selectedCredits] = await Promise.all([
                 fetchOTT(selectedMovie.id),
                 fetchOMDb(selectedMovie),
@@ -232,7 +231,7 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-title').textContent = movie.title;
     document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
     
-    // Rating Badges
+    // Rating Badges - Ensure exact matching for Rotten Tomatoes
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
@@ -292,7 +291,6 @@ async function fetchOTT(movieId) {
 
 async function fetchOMDb(movie) {
     try {
-        // Step 1: Try to get IMDb ID from TMDB first
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
         
@@ -300,7 +298,6 @@ async function fetchOMDb(movie) {
         if (extData.imdb_id) {
             url += `&i=${extData.imdb_id}`;
         } else {
-            // Step 2: Fallback to Title and Year
             const year = movie.release_date ? movie.release_date.split('-')[0] : '';
             url += `&t=${encodeURIComponent(movie.title)}&y=${year}`;
         }
@@ -309,9 +306,10 @@ async function fetchOMDb(movie) {
         const data = await res.json();
         
         if (data.Response === 'True') {
-            const rt = data.Ratings?.find(r => r.Source === 'Rotten Tomatoes')?.Value;
+            // Precise matching for Rotten Tomatoes source
+            const rt = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value;
             return {
-                imdbRating: data.imdbRating,
+                imdbRating: data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : null,
                 rtRating: rt || null
             };
         }
