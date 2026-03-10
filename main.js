@@ -255,7 +255,6 @@ async function showResult(movie, omdb, credits, ott) {
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
     const topCast = credits?.cast?.slice(0, 3) || [];
 
-    // Fetch IMDb IDs for people in parallel
     const peopleToFetch = [
         ...(directorObj ? [directorObj] : []),
         ...topCast
@@ -291,7 +290,6 @@ async function showResult(movie, omdb, credits, ott) {
     
     const krData = ott?.KR || {};
     const providers = (krData.flatrate || []).slice(0, 4);
-    const deepLink = krData.link; 
 
     if (providers.length > 0) {
         providers.forEach(p => {
@@ -299,7 +297,8 @@ async function showResult(movie, omdb, credits, ott) {
             item.className = 'ott-item';
             
             const link = document.createElement('a');
-            link.href = deepLink || `https://www.themoviedb.org/movie/${movie.id}/watch`;
+            // USE DIRECT SEARCH LINK INSTEAD OF TMDB PROVIDER PAGE
+            link.href = getDirectOttLink(p.provider_id, movie.title);
             link.target = '_blank';
             link.className = 'ott-link';
             link.onclick = (e) => e.stopPropagation(); 
@@ -320,6 +319,27 @@ async function showResult(movie, omdb, credits, ott) {
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
     slotView.style.display = 'none';
     resultView.style.display = 'flex';
+}
+
+/**
+ * Generates direct search URLs for popular OTT providers in Korea
+ */
+function getDirectOttLink(providerId, title) {
+    const encodedTitle = encodeURIComponent(title);
+    
+    // TMDB Provider IDs
+    const OTT_MAP = {
+        8: `https://www.netflix.com/search?q=${encodedTitle}`, // Netflix
+        337: `https://www.disneyplus.com/search?q=${encodedTitle}`, // Disney+
+        97: `https://watcha.com/search?query=${encodedTitle}`, // Watcha
+        356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`, // Wavve
+        444: `https://www.coupangplay.com/search?q=${encodedTitle}`, // Coupang Play
+        2: `https://tv.apple.com/kr/search?term=${encodedTitle}`, // Apple TV
+        3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`, // Google Play
+        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}` // Prime Video
+    };
+
+    return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+보러가기`;
 }
 
 function playTrailer() {
