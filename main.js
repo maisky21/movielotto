@@ -49,7 +49,7 @@ async function fetchGenres() {
 
 function renderGenres() {
     const container = document.getElementById('genre-container');
-    container.innerHTML = ''; // Clear for re-render if needed
+    container.innerHTML = '';
     
     const allChip = document.createElement('div');
     allChip.className = `genre-chip ${!state.selectedGenre ? 'active' : ''}`;
@@ -144,7 +144,6 @@ function startInfiniteSpin() {
     slotTrack.style.transform = 'translateY(0)';
     
     slotTrack.innerHTML = '';
-    // Add the ticket as the starting visual, then placeholders
     const ticketDiv = document.createElement('div');
     ticketDiv.className = 'slot-item placeholder';
     ticketDiv.innerHTML = '<span class="ticket-icon">🎟️</span>';
@@ -175,11 +174,11 @@ async function performFinalSpin(targetMovie, pool) {
     });
 
     return new Promise(resolve => {
-        const itemHeight = 340; // Updated to match new CSS
+        const itemHeight = 340; 
         const totalDist = (sequenceCount - 1) * itemHeight;
         
         slotTrack.style.transition = 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)';
-        slotTrack.offsetHeight; // Reflow
+        slotTrack.offsetHeight; 
         slotTrack.style.transform = `translateY(-${totalDist}px)`;
         
         setTimeout(resolve, 2700); 
@@ -187,9 +186,10 @@ async function performFinalSpin(targetMovie, pool) {
 }
 
 async function showResult(movie) {
-    const [ott, omdb] = await Promise.all([
+    const [ott, omdb, credits] = await Promise.all([
         fetchOTT(movie.id),
-        fetchOMDb(movie.id)
+        fetchOMDb(movie.id),
+        fetchCredits(movie.id)
     ]);
 
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
@@ -198,12 +198,18 @@ async function showResult(movie) {
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
 
+    // Credits Update
+    const director = credits.crew?.find(c => c.job === 'Director')?.name || '정보 없음';
+    const cast = credits.cast?.slice(0, 4).map(c => c.name).join(', ') || '정보 없음';
+    document.getElementById('res-director').textContent = `감독: ${director}`;
+    document.getElementById('res-cast').textContent = `출연: ${cast}`;
+
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     
     const krData = ott?.KR || {};
     const providers = (krData.flatrate || []).slice(0, 4);
-    const deepLink = krData.link; // User requested results.KR.link
+    const deepLink = krData.link; 
 
     if (providers.length > 0) {
         providers.forEach(p => {
@@ -241,6 +247,13 @@ async function fetchOMDb(tmdbId) {
         const res = await fetch(`${CONFIG.OMDB_BASE}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`);
         return await res.json();
     } catch (e) { return null; }
+}
+
+async function fetchCredits(movieId) {
+    try {
+        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}/credits?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`);
+        return await res.json();
+    } catch (e) { return { cast: [], crew: [] }; }
 }
 
 function resetApp() {
