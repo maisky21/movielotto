@@ -296,14 +296,10 @@ async function showResult(movie, omdb, credits, ott) {
 }
 
 function playTrailer() {
-    if (!state.currentTrailerId) {
-        // Fallback: search on youtube if no direct ID found
-        const title = document.getElementById('res-title').textContent;
-        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' 예고편')}`, '_blank');
-        return;
-    }
+    if (!state.currentTrailerId) return;
 
-    trailerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${state.currentTrailerId}?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    // Use autoplay=1&mute=0 as requested
+    trailerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${state.currentTrailerId}?autoplay=1&mute=0&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
 }
