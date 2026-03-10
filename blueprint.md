@@ -20,8 +20,8 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 - **OMDb API:** IMDb and Rotten Tomatoes ratings.
 
 ## Implementation Steps
-1. [ ] **UI Refactor:** Implement the new high-contrast CSS and mobile-centric layout.
-2. [ ] **Animation Engine:** Build the vertical scrolling slot machine using CSS transitions and JS orchestration.
-3. [ ] **Data Logic:** Implement the smart filtering and genre expansion logic.
-4. [ ] **Interaction Fixes:** Apply `stopPropagation` and deep link logic to OTT providers.
-5. [ ] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
+1. [x] **UI Refactor:** Implement the new high-contrast CSS and mobile-centric layout.
+2. [x] **Animation Engine:** Build the vertical scrolling slot machine using CSS transitions and JS orchestration.
+3. [x] **Data Logic:** Implement the smart filtering and genre expansion logic.
+4. [x] **Interaction Fixes:** Apply `stopPropagation` and deep link logic to OTT providers.
+5. [x] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
