@@ -49,6 +49,8 @@ async function fetchGenres() {
 
 function renderGenres() {
     const container = document.getElementById('genre-container');
+    container.innerHTML = ''; // Clear for re-render if needed
+    
     const allChip = document.createElement('div');
     allChip.className = `genre-chip ${!state.selectedGenre ? 'active' : ''}`;
     allChip.textContent = '전체';
@@ -67,12 +69,8 @@ function renderGenres() {
 function selectGenre(id) {
     if (state.isDrawing) return;
     state.selectedGenre = id;
-    state.movies = []; // Reset movie cache for new genre
-    
-    // Update UI
-    document.querySelectorAll('.genre-chip').forEach(chip => {
-        chip.classList.toggle('active', (id === null && chip.textContent === '전체') || (id !== null && chip.textContent === state.genres.find(g => g.id === id)?.name));
-    });
+    state.movies = []; 
+    renderGenres();
 }
 
 async function getMovies(genreId, ratingThreshold = 7.0, expanded = false) {
@@ -91,7 +89,6 @@ async function getMovies(genreId, ratingThreshold = 7.0, expanded = false) {
         const data = await res.json();
         let filtered = (data.results || []).filter(m => m.vote_average >= ratingThreshold && m.poster_path);
 
-        // expansion logic
         if (filtered.length < 5 && ratingThreshold > 6.0) {
             return await getMovies(genreId, ratingThreshold - 0.5, expanded);
         }
@@ -112,15 +109,12 @@ async function handleDrawClick() {
     state.isDrawing = true;
     updateButtonState(true);
     
-    // Switch to slot view
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
     
-    // Initial "Fast" Spin with placeholders/randoms
     startInfiniteSpin();
 
     try {
-        // Fetch data while spinning
         const moviePool = await getMovies(state.selectedGenre);
         const unviewed = moviePool.filter(m => !state.viewedIds.has(m.id));
         const finalPool = unviewed.length > 0 ? unviewed : moviePool;
@@ -128,10 +122,7 @@ async function handleDrawClick() {
         const selectedMovie = finalPool[Math.floor(Math.random() * finalPool.length)];
         state.viewedIds.add(selectedMovie.id);
 
-        // Perform Final Spin and Stop
         await performFinalSpin(selectedMovie, moviePool);
-        
-        // Show Results
         await showResult(selectedMovie);
     } catch (e) {
         console.error("Draw failed", e);
@@ -152,7 +143,6 @@ function startInfiniteSpin() {
     slotTrack.style.transition = 'none';
     slotTrack.style.transform = 'translateY(0)';
     
-    // Fill with random placeholders or generic posters if available
     slotTrack.innerHTML = '';
     for(let i=0; i<10; i++) {
         const div = document.createElement('div');
@@ -163,15 +153,13 @@ function startInfiniteSpin() {
 }
 
 async function performFinalSpin(targetMovie, pool) {
-    // Create a sequence of posters ending with the target
-    const sequenceCount = 15;
+    const sequenceCount = 12;
     const sequence = [];
     for(let i=0; i < sequenceCount - 1; i++) {
         sequence.push(pool[Math.floor(Math.random() * pool.length)]);
     }
     sequence.push(targetMovie);
 
-    // Render sequence
     slotTrack.innerHTML = '';
     sequence.forEach(m => {
         const div = document.createElement('div');
@@ -180,30 +168,24 @@ async function performFinalSpin(targetMovie, pool) {
         slotTrack.appendChild(div);
     });
 
-    // Animate
     return new Promise(resolve => {
-        const itemHeight = 380; // Hardcoded to match CSS
+        const itemHeight = 340; // Updated to match new CSS
         const totalDist = (sequenceCount - 1) * itemHeight;
         
-        slotTrack.style.transition = 'transform 3s cubic-bezier(0.15, 0, 0.15, 1)';
-        
-        // Force reflow
-        slotTrack.offsetHeight;
-        
+        slotTrack.style.transition = 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)';
+        slotTrack.offsetHeight; // Reflow
         slotTrack.style.transform = `translateY(-${totalDist}px)`;
         
-        setTimeout(resolve, 3200); // Wait for animation + buffer
+        setTimeout(resolve, 2700); 
     });
 }
 
 async function showResult(movie) {
-    // Fetch extra info (OTT, OMDb)
     const [ott, omdb] = await Promise.all([
         fetchOTT(movie.id),
         fetchOMDb(movie.id)
     ]);
 
-    // Update UI
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     document.getElementById('res-title').textContent = movie.title;
     document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
@@ -213,22 +195,25 @@ async function showResult(movie) {
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     
-    const providers = (ott?.KR?.flatrate || []).slice(0, 3);
+    const krData = ott?.KR || {};
+    const providers = (krData.flatrate || []).slice(0, 4);
+    const deepLink = krData.link; // User requested results.KR.link
+
     if (providers.length > 0) {
         providers.forEach(p => {
             const link = document.createElement('a');
-            link.href = `https://www.themoviedb.org/movie/${movie.id}/watch`;
+            link.href = deepLink || `https://www.themoviedb.org/movie/${movie.id}/watch`;
             link.target = '_blank';
             link.className = 'ott-link';
-            link.onclick = (e) => e.stopPropagation(); // BUG FIX: prevent redraw
+            link.title = p.provider_name;
+            link.onclick = (e) => e.stopPropagation(); 
             link.innerHTML = `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">`;
             ottList.appendChild(link);
         });
     } else {
-        ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:12px;">정보 없음</span>';
+        ottList.innerHTML = '<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:11px;">OTT 정보 없음</span>';
     }
 
-    // Switch view
     slotView.style.display = 'none';
     resultView.style.display = 'flex';
 }
@@ -243,7 +228,6 @@ async function fetchOTT(movieId) {
 
 async function fetchOMDb(tmdbId) {
     try {
-        // First get IMDb ID from TMDB
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${tmdbId}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
         if (!extData.imdb_id) return null;
@@ -273,7 +257,6 @@ function applyTheme() {
     themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
 }
 
-// Global exposure
 window.handleDrawClick = handleDrawClick;
 window.resetApp = resetApp;
 window.toggleTheme = toggleTheme;
