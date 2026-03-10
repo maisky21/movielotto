@@ -73,7 +73,7 @@ function selectGenre(id) {
     renderGenres();
 }
 
-async function getMovies(genreId, ratingThreshold = 7.0, expanded = false) {
+async function getMovies(genreId, ratingThreshold = 6.5, expanded = false) {
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}&sort_by=popularity.desc&include_adult=false&vote_count.gte=100`;
     
     if (genreId) {
@@ -87,13 +87,14 @@ async function getMovies(genreId, ratingThreshold = 7.0, expanded = false) {
     try {
         const res = await fetch(url);
         const data = await res.json();
+        // Lower initial threshold to catch movies that might have higher IMDb/RT scores
         let filtered = (data.results || []).filter(m => m.vote_average >= ratingThreshold && m.poster_path);
 
-        if (filtered.length < 5 && ratingThreshold > 6.0) {
+        if (filtered.length < 5 && ratingThreshold > 5.5) {
             return await getMovies(genreId, ratingThreshold - 0.5, expanded);
         }
         if (filtered.length < 5 && !expanded && genreId) {
-            return await getMovies(genreId, 6.5, true);
+            return await getMovies(genreId, 6.0, true);
         }
 
         return filtered;
@@ -116,14 +117,55 @@ async function handleDrawClick() {
 
     try {
         const moviePool = await getMovies(state.selectedGenre);
-        const unviewed = moviePool.filter(m => !state.viewedIds.has(m.id));
-        const finalPool = unviewed.length > 0 ? unviewed : moviePool;
+        let unviewed = moviePool.filter(m => !state.viewedIds.has(m.id));
+        if (unviewed.length === 0) {
+            state.viewedIds.clear();
+            unviewed = moviePool;
+        }
+
+        // Selection loop to satisfy OR condition: [TMDB 7.0] OR [IMDb 7.0] OR [RT 70%]
+        let selectedMovie = null;
+        let selectedOmdb = null;
+        let selectedCredits = null;
+        let selectedOtt = null;
         
-        const selectedMovie = finalPool[Math.floor(Math.random() * finalPool.length)];
+        // Try up to 5 times to find a match from the pool
+        const attempts = unviewed.sort(() => Math.random() - 0.5).slice(0, 5);
+        
+        for (const candidate of attempts) {
+            const [ott, omdb, credits] = await Promise.all([
+                fetchOTT(candidate.id),
+                fetchOMDb(candidate),
+                fetchCredits(candidate.id)
+            ]);
+
+            const tmdbScore = candidate.vote_average;
+            const imdbScore = parseFloat(omdb?.imdbRating) || 0;
+            const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
+
+            if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
+                selectedMovie = candidate;
+                selectedOmdb = omdb;
+                selectedCredits = credits;
+                selectedOtt = ott;
+                break;
+            }
+        }
+
+        // Fallback if no candidate meets criteria in 5 tries
+        if (!selectedMovie) {
+            selectedMovie = attempts[0];
+            [selectedOtt, selectedOmdb, selectedCredits] = await Promise.all([
+                fetchOTT(selectedMovie.id),
+                fetchOMDb(selectedMovie),
+                fetchCredits(selectedMovie.id)
+            ]);
+        }
+
         state.viewedIds.add(selectedMovie.id);
 
         await performFinalSpin(selectedMovie, moviePool);
-        await showResult(selectedMovie);
+        await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
         alert("영화를 불러오는데 실패했습니다. 다시 시도해주세요.");
@@ -185,13 +227,7 @@ async function performFinalSpin(targetMovie, pool) {
     });
 }
 
-async function showResult(movie) {
-    const [ott, omdb, credits] = await Promise.all([
-        fetchOTT(movie.id),
-        fetchOMDb(movie.id),
-        fetchCredits(movie.id)
-    ]);
-
+async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     document.getElementById('res-title').textContent = movie.title;
     document.getElementById('res-overview').textContent = movie.overview || "영화 설명이 없습니다.";
@@ -254,13 +290,22 @@ async function fetchOTT(movieId) {
     } catch (e) { return {}; }
 }
 
-async function fetchOMDb(tmdbId) {
+async function fetchOMDb(movie) {
     try {
-        const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${tmdbId}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
+        // Step 1: Try to get IMDb ID from TMDB first
+        const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
-        if (!extData.imdb_id) return null;
+        
+        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
+        if (extData.imdb_id) {
+            url += `&i=${extData.imdb_id}`;
+        } else {
+            // Step 2: Fallback to Title and Year
+            const year = movie.release_date ? movie.release_date.split('-')[0] : '';
+            url += `&t=${encodeURIComponent(movie.title)}&y=${year}`;
+        }
 
-        const res = await fetch(`${CONFIG.OMDB_BASE}?i=${extData.imdb_id}&apikey=${CONFIG.OMDB_KEY}`);
+        const res = await fetch(url);
         const data = await res.json();
         
         if (data.Response === 'True') {
@@ -271,17 +316,16 @@ async function fetchOMDb(tmdbId) {
             };
         }
         return null;
-    } catch (e) { return null; }
+    } catch (e) { 
+        console.error("OMDb fetch error", e);
+        return null; 
+    }
 }
 
 async function fetchCredits(movieId) {
     try {
-        // Fetch with Korean first
         const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}/credits?api_key=${CONFIG.TMDB_KEY}&language=${CONFIG.LANG}`);
         const data = await res.json();
-        
-        // If names are empty or suspicious (not Korean/English), fallback might be needed but TMDB usually handles name translations well.
-        // We use name (translated) and original_name as fallback in showResult.
         return data;
     } catch (e) { return { cast: [], crew: [] }; }
 }
