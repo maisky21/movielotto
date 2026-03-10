@@ -25,7 +25,11 @@ const I18N = {
         draw: "다음 영화 뽑기",
         drawing: "추첨 중...",
         all: "전체",
-        fail: "영화를 불러오는데 실패했습니다. 다시 시도해주세요."
+        fail: "영화를 불러오는데 실패했습니다. 다시 시도해주세요.",
+        about: "서비스 소개",
+        contact: "문의하기",
+        privacy: "개인정보처리방침",
+        terms: "이용약관"
     },
     EN: {
         hero: "The one movie that will decide your fate",
@@ -36,7 +40,11 @@ const I18N = {
         draw: "Next Movie",
         drawing: "Drawing...",
         all: "All",
-        fail: "Failed to load movie. Please try again."
+        fail: "Failed to load movie. Please try again.",
+        about: "About",
+        contact: "Contact",
+        privacy: "Privacy",
+        terms: "Terms"
     }
 };
 
@@ -49,7 +57,7 @@ let state = {
     theme: localStorage.getItem('theme') || 'dark',
     lang: localStorage.getItem('lang') || 'KO',
     currentTrailerId: null,
-    currentMovie: null // To track currently displayed movie for instant translation
+    currentMovie: null 
 };
 
 // UI Elements
@@ -198,7 +206,7 @@ async function handleDrawClick() {
         }
 
         state.viewedIds.add(selectedMovie.id);
-        state.currentMovie = selectedMovie; // Save for translation toggle
+        state.currentMovie = selectedMovie; 
 
         const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
         state.currentTrailerId = trailer?.key || null;
@@ -269,7 +277,6 @@ async function performFinalSpin(targetMovie, pool) {
 async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     
-    // Movie Title with IMDb Link
     const titleEl = document.getElementById('res-title');
     titleEl.innerHTML = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
@@ -281,7 +288,6 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
-    // Director & Cast
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
     const topCast = credits?.cast?.slice(0, 3) || [];
 
@@ -439,7 +445,7 @@ async function fetchPersonImdbId(personId) {
 function resetApp() {
     if (state.isDrawing) return;
     state.viewedIds.clear();
-    state.currentMovie = null; // Clear tracking
+    state.currentMovie = null;
     trailerContainer.innerHTML = '';
     trailerContainer.style.display = 'none';
     resultView.style.display = 'none';
@@ -464,21 +470,16 @@ async function toggleLanguage() {
     localStorage.setItem('lang', state.lang);
     updateLangUI();
     
-    // RE-FETCH GENRES
     await fetchGenres();
     renderGenres();
 
-    // RE-FETCH CURRENT MOVIE DATA IF VISIBLE
     if (state.currentMovie && resultView.style.display !== 'none') {
         const [ott, omdb, fullInfo] = await Promise.all([
             fetchOTT(state.currentMovie.id),
             fetchOMDb(state.currentMovie),
             fetchFullInfo(state.currentMovie.id)
         ]);
-        
-        // Update display with translated data
-        const movieWithNewLang = fullInfo; // fullInfo from fetchFullInfo has the new language
-        await showResult(movieWithNewLang, omdb, fullInfo.credits, ott);
+        await showResult(fullInfo, omdb, fullInfo.credits, ott);
     }
 }
 
@@ -488,6 +489,12 @@ function updateLangUI() {
     document.getElementById('hero-msg').textContent = labels.hero;
     document.getElementById('trust-msg').textContent = labels.trust;
     drawBtn.textContent = labels.draw;
+    
+    // LEGAL LINKS UPDATE
+    document.getElementById('link-about').textContent = labels.about;
+    document.getElementById('link-contact').textContent = labels.contact;
+    document.getElementById('link-privacy').textContent = labels.privacy;
+    document.getElementById('link-terms').textContent = labels.terms;
 }
 
 window.handleDrawClick = handleDrawClick;
