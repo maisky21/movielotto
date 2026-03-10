@@ -15,13 +15,41 @@ const GENRE_EXPANSION = {
     35: [10751, 14], // Comedy -> Family, Fantasy
 };
 
-// SFX Assets
+// CINEMATIC SFX Assets
 const SFX = {
-    CLICK: new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'),
-    SPIN: new Audio('https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3'),
-    REVEAL: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3')
+    CLICK: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'), // Soft Deep Thud
+    SPIN: new Audio('https://assets.mixkit.co/active_storage/sfx/111/111-preview.mp3'),   // Projector Hum/Static
+    REVEAL: new Audio('https://assets.mixkit.co/active_storage/sfx/2012/2012-preview.mp3') // Ambient Cinematic Pad
 };
+
+// Set volumes to be subtle (0.1 ~ 0.2)
+SFX.CLICK.volume = 0.15;
+SFX.SPIN.volume = 0.1;
+SFX.REVEAL.volume = 0.2;
 SFX.SPIN.loop = true;
+
+/**
+ * Smoothly fades out an audio element
+ * @param {HTMLAudioElement} audio 
+ */
+function fadeOut(audio, duration = 500) {
+    const startVolume = audio.volume;
+    const startTime = performance.now();
+
+    function update() {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        audio.volume = startVolume * (1 - progress);
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            audio.pause();
+            audio.volume = startVolume; // Reset for next use
+        }
+    }
+    requestAnimationFrame(update);
+}
 
 let state = {
     genres: [],
@@ -112,7 +140,7 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
-    // SFX: Click
+    // SFX: Soft Deep Thud
     SFX.CLICK.currentTime = 0;
     SFX.CLICK.play().catch(() => {});
 
@@ -124,7 +152,7 @@ async function handleDrawClick() {
     
     startInfiniteSpin();
     
-    // SFX: Spin Start
+    // SFX: Projector Hum Start
     SFX.SPIN.currentTime = 0;
     SFX.SPIN.play().catch(() => {});
 
@@ -176,15 +204,15 @@ async function handleDrawClick() {
 
         await performFinalSpin(selectedMovie, moviePool);
         
-        // SFX: Spin Stop & Reveal
-        SFX.SPIN.pause();
+        // SFX: Fade out Projector & Play Reveal Pad
+        fadeOut(SFX.SPIN, 400);
         SFX.REVEAL.currentTime = 0;
         SFX.REVEAL.play().catch(() => {});
 
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
-        SFX.SPIN.pause();
+        fadeOut(SFX.SPIN, 200);
         alert("영화를 불러오는데 실패했습니다. 다시 시도해주세요.");
         resetApp();
     } finally {
