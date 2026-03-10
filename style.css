@@ -324,9 +324,22 @@ body {
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(153, 255, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
 }
 
 .draw-btn:active { transform: scale(0.94); }
+
+.draw-btn.drawing {
+    animation: glowPulse 1.5s infinite ease-in-out;
+    cursor: wait;
+}
+
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent); opacity: 0.9; }
+    50% { box-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent); opacity: 1; }
+    100% { box-shadow: 0 0 5px var(--accent), 0 0 10px var(--accent); opacity: 0.9; }
+}
 
 .legal-footer {
     text-align: center;

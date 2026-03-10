@@ -59,7 +59,8 @@ let state = {
     theme: localStorage.getItem('theme') || 'dark',
     lang: localStorage.getItem('lang') || 'KO',
     currentTrailerId: null,
-    currentMovie: null 
+    currentMovie: null,
+    history: JSON.parse(localStorage.getItem('history') || '[]')
 };
 
 // UI Elements
@@ -228,6 +229,7 @@ async function handleDrawClick() {
 function updateButtonState(drawing) {
     drawBtn.disabled = drawing;
     drawBtn.textContent = drawing ? I18N[state.lang].drawing : I18N[state.lang].draw;
+    drawBtn.classList.toggle('drawing', drawing);
 }
 
 function startInfiniteSpin() {
@@ -363,6 +365,16 @@ async function showResult(movie, omdb, credits, ott) {
     } else {
         ottList.innerHTML = `<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">${labels.noOtt}</span>`;
     }
+
+    // Save to History
+    const historyItem = {
+        id: movie.id,
+        title: movie.title,
+        poster: movie.poster_path,
+        year: movie.release_date?.split('-')[0]
+    };
+    state.history = [historyItem, ...state.history.filter(h => h.id !== movie.id)].slice(0, 5);
+    localStorage.setItem('history', JSON.stringify(state.history));
 
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
     slotView.style.display = 'none';

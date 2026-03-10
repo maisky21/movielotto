@@ -25,3 +25,9 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 3. [x] **Data Logic:** Implement the smart filtering and genre expansion logic.
 4. [x] **Interaction Fixes:** Apply `stopPropagation` and deep link logic to OTT providers.
 5. [x] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
+
+## Future Roadmap
+1. [ ] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
+2. [ ] **Advanced Filtering:** Add options to filter by release year (e.g., 2010s, 2020s) and specific rating thresholds.
+3. [ ] **Visual Polish:** Add a "glow" pulse animation to the Neon button during the "Drawing..." state.
+4. [ ] **Share via QR Code:** Add a QR code generation feature for easy sharing between mobile devices.
