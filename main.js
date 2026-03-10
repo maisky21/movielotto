@@ -510,44 +510,11 @@ function updateLangUI() {
     document.getElementById('link-terms').textContent = labels.terms;
 }
 
-async function shareMovie(e) {
-    if (e) e.stopPropagation();
-    if (!state.currentMovie) return;
-
-    const shareData = {
-        title: `시네 로또 - ${state.currentMovie.title}`,
-        text: `${state.currentMovie.title} (${state.currentMovie.release_date?.split('-')[0]}) - 평점 ${state.currentMovie.vote_average.toFixed(1)} 명작 영화 추천!`,
-        url: window.location.href
-    };
-
-    const btn = document.getElementById('share-btn');
-    const icon = document.getElementById('share-icon');
-
-    try {
-        if (navigator.share) {
-            await navigator.share(shareData);
-        } else {
-            const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
-            await navigator.clipboard.writeText(textToCopy);
-            
-            btn.classList.add('copied');
-            icon.textContent = '✅';
-            setTimeout(() => {
-                btn.classList.remove('copied');
-                icon.textContent = '🔗';
-            }, 2000);
-        }
-    } catch (err) {
-        console.error('Share failed', err);
-    }
-}
-
 window.handleDrawClick = handleDrawClick;
 window.resetApp = resetApp;
 window.toggleTheme = toggleTheme;
 window.toggleLanguage = toggleLanguage;
 window.selectGenre = selectGenre;
 window.playTrailer = playTrailer;
-window.shareMovie = shareMovie;
 
 init();
