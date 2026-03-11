@@ -124,8 +124,10 @@ function selectGenre(id) {
 }
 
 async function getMovies(genreId, expanded = false) {
-    const randomPage = Math.floor(Math.random() * 50) + 1;
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}`;
+    const randomPage = Math.floor(Math.random() * 80) + 1; // Increased depth (was 50)
+    const providerIds = [2, 356, 8, 337, 119]; // Apple TV+, Coupang, Netflix, Disney+, Prime
+    
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${providerIds.join('|')}`;
     
     if (genreId) {
         let genreIds = [genreId];
@@ -177,13 +179,20 @@ async function handleDrawClick() {
         let moviePool = [];
         let retryCount = 0;
 
-        while (!selectedMovie && retryCount < 15) {
-            // Strictly 'movie' discovery
+        while (!selectedMovie && retryCount < 20) { // Increased retries for deeper search
             moviePool = await getMovies(state.selectedGenre);
-            const candidates = moviePool.filter(m => !state.viewedIds.has(m.id)).sort(() => Math.random() - 0.5);
+            
+            // Weighting & Detection for Originals
+            const candidates = moviePool.map(m => {
+                let weight = Math.random();
+                const isLikelyOriginal = (m.production_companies || []).some(c => 
+                    ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.includes(brand))
+                );
+                if (isLikelyOriginal) weight += 2.0; // Boost weight for original content
+                return { ...m, weight };
+            }).sort((a, b) => b.weight - a.weight);
             
             for (const candidate of candidates) {
-                // Fetch full info with watch/providers and region set to KR
                 const fullInfo = await fetchFullInfo(candidate.id);
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 const omdb = await fetchOMDb(candidate);
@@ -192,7 +201,7 @@ async function handleDrawClick() {
                 const imdbScore = parseFloat(omdb?.imdbRating) || 0;
                 const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
 
-                // High quality filter
+                // Threshold Check
                 if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
                     selectedMovie = candidate;
                     selectedOmdb = omdb;
