@@ -12,9 +12,10 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Dark Mode:** Fluorescent green (Neon) button with black text.
 - **Mobile-First (iPhone 12 Optimized):** Large, readable text in the main display box (yellow highlight style) and oversized icons for easy touch interaction.
 - **Reset Logic:** Clicking the top logo resets the application state instantly.
-- **Advanced YouTube Trailer Control:**
-    - **IFrame API Integration:** Uses the official YouTube IFrame Player API for granular control.
-    - **Accidental Pause Protection:** A transparent overlay covers the video area (except for the bottom 60px control bar) to prevent accidental pauses when clicking the video body.
+- **Stable YouTube Trailer Integration:**
+    - **Clean Player View:** All interfering transparent layers and `pointer-events: none` settings have been removed to allow direct interaction with the YouTube player.
+    - **Mobile Playback Stability:** `playsinline: 1` is enforced for immediate playback within the browser on mobile devices.
+    - **Event Propagation Control:** Clicks on the trailer container are isolated (`stopPropagation`) to prevent accidental app resets or rewinding on PC.
     - **Session Sync:** Video stops automatically when drawing a new movie or resetting the app, ensuring clean state transitions.
 
 ## Technical Stack
@@ -32,10 +33,9 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 5. [x] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
 6. [x] **UI/UX Polish:** Refactor poster/card ratios for better visual balance on all devices.
 7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
-8. [x] **YouTube API Integration:** Implement the YouTube IFrame API and click-protection overlay for trailers.
+8. [x] **YouTube API Integration:** Implement the YouTube IFrame API with clean player logic (removed blocking layers and fixed bubbling).
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
 2. [ ] **Advanced Filtering:** Add options to filter by release year (e.g., 2010s, 2020s) and specific rating thresholds.
 3. [x] **Visual Polish:** Add a "glow" pulse animation to the Neon button during the "Drawing..." state.
-

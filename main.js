@@ -417,11 +417,14 @@ function getKROttAppScheme(providerId, title) {
 }
 
 function playTrailer() {
-    if (!state.currentTrailerId || !state.isApiReady) return;
+    if (!state.currentTrailerId || !state.isApiReady || state.player) return;
 
-    trailerContainer.innerHTML = '<div id="yt-player"></div><div class="trailer-overlay"></div>';
+    trailerContainer.innerHTML = '<div id="yt-player"></div>';
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
+
+    // Stop propagation so clicking the trailer doesn't trigger playTrailer again via poster-area
+    trailerContainer.onclick = (e) => e.stopPropagation();
 
     state.player = new YT.Player('yt-player', {
         height: '100%',
@@ -442,23 +445,17 @@ function playTrailer() {
 }
 
 function onPlayerStateChange(event) {
-    // Prevent accidental pause
-    // If state is PAUSED (2), and it wasn't triggered by reaching the end (0)
-    if (event.data === YT.PlayerState.PAUSED) {
-        // We can't easily detect if the user clicked the bottom control bar vs the video body.
-        // However, we have a 'trailer-overlay' div covering the video body.
-        // If the pause was triggered while the video body was clicked, the overlay would have intercepted it.
-        // But the overlay 'pointer-events' are 'default', and it doesn't cover the bottom 60px.
-        // If the user clicks the overlay, it shouldn't pause.
-        // If for some reason it still pauses (e.g. keyboard), we can force play if needed.
-        // For now, the overlay should handle the "accidental click on video body" requirement.
-    }
+    // Handling state changes if needed
 }
 
 function stopTrailer() {
     if (state.player && state.player.stopVideo) {
-        state.player.stopVideo();
-        state.player.destroy();
+        try {
+            state.player.stopVideo();
+            state.player.destroy();
+        } catch (e) {
+            console.error("Error stopping trailer", e);
+        }
         state.player = null;
     }
     trailerContainer.innerHTML = '';
