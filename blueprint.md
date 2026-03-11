@@ -16,6 +16,10 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **IFrame API Integration:** Uses the official YouTube IFrame Player API for granular control.
     - **Accidental Pause Protection:** A transparent overlay covers the video area (except for the bottom 60px control bar) to prevent accidental pauses when clicking the video body.
     - **Session Sync:** Video stops automatically when drawing a new movie or resetting the app, ensuring clean state transitions.
+- **Dynamic Blurred Background:**
+    - **Immersive Visuals:** The background dynamically updates with a heavily blurred (40px) version of the current movie poster.
+    - **Readability:** A semi-transparent black overlay (0.4 opacity) and brightness adjustment (0.4) ensure the UI elements and text remain perfectly legible.
+    - **Smooth Transitions:** Transitions between background images are animated with a smooth 0.8s ease-in-out effect.
 
 ## Technical Stack
 - **HTML5/CSS3:** Vanilla CSS for maximum control and performance.
@@ -33,9 +37,9 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 6. [x] **UI/UX Polish:** Refactor poster/card ratios for better visual balance on all devices.
 7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
 8. [x] **YouTube API Integration:** Implement the YouTube IFrame API and click-protection overlay for trailers.
+9. [x] **Dynamic Blurred Background:** Implement the movie-specific blurred background with smooth transitions.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
 2. [ ] **Advanced Filtering:** Add options to filter by release year (e.g., 2010s, 2020s) and specific rating thresholds.
 3. [x] **Visual Polish:** Add a "glow" pulse animation to the Neon button during the "Drawing..." state.
-

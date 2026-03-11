@@ -286,8 +286,13 @@ async function performFinalSpin(targetMovie, pool) {
 }
 
 async function showResult(movie, omdb, credits, ott) {
-    document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
+    const posterUrl = `${CONFIG.IMG_URL}${movie.poster_path}`;
+    document.getElementById('res-poster').src = posterUrl;
     
+    // Set dynamic blurred background
+    const dynamicBg = document.getElementById('dynamic-bg');
+    dynamicBg.style.backgroundImage = `url(${posterUrl})`;
+
     const titleEl = document.getElementById('res-title');
     titleEl.innerHTML = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
@@ -512,6 +517,11 @@ function resetApp() {
     trailerContainer.style.display = 'none';
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
+    
+    // Clear dynamic background
+    const dynamicBg = document.getElementById('dynamic-bg');
+    dynamicBg.style.backgroundImage = 'none';
+
     startInfiniteSpin();
     updateButtonState(false);
 }
