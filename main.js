@@ -396,8 +396,12 @@ async function showResult(movie, omdb, credits, ott) {
         ...(krData.buy || [])
     ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
 
-    // Whitelist Only (Netflix, Disney+, Apple, Coupang, Prime)
+    // 1. Strict Whitelist Filter (Only 5 Targets)
     const whitelistIds = [8, 337, 2, 356, 119];
+    
+    // Forced removal of non-target OTTs (WAVVE: 356 check, WATCHA: 97, TVING: 350 etc)
+    // Actually Coupang is 356, so let's be careful with the IDs.
+    // TMDB IDs: Netflix(8), Disney+(337), Apple TV+(2), Prime Video(119), Coupang Play(356)
     let providers = allProviders.filter(p => whitelistIds.includes(p.provider_id));
 
     // Forced Original Match Logic (Restricted to Whitelist)
@@ -422,7 +426,10 @@ async function showResult(movie, omdb, credits, ott) {
         }
     });
 
+    // 2. Sorting by Priority
     providers.sort((a, b) => whitelistIds.indexOf(a.provider_id) - whitelistIds.indexOf(b.provider_id));
+
+    // Slice to 5 to avoid overflow
     providers = providers.slice(0, 5);
 
     if (providers.length > 0) {
