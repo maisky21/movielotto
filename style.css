@@ -181,6 +181,15 @@ body {
 .slot-item img { width: 100%; height: 100%; object-fit: cover; }
 .slot-item.placeholder { background: #000; }
 
+.slot-fade {
+    animation: slotFade 0.1s ease-in-out;
+}
+
+@keyframes slotFade {
+    0% { opacity: 0.5; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
 .ticket-icon {
     font-size: 100px;
     filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.4)) drop-shadow(0 0 10px rgba(138, 43, 226, 0.6));

@@ -165,7 +165,8 @@ async function handleDrawClick() {
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
     
-    startInfiniteSpin();
+    // Start slot machine visual effect
+    const slotPromise = runSlotAnimation();
 
     try {
         let selectedMovie = null;
@@ -221,7 +222,9 @@ async function handleDrawClick() {
         const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
         state.currentTrailerId = trailer?.key || null;
 
-        await performFinalSpin(selectedMovie, moviePool);
+        // Wait for slot animation to finish if it's still running
+        await slotPromise;
+        
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
@@ -233,56 +236,28 @@ async function handleDrawClick() {
     }
 }
 
-function updateButtonState(drawing) {
-    drawBtn.disabled = drawing;
-    drawBtn.textContent = drawing ? I18N[state.lang].drawing : I18N[state.lang].draw;
-    drawBtn.classList.toggle('drawing', drawing);
-}
-
-function startInfiniteSpin() {
-    slotTrack.style.transition = 'none';
-    slotTrack.style.transform = 'translateY(0)';
+async function runSlotAnimation() {
+    const sequenceCount = 15;
+    const duration = 1500; // 1.5 seconds
+    const interval = duration / sequenceCount;
     
-    slotTrack.innerHTML = '';
-    const ticketDiv = document.createElement('div');
-    ticketDiv.className = 'slot-item placeholder';
-    ticketDiv.innerHTML = '<span class="ticket-icon">🎟️</span>';
-    slotTrack.appendChild(ticketDiv);
+    // Use current movie pool or fetch a random one for animation
+    let pool = state.movies.length > 5 ? state.movies : await getMovies(null);
+    if (pool.length < 5) pool = [{poster_path: ''}]; // Fallback
 
-    for(let i=0; i<10; i++) {
-        const div = document.createElement('div');
-        div.className = 'slot-item placeholder';
-        div.textContent = '🎰';
-        slotTrack.appendChild(div);
+    for (let i = 0; i < sequenceCount; i++) {
+        const randomMovie = pool[Math.floor(Math.random() * pool.length)];
+        const posterUrl = randomMovie.poster_path ? `${CONFIG.IMG_URL}${randomMovie.poster_path}` : '';
+        
+        slotTrack.innerHTML = `<div class="slot-item slot-fade"><img src="${posterUrl}" alt="Slot"></div>`;
+        
+        await new Promise(resolve => setTimeout(resolve, interval));
     }
 }
 
+// Keeping original performFinalSpin for structural compatibility but unused now
 async function performFinalSpin(targetMovie, pool) {
-    const sequenceCount = 12;
-    const sequence = [];
-    for(let i=0; i < sequenceCount - 1; i++) {
-        sequence.push(pool[Math.floor(Math.random() * pool.length)]);
-    }
-    sequence.push(targetMovie);
-
-    slotTrack.innerHTML = '';
-    sequence.forEach(m => {
-        const div = document.createElement('div');
-        div.className = 'slot-item';
-        div.innerHTML = `<img src="${CONFIG.IMG_URL}${m.poster_path}" alt="Poster">`;
-        slotTrack.appendChild(div);
-    });
-
-    return new Promise(resolve => {
-        const itemHeight = 400; 
-        const totalDist = (sequenceCount - 1) * itemHeight;
-        
-        slotTrack.style.transition = 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)';
-        slotTrack.offsetHeight; 
-        slotTrack.style.transform = `translateY(-${totalDist}px)`;
-        
-        setTimeout(resolve, 2700); 
-    });
+    return Promise.resolve();
 }
 
 async function showResult(movie, omdb, credits, ott) {
