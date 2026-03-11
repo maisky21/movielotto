@@ -218,8 +218,15 @@ async function handleDrawClick() {
         state.viewedIds.add(selectedMovie.id);
         state.currentMovie = selectedMovie; 
 
-        const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
-        state.currentTrailerId = trailer?.key || null;
+        // Refined Trailer Search Logic
+        let trailerId = findBestTrailer(selectedVideos?.results);
+
+        if (!trailerId) {
+            const enInfo = await fetchFullInfo(selectedMovie.id, 'en-US');
+            trailerId = findBestTrailer(enInfo.videos?.results);
+        }
+
+        state.currentTrailerId = trailerId;
 
         await performFinalSpin(selectedMovie, moviePool);
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
@@ -231,6 +238,20 @@ async function handleDrawClick() {
         state.isDrawing = false;
         updateButtonState(false);
     }
+}
+
+function findBestTrailer(videos) {
+    if (!videos || !Array.isArray(videos)) return null;
+    const ytVideos = videos.filter(v => v.site === 'YouTube');
+    if (ytVideos.length === 0) return null;
+
+    const highPriority = ['Official Trailer', '공식 예고편', 'Main Trailer', '메인 예고편'];
+    let best = ytVideos.find(v => v.type === 'Trailer' && highPriority.some(kw => v.name.includes(kw)));
+    if (!best) best = ytVideos.find(v => v.type === 'Trailer');
+    if (!best) best = ytVideos.find(v => v.type === 'Teaser' && highPriority.some(kw => v.name.includes(kw)));
+    if (!best) best = ytVideos[0];
+
+    return best?.key || null;
 }
 
 function updateButtonState(drawing) {
@@ -258,7 +279,7 @@ function startInfiniteSpin() {
 }
 
 async function performFinalSpin(targetMovie, pool) {
-    const sequenceCount = 15; // Increased for more "rolling" feel
+    const sequenceCount = 15;
     const sequence = [];
     for(let i=0; i < sequenceCount - 1; i++) {
         sequence.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -427,7 +448,6 @@ function playTrailer() {
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
 
-    // Stop propagation so clicking the trailer doesn't trigger playTrailer again via poster-area
     trailerContainer.onclick = (e) => e.stopPropagation();
 
     state.player = new YT.Player('yt-player', {
@@ -449,7 +469,6 @@ function playTrailer() {
 }
 
 function onPlayerStateChange(event) {
-    // Handling state changes if needed
 }
 
 function stopTrailer() {
@@ -490,9 +509,10 @@ async function fetchOMDb(movie) {
     } catch (e) { return null; }
 }
 
-async function fetchFullInfo(movieId) {
+async function fetchFullInfo(movieId, overrideLang = null) {
     try {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&append_to_response=videos,credits`);
+        const lang = overrideLang || (state.lang === 'KO' ? 'ko-KR' : 'en-US');
+        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${lang}&append_to_response=videos,credits`);
         return await res.json();
     } catch (e) { return {}; }
 }
