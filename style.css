@@ -222,9 +222,9 @@ body {
 
 .poster-display {
     width: 100%;
-    max-width: 320px; /* Limit max width for better centering on tablets */
-    margin: 0 auto; /* Center horizontally */
-    display: block; /* Ensure it behaves as block for margin auto */
+    max-width: 320px;
+    margin: 0 auto;
+    display: block;
     aspect-ratio: 2 / 3;
     border-radius: 32px;
     overflow: hidden;
@@ -243,127 +243,18 @@ body {
 
 /* INFO CARD */
 .movie-info-box {
-    margin: 0.8rem auto 0 auto; /* Center with margin auto */
+    margin: 0.8rem auto 0 auto;
     width: 100%;
-    max-width: 340px; /* Limit max width to match poster + small padding */
+    max-width: 340px;
     background: var(--yellow);
     border-radius: 28px;
     padding: 1.2rem;
     color: #000;
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-/* Landscape Mode Optimization */
-@media (orientation: landscape) {
-    .main-card {
-        margin-bottom: 80px; /* Reduced for landscape */
-    }
-    .result-container {
-        flex-direction: row;
-        max-width: 100%;
-        gap: 2rem;
-        align-items: center;
-        justify-content: center;
-    }
-    .poster-display {
-        width: 30% !important;
-        max-width: 240px;
-        max-height: 70vh;
-        margin: 0 !important;
-    }
-    .movie-info-box {
-        width: 50% !important;
-        max-width: 400px;
-        margin: 0 !important;
-        height: auto;
-        max-height: 70vh;
-        overflow-y: auto; /* Allow internal scrolling if content overflows */
-    }
-    .slot-container {
-        flex-direction: row;
-        gap: 2rem;
-    }
-    .slot-window {
-        max-width: 180px;
-    }
-}
-
-/* Specific Mobile Landscape Fix (Ultra Compact) */
-@media screen and (max-height: 450px) and (orientation: landscape) {
-    .app-container {
-        padding-bottom: 80px !important; /* Force lift everything up */
-    }
-    .main-card {
-        margin-bottom: 40px !important;
-    }
-    .header, .genre-nav {
-        display: none !important;
-    }
-    .result-container {
-        flex-direction: row !important;
-        gap: 15px !important;
-        max-width: 100% !important;
-        justify-content: center !important;
-        align-items: flex-start !important;
-        padding-top: 10px !important;
-    }
-    .poster-display {
-        width: 60px !important;
-        height: auto !important;
-        max-width: 60px !important;
-        aspect-ratio: 2/3 !important;
-        margin: 0 !important;
-        border-radius: 12px !important;
-    }
-    .movie-info-box {
-        width: calc(100% - 90px) !important;
-        max-width: 450px !important;
-        padding: 10px !important;
-        margin: 0 !important;
-        max-height: 120px !important;
-        background: var(--yellow) !important;
-    }
-    .movie-title {
-        font-size: 0.9rem !important;
-        margin-bottom: 2px !important;
-    }
-    .rating-row {
-        margin-bottom: 2px !important;
-        transform: scale(0.8);
-        transform-origin: left center;
-    }
-    .movie-overview {
-        display: none !important;
-    }
-    .credits-info {
-        font-size: 0.6rem !important;
-        margin-bottom: 2px !important;
-    }
-    .ott-section {
-        padding-top: 0 !important;
-    }
-    .ott-list {
-        gap: 5px !important;
-    }
-    .ott-link {
-        width: 1.2rem !important;
-        height: 1.2rem !important;
-    }
-    .footer {
-        bottom: 10px !important;
-        left: 10% !important;
-        right: 10% !important;
-    }
-    .draw-btn {
-        padding: 12px !important;
-        font-size: 0.9rem !important;
-    }
-    .legal-footer {
-        display: none !important;
-    }
 }
 
 .rating-row { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
@@ -488,11 +379,6 @@ body {
         margin-bottom: 140px;
         gap: 1rem;
     }
-}
-
-/* Removal of specific mobile overrides as base is now responsive */
-@media (max-width: 768px) {
-    .app-container { padding: 0 5%; }
 }
 
 /* ULTRA SMALL SCREENS */
