@@ -180,24 +180,26 @@ async function handleDrawClick() {
         let retryCount = 0;
         const priorityIds = [8, 337, 2, 356, 119]; // Netflix, Disney+, Apple, Coupang, Prime
 
-        while (!selectedMovie && retryCount < 20) { // Increased retries for deeper search
+        while (!selectedMovie && retryCount < 25) { // Increased retries for Coupang depth
             moviePool = await getMovies(state.selectedGenre);
             
-            // Weighting & Detection for Originals
             const weightedCandidates = await Promise.all(moviePool.map(async m => {
                 const fullInfo = await fetchFullInfo(m.id);
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 
                 let weight = Math.random();
-                const isLikelyOriginal = (m.production_companies || []).some(c => 
-                    ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.includes(brand))
-                );
-                if (isLikelyOriginal) weight += 2.0;
+                
+                // 1. Coupang Play (356) Special Logic & Weight
+                const hasCoupang = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
+                    .some(p => p.provider_id === 356);
+                const isCoupangOriginal = (m.production_companies || []).some(c => c.name.toLowerCase().includes('coupang'));
+                
+                if (hasCoupang || isCoupangOriginal) weight += 5.0; // High bias for Coupang
 
-                // Subscribed OTT availability weight (3x bias)
-                const hasPriorityOtt = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
-                    .some(p => priorityIds.includes(p.provider_id));
-                if (hasPriorityOtt) weight += 3.0;
+                // 2. Other Subscribed OTTs
+                const hasOtherPriority = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
+                    .some(p => [8, 337, 2, 119].includes(p.provider_id));
+                if (hasOtherPriority) weight += 2.5;
 
                 return { ...m, weight, fullInfo };
             }));
@@ -419,11 +421,11 @@ async function showResult(movie, omdb, credits, ott) {
         { name: 'Disney Plus', id: 337, keywords: ['Disney'] },
         { name: 'Apple TV Plus', id: 2, keywords: ['Apple'] },
         { name: 'Amazon Prime Video', id: 119, keywords: ['Amazon'] },
-        { name: 'Coupang Play', id: 356, keywords: ['Coupang'] }
+        { name: 'Coupang Play', id: 356, keywords: ['Coupang', '쿠팡'] } 
     ];
 
     originalPlatforms.forEach(p => {
-        const isOriginal = prodCompanies.some(c => p.keywords.some(kw => c.name.includes(kw)));
+        const isOriginal = prodCompanies.some(c => p.keywords.some(kw => c.name.toLowerCase().includes(kw.toLowerCase())));
         const alreadyExists = providers.some(pr => pr.provider_id === p.id);
         if (isOriginal && !alreadyExists) {
             providers.push({
