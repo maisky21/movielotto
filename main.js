@@ -514,13 +514,16 @@ function getKROttAppScheme(providerId, title) {
     return SCHEME_MAP[providerId] || null;
 }
 
-function playTrailer() {
+function playTrailer(event) {
+    if (event) event.stopPropagation(); // Prevent bubbling to poster-area
+    
     if (!state.currentTrailerId || !state.isApiReady || state.player) return;
 
     trailerContainer.innerHTML = '<div id="yt-player"></div>';
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
 
+    // Prevent re-triggering via bubbling when interacting with player
     trailerContainer.onclick = (e) => e.stopPropagation();
 
     state.player = new YT.Player('yt-player', {
