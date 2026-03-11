@@ -177,26 +177,27 @@ async function handleDrawClick() {
         let moviePool = [];
         let retryCount = 0;
 
-        while (!selectedMovie && retryCount < 10) {
+        while (!selectedMovie && retryCount < 15) {
+            // Strictly 'movie' discovery
             moviePool = await getMovies(state.selectedGenre);
             const candidates = moviePool.filter(m => !state.viewedIds.has(m.id)).sort(() => Math.random() - 0.5);
             
             for (const candidate of candidates) {
-                const [ott, omdb, fullInfo] = await Promise.all([
-                    fetchOTT(candidate.id),
-                    fetchOMDb(candidate),
-                    fetchFullInfo(candidate.id)
-                ]);
+                // Fetch full info with watch/providers and region set to KR
+                const fullInfo = await fetchFullInfo(candidate.id);
+                const ott = fullInfo['watch/providers']?.results?.KR || {};
+                const omdb = await fetchOMDb(candidate);
 
                 const tmdbScore = candidate.vote_average || 0;
                 const imdbScore = parseFloat(omdb?.imdbRating) || 0;
                 const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
 
+                // High quality filter
                 if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
                     selectedMovie = candidate;
                     selectedOmdb = omdb;
                     selectedCredits = fullInfo.credits;
-                    selectedOtt = ott;
+                    selectedOtt = { KR: ott }; 
                     selectedVideos = fullInfo.videos;
                     break;
                 }
@@ -207,22 +208,17 @@ async function handleDrawClick() {
         if (!selectedMovie) {
             selectedMovie = moviePool[0];
             const fullInfo = await fetchFullInfo(selectedMovie.id);
-            [selectedOtt, selectedOmdb] = await Promise.all([
-                fetchOTT(selectedMovie.id),
-                fetchOMDb(selectedMovie)
-            ]);
+            const ott = fullInfo['watch/providers']?.results?.KR || {};
+            const omdb = await fetchOMDb(selectedMovie);
             selectedCredits = fullInfo.credits;
             selectedVideos = fullInfo.videos;
+            selectedOtt = { KR: ott };
         }
 
         state.viewedIds.add(selectedMovie.id);
         state.currentMovie = selectedMovie; 
 
-        // 1. Construct Precise Search Keywords for Matching Logic
-        const releaseYear = selectedMovie.release_date ? selectedMovie.release_date.split('-')[0] : '';
-        const koSearchQuery = `${selectedMovie.title} ${releaseYear} 공식 예고편`;
-        
-        // 2. Ultimate Trailer Matching & Fallback
+        // Refined Trailer Search Logic (100% Movie Focused)
         let trailerId = findBestTrailer(selectedVideos?.results);
 
         if (!trailerId) {
@@ -249,23 +245,16 @@ function findBestTrailer(videos) {
     const ytVideos = videos.filter(v => v.site === 'YouTube');
     if (ytVideos.length === 0) return null;
 
-    // Advanced filtering based on keywords
     const officialKws = ['Official', '공식', 'Main', '메인'];
     const trailerKws = ['Trailer', '예고편'];
 
-    // Priority 1: Official + Trailer
     let best = ytVideos.find(v => 
         officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())) && 
         trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase()))
     );
 
-    // Priority 2: Trailer type or Trailer in name
     if (!best) best = ytVideos.find(v => v.type === 'Trailer' || trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase())));
-
-    // Priority 3: Teaser or Official in name
     if (!best) best = ytVideos.find(v => v.type === 'Teaser' || officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())));
-
-    // Priority 4: First available YouTube video
     if (!best) best = ytVideos[0];
 
     return best?.key || null;
