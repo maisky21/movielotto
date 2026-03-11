@@ -259,7 +259,7 @@ body {
 /* Landscape Mode Optimization */
 @media (orientation: landscape) {
     .main-card {
-        margin-bottom: 100px;
+        margin-bottom: 80px; /* Reduced for landscape */
     }
     .result-container {
         flex-direction: row;
@@ -269,8 +269,8 @@ body {
         justify-content: center;
     }
     .poster-display {
-        width: 35% !important;
-        max-width: 280px;
+        width: 30% !important;
+        max-width: 240px;
         max-height: 70vh;
         margin: 0 !important;
     }
@@ -280,13 +280,56 @@ body {
         margin: 0 !important;
         height: auto;
         max-height: 70vh;
+        overflow-y: auto; /* Allow internal scrolling if content overflows */
     }
     .slot-container {
         flex-direction: row;
         gap: 2rem;
     }
     .slot-window {
-        max-width: 200px;
+        max-width: 180px;
+    }
+}
+
+/* Specific Mobile Landscape Fix (Low Height) */
+@media (orientation: landscape) and (max-height: 500px) {
+    .main-card {
+        margin-bottom: 60px;
+    }
+    .header {
+        padding: 0.5rem 0;
+    }
+    .logo {
+        font-size: 1rem;
+    }
+    .poster-display {
+        width: 25vw !important;
+        max-height: 60vh;
+    }
+    .movie-info-box {
+        padding: 0.8rem;
+        width: 60% !important;
+        max-height: 60vh;
+    }
+    .movie-title {
+        font-size: 1rem;
+    }
+    .movie-overview {
+        font-size: 0.65rem;
+        -webkit-line-clamp: 2; /* Limit to 2 lines */
+        margin-bottom: 0.4rem;
+    }
+    .ott-link {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+    .footer {
+        bottom: 0.5rem;
+        gap: 0.5rem;
+    }
+    .draw-btn {
+        padding: 0.8rem;
+        font-size: 0.9rem;
     }
 }
 
