@@ -204,11 +204,17 @@ async function handleDrawClick() {
                 return { ...m, weight, fullInfo, availableOnWhitelist };
             }));
 
-            // Filter strictly: only pick movies on whitelisted OTTs if possible
+            // Filter strictly: only pick movies on whitelisted OTTs. NO FALLBACK.
             let filteredCandidates = weightedCandidates.filter(c => c.availableOnWhitelist);
-            if (filteredCandidates.length === 0) filteredCandidates = weightedCandidates;
+
+            // If no whitelisted movies in this pool, skip to next retry
+            if (filteredCandidates.length === 0) {
+                retryCount++;
+                continue;
+            }
 
             filteredCandidates.sort((a, b) => b.weight - a.weight);
+
             
             for (const candidate of filteredCandidates) {
                 const fullInfo = candidate.fullInfo;
