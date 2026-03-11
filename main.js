@@ -361,8 +361,8 @@ async function showResult(movie, omdb, credits, ott) {
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
         : movie.title;
     
-    const releaseDate = movie.release_date ? ` (${movie.release_date})` : '';
-    const dateSpan = releaseDate ? `<span class="release-date">${releaseDate}</span>` : '';
+    const releaseYearStr = movie.release_date ? ` (${movie.release_date.split('-')[0]})` : '';
+    const dateSpan = releaseYearStr ? `<span class="release-date">${releaseYearStr}</span>` : '';
     
     titleEl.innerHTML = `${titleContent}${dateSpan} ${newBadge}`;
 
