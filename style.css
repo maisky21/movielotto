@@ -223,8 +223,17 @@ body {
 }
 
 .poster-display img { width: 100%; height: 100%; object-fit: cover; }
-.trailer-container { position: absolute; inset: 0; z-index: 5; display: none; }
+.trailer-container { position: absolute; inset: 0; z-index: 5; display: none; background: #000; }
 .trailer-container iframe { width: 100%; height: 100%; border: none; }
+.trailer-overlay { 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: calc(100% - 60px); 
+    z-index: 10; 
+    cursor: default;
+}
 .play-overlay { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 10; pointer-events: none; }
 .play-icon { font-size: 60px; color: #fff; opacity: 0.7; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
 

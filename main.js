@@ -60,7 +60,9 @@ let state = {
     lang: localStorage.getItem('lang') || 'KO',
     currentTrailerId: null,
     currentMovie: null,
-    history: JSON.parse(localStorage.getItem('history') || '[]')
+    history: JSON.parse(localStorage.getItem('history') || '[]'),
+    player: null,
+    isApiReady: false
 };
 
 // UI Elements
@@ -72,6 +74,11 @@ const themeToggle = document.getElementById('theme-toggle');
 const langToggle = document.getElementById('lang-toggle');
 const trailerContainer = document.getElementById('trailer-container');
 const playOverlay = document.getElementById('play-overlay');
+
+// YouTube IFrame API
+window.onYouTubeIframeAPIReady = () => {
+    state.isApiReady = true;
+};
 
 async function init() {
     applyTheme();
@@ -147,7 +154,7 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
-    trailerContainer.innerHTML = '';
+    stopTrailer();
     trailerContainer.style.display = 'none';
     playOverlay.style.display = 'flex';
     state.currentTrailerId = null;
@@ -410,10 +417,51 @@ function getKROttAppScheme(providerId, title) {
 }
 
 function playTrailer() {
-    if (!state.currentTrailerId) return;
-    trailerContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${state.currentTrailerId}?autoplay=1&mute=0&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    if (!state.currentTrailerId || !state.isApiReady) return;
+
+    trailerContainer.innerHTML = '<div id="yt-player"></div><div class="trailer-overlay"></div>';
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
+
+    state.player = new YT.Player('yt-player', {
+        height: '100%',
+        width: '100%',
+        videoId: state.currentTrailerId,
+        playerVars: {
+            'autoplay': 1,
+            'controls': 1,
+            'rel': 0,
+            'modestbranding': 1,
+            'iv_load_policy': 3,
+            'playsinline': 1
+        },
+        events: {
+            'onStateChange': onPlayerStateChange
+        }
+    });
+}
+
+function onPlayerStateChange(event) {
+    // Prevent accidental pause
+    // If state is PAUSED (2), and it wasn't triggered by reaching the end (0)
+    if (event.data === YT.PlayerState.PAUSED) {
+        // We can't easily detect if the user clicked the bottom control bar vs the video body.
+        // However, we have a 'trailer-overlay' div covering the video body.
+        // If the pause was triggered while the video body was clicked, the overlay would have intercepted it.
+        // But the overlay 'pointer-events' are 'default', and it doesn't cover the bottom 60px.
+        // If the user clicks the overlay, it shouldn't pause.
+        // If for some reason it still pauses (e.g. keyboard), we can force play if needed.
+        // For now, the overlay should handle the "accidental click on video body" requirement.
+    }
+}
+
+function stopTrailer() {
+    if (state.player && state.player.stopVideo) {
+        state.player.stopVideo();
+        state.player.destroy();
+        state.player = null;
+    }
+    trailerContainer.innerHTML = '';
 }
 
 async function fetchOTT(movieId) {
@@ -460,7 +508,7 @@ function resetApp() {
     if (state.isDrawing) return;
     state.viewedIds.clear();
     state.currentMovie = null;
-    trailerContainer.innerHTML = '';
+    stopTrailer();
     trailerContainer.style.display = 'none';
     resultView.style.display = 'none';
     slotView.style.display = 'flex';

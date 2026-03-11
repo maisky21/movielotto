@@ -12,12 +12,17 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Dark Mode:** Fluorescent green (Neon) button with black text.
 - **Mobile-First (iPhone 12 Optimized):** Large, readable text in the main display box (yellow highlight style) and oversized icons for easy touch interaction.
 - **Reset Logic:** Clicking the top logo resets the application state instantly.
+- **Advanced YouTube Trailer Control:**
+    - **IFrame API Integration:** Uses the official YouTube IFrame Player API for granular control.
+    - **Accidental Pause Protection:** A transparent overlay covers the video area (except for the bottom 60px control bar) to prevent accidental pauses when clicking the video body.
+    - **Session Sync:** Video stops automatically when drawing a new movie or resetting the app, ensuring clean state transitions.
 
 ## Technical Stack
 - **HTML5/CSS3:** Vanilla CSS for maximum control and performance.
 - **JavaScript (ES Modules):** Clean, modular code in `main.js`.
 - **TMDB API:** Movie data, genres, and watch providers.
 - **OMDb API:** IMDb and Rotten Tomatoes ratings.
+- **YouTube IFrame Player API:** Enhanced trailer playback.
 
 ## Implementation Steps
 1. [x] **UI Refactor:** Implement the new high-contrast CSS and mobile-centric layout.
@@ -27,6 +32,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 5. [x] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
 6. [x] **UI/UX Polish:** Refactor poster/card ratios for better visual balance on all devices.
 7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
+8. [x] **YouTube API Integration:** Implement the YouTube IFrame API and click-protection overlay for trailers.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
