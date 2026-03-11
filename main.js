@@ -218,7 +218,11 @@ async function handleDrawClick() {
         state.viewedIds.add(selectedMovie.id);
         state.currentMovie = selectedMovie; 
 
-        // Refined Trailer Search Logic
+        // 1. Construct Precise Search Keywords for Matching Logic
+        const releaseYear = selectedMovie.release_date ? selectedMovie.release_date.split('-')[0] : '';
+        const koSearchQuery = `${selectedMovie.title} ${releaseYear} 공식 예고편`;
+        
+        // 2. Ultimate Trailer Matching & Fallback
         let trailerId = findBestTrailer(selectedVideos?.results);
 
         if (!trailerId) {
@@ -245,10 +249,23 @@ function findBestTrailer(videos) {
     const ytVideos = videos.filter(v => v.site === 'YouTube');
     if (ytVideos.length === 0) return null;
 
-    const highPriority = ['Official Trailer', '공식 예고편', 'Main Trailer', '메인 예고편'];
-    let best = ytVideos.find(v => v.type === 'Trailer' && highPriority.some(kw => v.name.includes(kw)));
-    if (!best) best = ytVideos.find(v => v.type === 'Trailer');
-    if (!best) best = ytVideos.find(v => v.type === 'Teaser' && highPriority.some(kw => v.name.includes(kw)));
+    // Advanced filtering based on keywords
+    const officialKws = ['Official', '공식', 'Main', '메인'];
+    const trailerKws = ['Trailer', '예고편'];
+
+    // Priority 1: Official + Trailer
+    let best = ytVideos.find(v => 
+        officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())) && 
+        trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase()))
+    );
+
+    // Priority 2: Trailer type or Trailer in name
+    if (!best) best = ytVideos.find(v => v.type === 'Trailer' || trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase())));
+
+    // Priority 3: Teaser or Official in name
+    if (!best) best = ytVideos.find(v => v.type === 'Teaser' || officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())));
+
+    // Priority 4: First available YouTube video
     if (!best) best = ytVideos[0];
 
     return best?.key || null;
