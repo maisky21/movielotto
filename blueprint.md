@@ -25,7 +25,8 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 3. [x] **Data Logic:** Implement the smart filtering and genre expansion logic.
 4. [x] **Interaction Fixes:** Apply `stopPropagation` and deep link logic to OTT providers.
 5. [x] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
-6. [x] **UI/UX Polish (Current):** Refactor poster/card ratios for better visual balance on all devices.
+6. [x] **UI/UX Polish:** Refactor poster/card ratios for better visual balance on all devices.
+7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
