@@ -178,35 +178,32 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
-        const priorityIds = [8, 337, 2, 356, 119]; // Netflix, Disney+, Apple, Coupang, Prime
+        const whitelistIds = [8, 337, 2, 356, 119]; // Whitelist: Netflix, Disney+, Apple, Coupang, Prime
 
-        while (!selectedMovie && retryCount < 25) { // Increased retries for Coupang depth
+        while (!selectedMovie && retryCount < 30) { // Increased retries for strict filtering
             moviePool = await getMovies(state.selectedGenre);
             
-            const weightedCandidates = await Promise.all(moviePool.map(async m => {
+            const candidates = await Promise.all(moviePool.map(async m => {
                 const fullInfo = await fetchFullInfo(m.id);
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 
+                // Whitelist check
+                const availableOnWhitelist = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
+                    .some(p => whitelistIds.includes(p.provider_id));
+                
                 let weight = Math.random();
-                
-                // 1. Coupang Play (356) Special Logic & Weight
-                const hasCoupang = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
-                    .some(p => p.provider_id === 356);
-                const isCoupangOriginal = (m.production_companies || []).some(c => c.name.toLowerCase().includes('coupang'));
-                
-                if (hasCoupang || isCoupangOriginal) weight += 5.0; // High bias for Coupang
+                if (availableOnWhitelist) weight += 10.0; // Strong bias for whitelisted platforms
 
-                // 2. Other Subscribed OTTs
-                const hasOtherPriority = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
-                    .some(p => [8, 337, 2, 119].includes(p.provider_id));
-                if (hasOtherPriority) weight += 2.5;
-
-                return { ...m, weight, fullInfo };
+                return { ...m, weight, fullInfo, availableOnWhitelist };
             }));
 
-            weightedCandidates.sort((a, b) => b.weight - a.weight);
+            // Filter strictly: preferentially pick movies on whitelisted OTTs
+            let filteredCandidates = candidates.filter(c => c.availableOnWhitelist);
+            if (filteredCandidates.length === 0) filteredCandidates = candidates; // Fallback if none found in pool
+
+            filteredCandidates.sort((a, b) => b.weight - a.weight);
             
-            for (const candidate of weightedCandidates) {
+            for (const candidate of filteredCandidates) {
                 const fullInfo = candidate.fullInfo;
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 const omdb = await fetchOMDb(candidate);
@@ -215,7 +212,6 @@ async function handleDrawClick() {
                 const imdbScore = parseFloat(omdb?.imdbRating) || 0;
                 const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
 
-                // Threshold Check
                 if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
                     selectedMovie = candidate;
                     selectedOmdb = omdb;
@@ -401,20 +397,19 @@ async function showResult(movie, omdb, credits, ott) {
     ottList.innerHTML = '';
     
     const krData = ott?.KR || {};
-    let providers = [
+    let allProviders = [
         ...(krData.flatrate || []),
         ...(krData.rent || []),
         ...(krData.buy || [])
     ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
 
-    // 1. Priority OTT IDs (Netflix, Disney+, Apple, Coupang, Prime)
-    const priorityIds = [8, 337, 2, 356, 119];
-    const excludedIds = [3, 192, 424, 421]; // Google TV, Rakuten Viki etc (VOD focus)
+    // 1. Whitelist Only (Netflix, Disney+, Apple, Coupang, Prime)
+    const whitelistIds = [8, 337, 2, 356, 119];
+    
+    // Strict Filtering: Only keep whitelisted services
+    let providers = allProviders.filter(p => whitelistIds.includes(p.provider_id));
 
-    // Filter out VOD/Excluded services
-    providers = providers.filter(p => !excludedIds.includes(p.provider_id));
-
-    // Forced Original Match Logic
+    // Forced Original Match Logic (Restricted to Whitelist)
     const prodCompanies = movie.production_companies || [];
     const originalPlatforms = [
         { name: 'Netflix', id: 8, keywords: ['Netflix'] },
@@ -436,17 +431,8 @@ async function showResult(movie, omdb, credits, ott) {
         }
     });
 
-    // 2. Sorting by Priority (Subscribed OTTs first)
-    providers.sort((a, b) => {
-        const idxA = priorityIds.indexOf(a.provider_id);
-        const idxB = priorityIds.indexOf(b.provider_id);
-        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-        if (idxA !== -1) return -1;
-        if (idxB !== -1) return 1;
-        return 0;
-    });
-
-    providers = providers.slice(0, 5);
+    // 2. Sorting by Whitelist Priority
+    providers.sort((a, b) => whitelistIds.indexOf(a.provider_id) - whitelistIds.indexOf(b.provider_id));
 
     if (providers.length > 0) {
         providers.forEach(p => {
