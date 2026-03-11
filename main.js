@@ -178,22 +178,34 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
+        const priorityIds = [8, 337, 2, 356, 119]; // Netflix, Disney+, Apple, Coupang, Prime
 
         while (!selectedMovie && retryCount < 20) { // Increased retries for deeper search
             moviePool = await getMovies(state.selectedGenre);
             
             // Weighting & Detection for Originals
-            const candidates = moviePool.map(m => {
+            const weightedCandidates = await Promise.all(moviePool.map(async m => {
+                const fullInfo = await fetchFullInfo(m.id);
+                const ott = fullInfo['watch/providers']?.results?.KR || {};
+                
                 let weight = Math.random();
                 const isLikelyOriginal = (m.production_companies || []).some(c => 
                     ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.includes(brand))
                 );
-                if (isLikelyOriginal) weight += 2.0; // Boost weight for original content
-                return { ...m, weight };
-            }).sort((a, b) => b.weight - a.weight);
+                if (isLikelyOriginal) weight += 2.0;
+
+                // Subscribed OTT availability weight (3x bias)
+                const hasPriorityOtt = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
+                    .some(p => priorityIds.includes(p.provider_id));
+                if (hasPriorityOtt) weight += 3.0;
+
+                return { ...m, weight, fullInfo };
+            }));
+
+            weightedCandidates.sort((a, b) => b.weight - a.weight);
             
-            for (const candidate of candidates) {
-                const fullInfo = await fetchFullInfo(candidate.id);
+            for (const candidate of weightedCandidates) {
+                const fullInfo = candidate.fullInfo;
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 const omdb = await fetchOMDb(candidate);
 
@@ -227,7 +239,11 @@ async function handleDrawClick() {
         state.viewedIds.add(selectedMovie.id);
         state.currentMovie = selectedMovie; 
 
-        // Refined Trailer Search Logic (100% Movie Focused)
+        // 1. Construct Precise Search Keywords for Matching Logic
+        const releaseYear = selectedMovie.release_date ? selectedMovie.release_date.split('-')[0] : '';
+        const koSearchQuery = `${selectedMovie.title} ${releaseYear} 공식 예고편`;
+        
+        // 2. Ultimate Trailer Matching & Fallback
         let trailerId = findBestTrailer(selectedVideos?.results);
 
         if (!trailerId) {
@@ -254,16 +270,23 @@ function findBestTrailer(videos) {
     const ytVideos = videos.filter(v => v.site === 'YouTube');
     if (ytVideos.length === 0) return null;
 
+    // Advanced filtering based on keywords
     const officialKws = ['Official', '공식', 'Main', '메인'];
     const trailerKws = ['Trailer', '예고편'];
 
+    // Priority 1: Official + Trailer
     let best = ytVideos.find(v => 
         officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())) && 
         trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase()))
     );
 
+    // Priority 2: Trailer type or Trailer in name
     if (!best) best = ytVideos.find(v => v.type === 'Trailer' || trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase())));
+
+    // Priority 3: Teaser or Official in name
     if (!best) best = ytVideos.find(v => v.type === 'Teaser' || officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())));
+
+    // Priority 4: First available YouTube video
     if (!best) best = ytVideos[0];
 
     return best?.key || null;
@@ -382,23 +405,27 @@ async function showResult(movie, omdb, credits, ott) {
         ...(krData.buy || [])
     ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
 
-    // 1. Expand Preferred Platforms & Original Matching
-    const originalPlatforms = [
-        { name: 'Netflix', id: 8, keywords: ['Netflix'] },
-        { name: 'Disney Plus', id: 337, keywords: ['Disney'] },
-        { name: 'Apple TV Plus', id: 350, keywords: ['Apple'] }, // Apple TV provider_id varies, using common one
-        { name: 'Amazon Prime Video', id: 119, keywords: ['Amazon'] },
-        { name: 'Coupang Play', id: 444, keywords: ['Coupang'] }
-    ];
+    // 1. Priority OTT IDs (Netflix, Disney+, Apple, Coupang, Prime)
+    const priorityIds = [8, 337, 2, 356, 119];
+    const excludedIds = [3, 192, 424, 421]; // Google TV, Rakuten Viki etc (VOD focus)
+
+    // Filter out VOD/Excluded services
+    providers = providers.filter(p => !excludedIds.includes(p.provider_id));
 
     // Forced Original Match Logic
     const prodCompanies = movie.production_companies || [];
+    const originalPlatforms = [
+        { name: 'Netflix', id: 8, keywords: ['Netflix'] },
+        { name: 'Disney Plus', id: 337, keywords: ['Disney'] },
+        { name: 'Apple TV Plus', id: 2, keywords: ['Apple'] },
+        { name: 'Amazon Prime Video', id: 119, keywords: ['Amazon'] },
+        { name: 'Coupang Play', id: 356, keywords: ['Coupang'] }
+    ];
+
     originalPlatforms.forEach(p => {
         const isOriginal = prodCompanies.some(c => p.keywords.some(kw => c.name.includes(kw)));
         const alreadyExists = providers.some(pr => pr.provider_id === p.id);
-        
         if (isOriginal && !alreadyExists) {
-            // Add custom provider entry for originals
             providers.push({
                 provider_id: p.id,
                 provider_name: p.name,
@@ -407,8 +434,7 @@ async function showResult(movie, omdb, credits, ott) {
         }
     });
 
-    // 2. Sorting by Priority
-    const priorityIds = [8, 337, 350, 119, 444, 356, 97]; // Netflix, Disney+, Apple, Amazon, Coupang, Wavve, Watcha
+    // 2. Sorting by Priority (Subscribed OTTs first)
     providers.sort((a, b) => {
         const idxA = priorityIds.indexOf(a.provider_id);
         const idxB = priorityIds.indexOf(b.provider_id);
@@ -473,7 +499,7 @@ function getPlatformLogo(name) {
         'Disney Plus': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg',
         'Apple TV Plus': '/68vAnUiqHpkS9jY7-ZpCkYW9Iba.jpg',
         'Amazon Prime Video': '/if8Q9jy96OuwFyH4o0vUBTMpS3M.jpg',
-        'Coupang Play': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg' // Placeholder or exact if known
+        'Coupang Play': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg' 
     };
     return MAP[name] || '';
 }
