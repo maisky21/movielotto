@@ -43,24 +43,6 @@ body {
     overflow: hidden;
 }
 
-.dynamic-bg {
-    position: fixed;
-    inset: 0;
-    z-index: -2;
-    background-size: cover;
-    background-position: center;
-    filter: blur(40px) brightness(0.4);
-    transform: scale(1.1);
-    transition: background-image 0.8s ease-in-out;
-}
-
-.dynamic-bg::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-}
-
 .app-container {
     width: 100%;
     max-width: 420px;
