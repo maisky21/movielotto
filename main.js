@@ -125,7 +125,8 @@ function selectGenre(id) {
 
 async function getMovies(genreId, expanded = false) {
     const randomPage = Math.floor(Math.random() * 80) + 1; 
-    const whitelistIds = [8, 337, 2, 356, 119]; 
+    // CORRECT WHITELIST: Netflix(8), Disney+(337), Apple TV+(2), Coupang Play(444), Prime(119)
+    const whitelistIds = [8, 337, 2, 444, 119]; 
     
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
@@ -178,16 +179,17 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
-        const whitelistIds = [8, 337, 2, 356, 119]; 
+        // CORRECT WHITELIST: Netflix(8), Disney+(337), Apple TV+(2), Coupang Play(444), Prime(119)
+        const whitelistIds = [8, 337, 2, 444, 119]; 
 
-        while (!selectedMovie && retryCount < 30) {
+        while (!selectedMovie && retryCount < 30) { 
             moviePool = await getMovies(state.selectedGenre);
             
-            const weightedCandidates = await Promise.all(moviePool.map(async m => {
+            const candidates = await Promise.all(moviePool.map(async m => {
                 const fullInfo = await fetchFullInfo(m.id);
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 
-                // Strict Whitelist Filtering for Recommendation
+                // Whitelist check: Strict
                 const availableOnWhitelist = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
                     .some(p => whitelistIds.includes(p.provider_id));
                 
@@ -204,17 +206,15 @@ async function handleDrawClick() {
                 return { ...m, weight, fullInfo, availableOnWhitelist };
             }));
 
-            // Filter strictly: only pick movies on whitelisted OTTs. NO FALLBACK.
-            let filteredCandidates = weightedCandidates.filter(c => c.availableOnWhitelist);
-
-            // If no whitelisted movies in this pool, skip to next retry
+            // Filter strictly: only pick movies on whitelisted OTTs. NO FALLBACK TO OTHERS.
+            let filteredCandidates = candidates.filter(c => c.availableOnWhitelist);
+            
             if (filteredCandidates.length === 0) {
                 retryCount++;
                 continue;
             }
 
             filteredCandidates.sort((a, b) => b.weight - a.weight);
-
             
             for (const candidate of filteredCandidates) {
                 const fullInfo = candidate.fullInfo;
@@ -402,22 +402,20 @@ async function showResult(movie, omdb, credits, ott) {
         ...(krData.buy || [])
     ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
 
-    // 1. Strict Whitelist Filter (Only 5 Targets)
-    const whitelistIds = [8, 337, 2, 356, 119];
+    // CORRECT WHITELIST: Netflix(8), Disney+(337), Apple TV+(2), Coupang Play(444), Prime(119)
+    const whitelistIds = [8, 337, 2, 444, 119];
     
-    // Forced removal of non-target OTTs (WAVVE: 356 check, WATCHA: 97, TVING: 350 etc)
-    // Actually Coupang is 356, so let's be careful with the IDs.
-    // TMDB IDs: Netflix(8), Disney+(337), Apple TV+(2), Prime Video(119), Coupang Play(356)
+    // Strict Filtering
     let providers = allProviders.filter(p => whitelistIds.includes(p.provider_id));
 
-    // Forced Original Match Logic (Restricted to Whitelist)
+    // Forced Original Match Logic
     const prodCompanies = movie.production_companies || [];
     const originalPlatforms = [
         { name: 'Netflix', id: 8, keywords: ['Netflix'] },
         { name: 'Disney Plus', id: 337, keywords: ['Disney'] },
         { name: 'Apple TV Plus', id: 2, keywords: ['Apple'] },
         { name: 'Amazon Prime Video', id: 119, keywords: ['Amazon'] },
-        { name: 'Coupang Play', id: 356, keywords: ['Coupang', '쿠팡'] } 
+        { name: 'Coupang Play', id: 444, keywords: ['Coupang', '쿠팡'] } 
     ];
 
     originalPlatforms.forEach(p => {
@@ -432,10 +430,7 @@ async function showResult(movie, omdb, credits, ott) {
         }
     });
 
-    // 2. Sorting by Priority
     providers.sort((a, b) => whitelistIds.indexOf(a.provider_id) - whitelistIds.indexOf(b.provider_id));
-
-    // Slice to 5 to avoid overflow
     providers = providers.slice(0, 5);
 
     if (providers.length > 0) {
@@ -501,12 +496,8 @@ function getKROttDeepLink(providerId, title, originalTitle) {
         8: `https://www.netflix.com/search?q=${encodedTitle}`,
         337: `https://www.disneyplus.com/ko-kr/search?q=${encodedTitle}`,
         2: `https://tv.apple.com/kr/search?term=${encodedTitle}`,
-        350: `https://www.tving.com/search?keyword=${encodedTitle}`,
         119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`,
-        444: `https://www.coupangplay.com/search?q=${encodedTitle}`,
-        356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`,
-        97: `https://watcha.com/search?query=${encodedTitle}`,
-        3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`,
+        444: `https://www.coupangplay.com/search?q=${encodedTitle}`
     };
     return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT+보러가기`;
 }
@@ -516,9 +507,8 @@ function getKROttAppScheme(providerId, title) {
     const SCHEME_MAP = {
         8: `nflx://www.netflix.com/Browse?q=${encodedTitle}`,
         337: `disneyplus://`,
-        356: `wavve://`,
-        350: `tving://`,
-        97: `watcha://`,
+        2: `atve://`,
+        119: `primevideo://`,
         444: `coupangplay://`
     };
     return SCHEME_MAP[providerId] || null;
