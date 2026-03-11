@@ -258,7 +258,7 @@ function startInfiniteSpin() {
 }
 
 async function performFinalSpin(targetMovie, pool) {
-    const sequenceCount = 15; // Increased for more "rolling" feel
+    const sequenceCount = 12;
     const sequence = [];
     for(let i=0; i < sequenceCount - 1; i++) {
         sequence.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -274,18 +274,14 @@ async function performFinalSpin(targetMovie, pool) {
     });
 
     return new Promise(resolve => {
-        const itemHeight = document.querySelector('.slot-window').offsetHeight || 400;
+        const itemHeight = 400; 
         const totalDist = (sequenceCount - 1) * itemHeight;
         
-        slotTrack.classList.add('spinning');
-        slotTrack.style.transition = 'transform 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95)';
+        slotTrack.style.transition = 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)';
         slotTrack.offsetHeight; 
         slotTrack.style.transform = `translateY(-${totalDist}px)`;
         
-        setTimeout(() => {
-            slotTrack.classList.remove('spinning');
-            resolve();
-        }, 1600); 
+        setTimeout(resolve, 2700); 
     });
 }
 
