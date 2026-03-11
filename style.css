@@ -263,6 +263,14 @@ body {
     flex-shrink: 0;
 }
 
+.release-date {
+    font-size: 0.7em;
+    opacity: 0.6;
+    margin-left: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
 .credits-info { margin-bottom: 6px; font-size: 11px; font-weight: 700; opacity: 0.8; }
 .credit-link { text-decoration: none; color: inherit; }
 .credit-link:hover { text-decoration: underline; }

@@ -361,7 +361,10 @@ async function showResult(movie, omdb, credits, ott) {
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
         : movie.title;
     
-    titleEl.innerHTML = `${titleContent} ${newBadge}`;
+    const releaseDate = movie.release_date ? ` (${movie.release_date})` : '';
+    const dateSpan = releaseDate ? `<span class="release-date">${releaseDate}</span>` : '';
+    
+    titleEl.innerHTML = `${titleContent}${dateSpan} ${newBadge}`;
 
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     
