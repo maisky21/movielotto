@@ -195,6 +195,10 @@ async function handleDrawClick() {
                 
                 let weight = Math.random();
                 
+                // Balanced Logic: Subtle 1.1x effect for 2025-2026 releases
+                const releaseYear = parseInt(m.release_date?.split('-')[0]) || 0;
+                if (releaseYear >= 2025) weight += 0.1;
+
                 // Original Match Logic
                 const isLikelyOriginal = (m.production_companies || []).some(c => 
                     ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.toLowerCase().includes(brand.toLowerCase()))
@@ -348,10 +352,16 @@ async function performFinalSpin(targetMovie, pool) {
 async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-poster').src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     
+    const releaseYear = parseInt(movie.release_date?.split('-')[0]) || 0;
+    const isNew = releaseYear >= 2025;
+    const newBadge = isNew ? `<span class="new-badge">NEW</span>` : '';
+
     const titleEl = document.getElementById('res-title');
-    titleEl.innerHTML = omdb?.imdbId 
+    const titleContent = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
         : movie.title;
+    
+    titleEl.innerHTML = `${titleContent} ${newBadge}`;
 
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     

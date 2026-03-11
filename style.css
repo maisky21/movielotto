@@ -248,9 +248,20 @@ body {
 .rating-row { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .rating-badge { background: #000; color: #fff; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 900; }
 
-.movie-title { font-size: 20px; font-weight: 900; margin-bottom: 2px; line-height: 1.2; }
+.movie-title { font-size: 20px; font-weight: 900; margin-bottom: 2px; line-height: 1.2; display: flex; align-items: center; gap: 8px; }
 .movie-title a { text-decoration: none; color: inherit; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .movie-title a:hover { text-decoration: underline; }
+
+.new-badge {
+    background: #ff3b30;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
 
 .credits-info { margin-bottom: 6px; font-size: 11px; font-weight: 700; opacity: 0.8; }
 .credit-link { text-decoration: none; color: inherit; }
