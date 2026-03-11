@@ -298,11 +298,12 @@ body {
     bottom: 16px;
     left: 20px;
     right: 20px;
-    z-index: 100;
+    z-index: 9999 !important; /* Highest priority */
     display: flex;
     flex-direction: column;
     gap: 16px;
     background-color: var(--bg);
+    pointer-events: none; /* Let clicks pass through to button */
 }
 
 .draw-btn {
@@ -314,11 +315,13 @@ body {
     color: var(--btn-text);
     font-size: 17px;
     font-weight: 900;
-    cursor: pointer;
+    cursor: pointer !important;
     box-shadow: 0 10px 30px rgba(153, 255, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     overflow: hidden;
+    pointer-events: auto !important; /* Force enable clicks */
+    z-index: 10000 !important;
 }
 
 .draw-btn:active { transform: scale(0.94); }

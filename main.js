@@ -154,6 +154,8 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
+    console.log("Draw initiated"); // Debug check
+    
     stopTrailer();
     trailerContainer.style.display = 'none';
     playOverlay.style.display = 'flex';
@@ -222,7 +224,7 @@ async function handleDrawClick() {
         const trailer = selectedVideos?.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube') || selectedVideos?.results?.find(v => v.site === 'YouTube');
         state.currentTrailerId = trailer?.key || null;
 
-        // Wait for slot animation to finish if it's still running
+        // Wait for slot animation to finish
         await slotPromise;
         
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
