@@ -124,10 +124,10 @@ function selectGenre(id) {
 }
 
 async function getMovies(genreId, expanded = false) {
-    const randomPage = Math.floor(Math.random() * 80) + 1; // Increased depth (was 50)
-    const providerIds = [2, 356, 8, 337, 119]; // Apple TV+, Coupang, Netflix, Disney+, Prime
+    const randomPage = Math.floor(Math.random() * 80) + 1; 
+    const whitelistIds = [8, 337, 2, 356, 119]; 
     
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${providerIds.join('|')}`;
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
     if (genreId) {
         let genreIds = [genreId];
@@ -178,28 +178,35 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
-        const whitelistIds = [8, 337, 2, 356, 119]; // Whitelist: Netflix, Disney+, Apple, Coupang, Prime
+        const whitelistIds = [8, 337, 2, 356, 119]; 
 
-        while (!selectedMovie && retryCount < 30) { // Increased retries for strict filtering
+        while (!selectedMovie && retryCount < 30) {
             moviePool = await getMovies(state.selectedGenre);
             
-            const candidates = await Promise.all(moviePool.map(async m => {
+            const weightedCandidates = await Promise.all(moviePool.map(async m => {
                 const fullInfo = await fetchFullInfo(m.id);
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
                 
-                // Whitelist check
+                // Strict Whitelist Filtering for Recommendation
                 const availableOnWhitelist = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
                     .some(p => whitelistIds.includes(p.provider_id));
                 
                 let weight = Math.random();
-                if (availableOnWhitelist) weight += 10.0; // Strong bias for whitelisted platforms
+                
+                // Original Match Logic
+                const isLikelyOriginal = (m.production_companies || []).some(c => 
+                    ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.toLowerCase().includes(brand.toLowerCase()))
+                );
+                
+                if (availableOnWhitelist) weight += 10.0;
+                if (isLikelyOriginal) weight += 5.0;
 
                 return { ...m, weight, fullInfo, availableOnWhitelist };
             }));
 
-            // Filter strictly: preferentially pick movies on whitelisted OTTs
-            let filteredCandidates = candidates.filter(c => c.availableOnWhitelist);
-            if (filteredCandidates.length === 0) filteredCandidates = candidates; // Fallback if none found in pool
+            // Filter strictly: only pick movies on whitelisted OTTs if possible
+            let filteredCandidates = weightedCandidates.filter(c => c.availableOnWhitelist);
+            if (filteredCandidates.length === 0) filteredCandidates = weightedCandidates;
 
             filteredCandidates.sort((a, b) => b.weight - a.weight);
             
@@ -237,18 +244,11 @@ async function handleDrawClick() {
         state.viewedIds.add(selectedMovie.id);
         state.currentMovie = selectedMovie; 
 
-        // 1. Construct Precise Search Keywords for Matching Logic
-        const releaseYear = selectedMovie.release_date ? selectedMovie.release_date.split('-')[0] : '';
-        const koSearchQuery = `${selectedMovie.title} ${releaseYear} 공식 예고편`;
-        
-        // 2. Ultimate Trailer Matching & Fallback
         let trailerId = findBestTrailer(selectedVideos?.results);
-
         if (!trailerId) {
             const enInfo = await fetchFullInfo(selectedMovie.id, 'en-US');
             trailerId = findBestTrailer(enInfo.videos?.results);
         }
-
         state.currentTrailerId = trailerId;
 
         await performFinalSpin(selectedMovie, moviePool);
@@ -268,23 +268,16 @@ function findBestTrailer(videos) {
     const ytVideos = videos.filter(v => v.site === 'YouTube');
     if (ytVideos.length === 0) return null;
 
-    // Advanced filtering based on keywords
     const officialKws = ['Official', '공식', 'Main', '메인'];
     const trailerKws = ['Trailer', '예고편'];
 
-    // Priority 1: Official + Trailer
     let best = ytVideos.find(v => 
         officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())) && 
         trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase()))
     );
 
-    // Priority 2: Trailer type or Trailer in name
     if (!best) best = ytVideos.find(v => v.type === 'Trailer' || trailerKws.some(tk => v.name.toLowerCase().includes(tk.toLowerCase())));
-
-    // Priority 3: Teaser or Official in name
     if (!best) best = ytVideos.find(v => v.type === 'Teaser' || officialKws.some(ok => v.name.toLowerCase().includes(ok.toLowerCase())));
-
-    // Priority 4: First available YouTube video
     if (!best) best = ytVideos[0];
 
     return best?.key || null;
@@ -403,10 +396,8 @@ async function showResult(movie, omdb, credits, ott) {
         ...(krData.buy || [])
     ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
 
-    // 1. Whitelist Only (Netflix, Disney+, Apple, Coupang, Prime)
+    // Whitelist Only (Netflix, Disney+, Apple, Coupang, Prime)
     const whitelistIds = [8, 337, 2, 356, 119];
-    
-    // Strict Filtering: Only keep whitelisted services
     let providers = allProviders.filter(p => whitelistIds.includes(p.provider_id));
 
     // Forced Original Match Logic (Restricted to Whitelist)
@@ -431,8 +422,8 @@ async function showResult(movie, omdb, credits, ott) {
         }
     });
 
-    // 2. Sorting by Whitelist Priority
     providers.sort((a, b) => whitelistIds.indexOf(a.provider_id) - whitelistIds.indexOf(b.provider_id));
+    providers = providers.slice(0, 5);
 
     if (providers.length > 0) {
         providers.forEach(p => {
@@ -466,7 +457,6 @@ async function showResult(movie, omdb, credits, ott) {
         ottList.innerHTML = `<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">${labels.noOtt}</span>`;
     }
 
-    // Save to History
     const historyItem = {
         id: movie.id,
         title: movie.title,
