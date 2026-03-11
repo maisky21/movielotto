@@ -291,66 +291,78 @@ body {
     }
 }
 
-/* Specific Mobile Landscape Fix (Low Height) */
-@media (max-height: 480px) and (orientation: landscape) {
+/* Specific Mobile Landscape Fix (Ultra Compact) */
+@media screen and (max-height: 450px) and (orientation: landscape) {
     .app-container {
-        padding-bottom: 60px !important; /* Lift everything up for bottom toolbars */
+        padding-bottom: 80px !important; /* Force lift everything up */
     }
     .main-card {
-        margin-bottom: 50px !important;
+        margin-bottom: 40px !important;
     }
-    .header {
-        display: none !important; /* Hide header to save vertical space */
-    }
-    .genre-nav {
-        display: none !important; /* Hide genre nav to save vertical space */
+    .header, .genre-nav {
+        display: none !important;
     }
     .result-container {
         flex-direction: row !important;
-        gap: 10px !important;
+        gap: 15px !important;
         max-width: 100% !important;
         justify-content: center !important;
+        align-items: flex-start !important;
+        padding-top: 10px !important;
     }
     .poster-display {
-        width: 80px !important;
-        height: 120px !important;
-        max-width: 80px !important;
+        width: 60px !important;
+        height: auto !important;
+        max-width: 60px !important;
         aspect-ratio: 2/3 !important;
         margin: 0 !important;
+        border-radius: 12px !important;
     }
     .movie-info-box {
-        width: calc(100% - 100px) !important;
-        max-width: 500px !important;
-        padding: 8px !important;
+        width: calc(100% - 90px) !important;
+        max-width: 450px !important;
+        padding: 10px !important;
         margin: 0 !important;
-        max-height: 140px !important;
+        max-height: 120px !important;
+        background: var(--yellow) !important;
     }
     .movie-title {
-        font-size: 1rem !important;
-        margin-bottom: 4px !important;
-    }
-    .movie-overview {
-        display: none !important; /* Radical: Hide description to save space */
+        font-size: 0.9rem !important;
+        margin-bottom: 2px !important;
     }
     .rating-row {
-        margin-bottom: 4px !important;
+        margin-bottom: 2px !important;
+        transform: scale(0.8);
+        transform-origin: left center;
+    }
+    .movie-overview {
+        display: none !important;
+    }
+    .credits-info {
+        font-size: 0.6rem !important;
+        margin-bottom: 2px !important;
     }
     .ott-section {
-        padding-top: 2px !important;
+        padding-top: 0 !important;
+    }
+    .ott-list {
+        gap: 5px !important;
     }
     .ott-link {
         width: 1.2rem !important;
         height: 1.2rem !important;
     }
     .footer {
-        bottom: 5px !important;
+        bottom: 10px !important;
+        left: 10% !important;
+        right: 10% !important;
     }
     .draw-btn {
-        padding: 10px !important;
+        padding: 12px !important;
         font-size: 0.9rem !important;
     }
     .legal-footer {
-        display: none !important; /* Hide legal info to save space */
+        display: none !important;
     }
 }
 
