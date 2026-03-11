@@ -378,11 +378,49 @@ async function showResult(movie, omdb, credits, ott) {
     ottList.innerHTML = '';
     
     const krData = ott?.KR || {};
-    const providers = [
+    let providers = [
         ...(krData.flatrate || []),
-        ...(krData.rent || [])
-    ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i)
-    .slice(0, 4);
+        ...(krData.rent || []),
+        ...(krData.buy || [])
+    ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
+
+    // 1. Expand Preferred Platforms & Original Matching
+    const originalPlatforms = [
+        { name: 'Netflix', id: 8, keywords: ['Netflix'] },
+        { name: 'Disney Plus', id: 337, keywords: ['Disney'] },
+        { name: 'Apple TV Plus', id: 350, keywords: ['Apple'] }, // Apple TV provider_id varies, using common one
+        { name: 'Amazon Prime Video', id: 119, keywords: ['Amazon'] },
+        { name: 'Coupang Play', id: 444, keywords: ['Coupang'] }
+    ];
+
+    // Forced Original Match Logic
+    const prodCompanies = movie.production_companies || [];
+    originalPlatforms.forEach(p => {
+        const isOriginal = prodCompanies.some(c => p.keywords.some(kw => c.name.includes(kw)));
+        const alreadyExists = providers.some(pr => pr.provider_id === p.id);
+        
+        if (isOriginal && !alreadyExists) {
+            // Add custom provider entry for originals
+            providers.push({
+                provider_id: p.id,
+                provider_name: p.name,
+                logo_path: getPlatformLogo(p.name)
+            });
+        }
+    });
+
+    // 2. Sorting by Priority
+    const priorityIds = [8, 337, 350, 119, 444, 356, 97]; // Netflix, Disney+, Apple, Amazon, Coupang, Wavve, Watcha
+    providers.sort((a, b) => {
+        const idxA = priorityIds.indexOf(a.provider_id);
+        const idxB = priorityIds.indexOf(b.provider_id);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return 0;
+    });
+
+    providers = providers.slice(0, 5);
 
     if (providers.length > 0) {
         providers.forEach(p => {
@@ -401,7 +439,8 @@ async function showResult(movie, omdb, credits, ott) {
                     if (scheme) { window.location.href = scheme; }
                 }
             };
-            link.innerHTML = `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">`;
+            const logoSrc = p.logo_path.startsWith('/') ? `https://image.tmdb.org/t/p/original${p.logo_path}` : p.logo_path;
+            link.innerHTML = `<img src="${logoSrc}" alt="${p.provider_name}">`;
             
             const name = document.createElement('span');
             name.className = 'ott-name';
@@ -430,18 +469,29 @@ async function showResult(movie, omdb, credits, ott) {
     resultView.style.display = 'flex';
 }
 
+function getPlatformLogo(name) {
+    const MAP = {
+        'Netflix': '/wwemzKWzjKYJFfCeiB57q3r4Bcm.jpg',
+        'Disney Plus': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg',
+        'Apple TV Plus': '/68vAnUiqHpkS9jY7-ZpCkYW9Iba.jpg',
+        'Amazon Prime Video': '/if8Q9jy96OuwFyH4o0vUBTMpS3M.jpg',
+        'Coupang Play': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg' // Placeholder or exact if known
+    };
+    return MAP[name] || '';
+}
+
 function getKROttDeepLink(providerId, title, originalTitle) {
     const encodedTitle = encodeURIComponent(title);
     const OTT_MAP = {
         8: `https://www.netflix.com/search?q=${encodedTitle}`,
         337: `https://www.disneyplus.com/ko-kr/search?q=${encodedTitle}`,
-        97: `https://watcha.com/search?query=${encodedTitle}`,
-        356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`,
-        444: `https://www.coupangplay.com/search?q=${encodedTitle}`,
-        350: `https://www.tving.com/search?keyword=${encodedTitle}`,
         2: `https://tv.apple.com/kr/search?term=${encodedTitle}`,
-        3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`,
+        350: `https://www.tving.com/search?keyword=${encodedTitle}`,
         119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`,
+        444: `https://www.coupangplay.com/search?q=${encodedTitle}`,
+        356: `https://www.wavve.com/search?searchKeyword=${encodedTitle}`,
+        97: `https://watcha.com/search?query=${encodedTitle}`,
+        3: `https://play.google.com/store/search?q=${encodedTitle}&c=movies`,
     };
     return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT+보러가기`;
 }
@@ -453,7 +503,8 @@ function getKROttAppScheme(providerId, title) {
         337: `disneyplus://`,
         356: `wavve://`,
         350: `tving://`,
-        97: `watcha://`
+        97: `watcha://`,
+        444: `coupangplay://`
     };
     return SCHEME_MAP[providerId] || null;
 }
@@ -529,7 +580,7 @@ async function fetchOMDb(movie) {
 async function fetchFullInfo(movieId, overrideLang = null) {
     try {
         const lang = overrideLang || (state.lang === 'KO' ? 'ko-KR' : 'en-US');
-        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${lang}&append_to_response=videos,credits`);
+        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${lang}&append_to_response=videos,credits,watch/providers`);
         return await res.json();
     } catch (e) { return {}; }
 }
