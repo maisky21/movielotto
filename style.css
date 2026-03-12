@@ -102,6 +102,12 @@ body {
     scrollbar-color: var(--border) transparent;
     flex-shrink: 0;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    cursor: grab;
+}
+
+.genre-nav:active {
+    cursor: grabbing;
 }
 
 .genre-nav::-webkit-scrollbar { 

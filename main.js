@@ -85,6 +85,47 @@ async function init() {
     updateLangUI();
     await fetchGenres();
     renderGenres();
+    setupGenreNavScroll();
+}
+
+function setupGenreNavScroll() {
+    const nav = document.getElementById('genre-container');
+    if (!nav) return;
+
+    // 1. Wheel Scroll (Vertical to Horizontal)
+    nav.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0) {
+            e.preventDefault();
+            nav.scrollLeft += e.deltaY;
+        }
+    }, { passive: false });
+
+    // 2. Click Drag Scroll
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    nav.onmousedown = (e) => {
+        isDown = true;
+        startX = e.pageX - nav.offsetLeft;
+        scrollLeft = nav.scrollLeft;
+        nav.style.scrollBehavior = 'auto'; // Disable smooth scroll during drag for responsiveness
+    };
+
+    window.addEventListener('mouseup', () => {
+        if (isDown) {
+            isDown = false;
+            nav.style.scrollBehavior = 'smooth';
+        }
+    });
+
+    nav.onmousemove = (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - nav.offsetLeft;
+        const walk = (x - startX) * 2;
+        nav.scrollLeft = scrollLeft - walk;
+    };
 }
 
 async function fetchGenres() {
