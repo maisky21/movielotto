@@ -157,7 +157,6 @@ async function getMovies(genreId, expanded = false) {
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
-    // Immediate UI Feedback: Start Animation & Data Fetching in Parallel
     stopTrailer();
     trailerContainer.style.display = 'none';
     playOverlay.style.display = 'flex';
@@ -171,105 +170,92 @@ async function handleDrawClick() {
     
     startInfiniteSpin();
 
-    // Start fetching logic immediately (don't await it yet)
-    const fetchMoviePromise = (async () => {
-        try {
-            let selectedMovie = null;
-            let selectedOmdb = null;
-            let selectedCredits = null;
-            let selectedOtt = null;
-            let selectedVideos = null;
-            
-            let moviePool = [];
-            let retryCount = 0;
-            const whitelistIds = [8, 337, 2, 444, 119]; 
-
-            while (!selectedMovie && retryCount < 30) { 
-                moviePool = await getMovies(state.selectedGenre);
-                
-                const candidates = await Promise.all(moviePool.map(async m => {
-                    const fullInfo = await fetchFullInfo(m.id);
-                    const ott = fullInfo['watch/providers']?.results?.KR || {};
-                    const availableOnWhitelist = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
-                        .some(p => whitelistIds.includes(p.provider_id));
-                    
-                    let weight = Math.random();
-                    const releaseYear = parseInt(m.release_date?.split('-')[0]) || 0;
-                    if (releaseYear >= 2025) weight += 0.1;
-
-                    const isLikelyOriginal = (m.production_companies || []).some(c => 
-                        ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.toLowerCase().includes(brand.toLowerCase()))
-                    );
-                    
-                    if (availableOnWhitelist) weight += 10.0;
-                    if (isLikelyOriginal) weight += 5.0;
-
-                    return { ...m, weight, fullInfo, availableOnWhitelist };
-                }));
-
-                let filteredCandidates = candidates.filter(c => c.availableOnWhitelist);
-                if (filteredCandidates.length === 0) {
-                    retryCount++;
-                    continue;
-                }
-
-                filteredCandidates.sort((a, b) => b.weight - a.weight);
-                for (const candidate of filteredCandidates) {
-                    const fullInfo = candidate.fullInfo;
-                    const ott = fullInfo['watch/providers']?.results?.KR || {};
-                    const omdb = await fetchOMDb(candidate);
-
-                    const tmdbScore = candidate.vote_average || 0;
-                    const imdbScore = parseFloat(omdb?.imdbRating) || 0;
-                    const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
-
-                    if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
-                        selectedMovie = candidate;
-                        selectedOmdb = omdb;
-                        selectedCredits = fullInfo.credits;
-                        selectedOtt = { KR: ott }; 
-                        selectedVideos = fullInfo.videos;
-                        break;
-                    }
-                }
-                retryCount++;
-            }
-
-            if (!selectedMovie && moviePool.length > 0) {
-                selectedMovie = moviePool[0];
-                const fullInfo = await fetchFullInfo(selectedMovie.id);
-                const ott = fullInfo['watch/providers']?.results?.KR || {};
-                const omdb = await fetchOMDb(selectedMovie);
-                selectedCredits = fullInfo.credits;
-                selectedVideos = fullInfo.videos;
-                selectedOtt = { KR: ott };
-            }
-
-            if (selectedMovie) {
-                state.viewedIds.add(selectedMovie.id);
-                state.currentMovie = selectedMovie; 
-
-                let trailerId = findBestTrailer(selectedVideos?.results);
-                if (!trailerId) {
-                    const enInfo = await fetchFullInfo(selectedMovie.id, 'en-US');
-                    trailerId = findBestTrailer(enInfo.videos?.results);
-                }
-                state.currentTrailerId = trailerId;
-                return { selectedMovie, selectedOmdb, selectedCredits, selectedOtt, moviePool };
-            }
-            throw new Error("No movie found");
-        } catch (e) {
-            console.error("Fetch failed", e);
-            throw e;
-        }
-    })();
-
     try {
-        const result = await fetchMoviePromise;
-        // Proceed with spin animation only after we have the target movie
-        await performFinalSpin(result.selectedMovie, result.moviePool);
-        await showResult(result.selectedMovie, result.selectedOmdb, result.selectedCredits, result.selectedOtt);
+        let selectedMovie = null;
+        let selectedOmdb = null;
+        let selectedCredits = null;
+        let selectedOtt = null;
+        let selectedVideos = null;
+        
+        let moviePool = [];
+        let retryCount = 0;
+        const whitelistIds = [8, 337, 2, 444, 119]; 
+
+        while (!selectedMovie && retryCount < 30) { 
+            moviePool = await getMovies(state.selectedGenre);
+            
+            const candidates = await Promise.all(moviePool.map(async m => {
+                const fullInfo = await fetchFullInfo(m.id);
+                const ott = fullInfo['watch/providers']?.results?.KR || {};
+                const availableOnWhitelist = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
+                    .some(p => whitelistIds.includes(p.provider_id));
+                
+                let weight = Math.random();
+                const releaseYear = parseInt(m.release_date?.split('-')[0]) || 0;
+                if (releaseYear >= 2025) weight += 0.1;
+
+                const isLikelyOriginal = (m.production_companies || []).some(c => 
+                    ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.toLowerCase().includes(brand.toLowerCase()))
+                );
+                
+                if (availableOnWhitelist) weight += 10.0;
+                if (isLikelyOriginal) weight += 5.0;
+
+                return { ...m, weight, fullInfo, availableOnWhitelist };
+            }));
+
+            let filteredCandidates = candidates.filter(c => c.availableOnWhitelist);
+            if (filteredCandidates.length === 0) {
+                retryCount++;
+                continue;
+            }
+
+            filteredCandidates.sort((a, b) => b.weight - a.weight);
+            for (const candidate of filteredCandidates) {
+                const fullInfo = candidate.fullInfo;
+                const ott = fullInfo['watch/providers']?.results?.KR || {};
+                const omdb = await fetchOMDb(candidate);
+
+                const tmdbScore = candidate.vote_average || 0;
+                const imdbScore = parseFloat(omdb?.imdbRating) || 0;
+                const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
+
+                if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
+                    selectedMovie = candidate;
+                    selectedOmdb = omdb;
+                    selectedCredits = fullInfo.credits;
+                    selectedOtt = { KR: ott }; 
+                    selectedVideos = fullInfo.videos;
+                    break;
+                }
+            }
+            retryCount++;
+        }
+
+        if (!selectedMovie) {
+            selectedMovie = moviePool[0];
+            const fullInfo = await fetchFullInfo(selectedMovie.id);
+            const ott = fullInfo['watch/providers']?.results?.KR || {};
+            const omdb = await fetchOMDb(selectedMovie);
+            selectedCredits = fullInfo.credits;
+            selectedVideos = fullInfo.videos;
+            selectedOtt = { KR: ott };
+        }
+
+        state.viewedIds.add(selectedMovie.id);
+        state.currentMovie = selectedMovie; 
+
+        let trailerId = findBestTrailer(selectedVideos?.results);
+        if (!trailerId) {
+            const enInfo = await fetchFullInfo(selectedMovie.id, 'en-US');
+            trailerId = findBestTrailer(enInfo.videos?.results);
+        }
+        state.currentTrailerId = trailerId;
+
+        await performFinalSpin(selectedMovie, moviePool);
+        await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
+        console.error("Draw failed", e);
         alert(I18N[state.lang].fail);
         resetApp();
     } finally {
@@ -323,7 +309,7 @@ function startInfiniteSpin() {
 }
 
 async function performFinalSpin(targetMovie, pool) {
-    const sequenceCount = 10; // Slightly fewer items for faster sequence
+    const sequenceCount = 15;
     const sequence = [];
     for(let i=0; i < sequenceCount - 1; i++) {
         sequence.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -339,19 +325,18 @@ async function performFinalSpin(targetMovie, pool) {
     });
 
     return new Promise(resolve => {
-        const itemHeight = 400; // Fixed height for performance
+        const itemHeight = document.querySelector('.slot-window').offsetHeight || 400;
         const totalDist = (sequenceCount - 1) * itemHeight;
         
         slotTrack.classList.add('spinning');
-        // Faster, Snappier Transition: 0.6s
-        slotTrack.style.transition = 'transform 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
+        slotTrack.style.transition = 'transform 1.5s cubic-bezier(0.45, 0.05, 0.55, 0.95)';
         slotTrack.offsetHeight; 
         slotTrack.style.transform = `translate3d(0, -${totalDist}px, 0)`;
         
         setTimeout(() => {
             slotTrack.classList.remove('spinning');
             resolve();
-        }, 650); 
+        }, 1600); 
     });
 }
 
