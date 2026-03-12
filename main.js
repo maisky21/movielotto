@@ -528,7 +528,10 @@ function getKROttAppScheme(providerId, title) {
 }
 
 function playTrailer(event) {
-    if (event) event.stopPropagation(); // Prevent bubbling to poster-area
+    if (event) {
+        event.stopPropagation();
+        if (event.cancelable) event.preventDefault();
+    }
     
     if (!state.currentTrailerId || !state.isApiReady || state.player) return;
 
@@ -536,8 +539,11 @@ function playTrailer(event) {
     trailerContainer.style.display = 'block';
     playOverlay.style.display = 'none';
 
-    // Prevent re-triggering via bubbling when interacting with player
-    trailerContainer.onclick = (e) => e.stopPropagation();
+    // Strongly prevent any clicks or touches within the player area from bubbling up to the poster-area
+    const stopBubbling = (e) => e.stopPropagation();
+    trailerContainer.addEventListener('click', stopBubbling, { capture: true });
+    trailerContainer.addEventListener('touchstart', stopBubbling, { capture: true });
+    trailerContainer.addEventListener('mousedown', stopBubbling, { capture: true });
 
     state.player = new YT.Player('yt-player', {
         height: '100%',
@@ -549,9 +555,15 @@ function playTrailer(event) {
             'rel': 0,
             'modestbranding': 1,
             'iv_load_policy': 3,
-            'playsinline': 1
+            'playsinline': 1,
+            'enablejsapi': 1,
+            'origin': window.location.origin
         },
         events: {
+            'onReady': (e) => {
+                // Force play for iOS one-click experience
+                e.target.playVideo();
+            },
             'onStateChange': onPlayerStateChange
         }
     });
