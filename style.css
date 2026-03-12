@@ -96,13 +96,30 @@ body {
     display: flex;
     gap: 10px;
     overflow-x: auto;
-    padding: 10px 0;
+    padding: 10px 0 12px 0;
     margin-bottom: 10px;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
     flex-shrink: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
-.genre-nav::-webkit-scrollbar { display: none; }
+.genre-nav::-webkit-scrollbar { 
+    height: 3px;
+}
+
+.genre-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.genre-nav::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.genre-nav::-webkit-scrollbar-thumb:hover {
+    background: var(--sub-text);
+}
 
 .genre-chip {
     padding: 8px 16px;
