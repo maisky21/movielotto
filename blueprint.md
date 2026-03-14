@@ -4,6 +4,11 @@
 Movie Lotto is a "lottery-style" movie recommendation app. This refactored version uses a consolidated engine for better performance, reliable data fetching, and a smoother slot machine experience.
 
 ## Features & Design (New Requirements)
+- **Brand Identity (CINE LOTTO):**
+    - **Visual Branding:** A premium text-based logo where "CINE" is crisp white (#FFFFFF) and "LOTTO" is radiant gold (#FFD700).
+    - **Golden Shimmer Animation:** A low-overhead CSS animation that sends a subtle golden flash across the "LOTTO" text every 3 seconds, creating a high-end feel without performance impact.
+    - **Golden Ball Icon:** The letter 'O' in "LOTTO" is styled as a golden slot machine ball with a soft glow effect.
+    - **Interactive Feedback:** Micro-bounce animation on logo hover to enhance the user's "Jackpot" excitement.
 - **Consolidated Engine:** A robust `async/await` logic that prevents "stuck" states by expanding genre searches if high-rated (7.0+) movies are scarce.
 - **Slot Machine 2.0:** A visual-first slot machine animation where posters fly by before revealing the final choice. The "Next Movie" button transforms into "Drawing..." and is disabled during the process.
 - **Deep Linking & Interaction:** OTT icons now link directly to the movie's streaming page. `stopPropagation()` is applied to prevent accidental redraws when clicking OTT links.
@@ -19,7 +24,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Session Sync:** Video stops automatically when drawing a new movie or resetting the app, ensuring clean state transitions.
 
 ## Technical Stack
-- **HTML5/CSS3:** Vanilla CSS for maximum control and performance.
+- **HTML5/CSS3:** Vanilla CSS for maximum control and performance (using CSS variables, `@keyframes`, and `background-clip: text`).
 - **JavaScript (ES Modules):** Clean, modular code in `main.js`.
 - **TMDB API:** Movie data, genres, and watch providers.
 - **OMDb API:** IMDb and Rotten Tomatoes ratings.
@@ -34,6 +39,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 6. [x] **UI/UX Polish:** Refactor poster/card ratios for better visual balance on all devices.
 7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
 8. [x] **YouTube API Integration:** Implement the YouTube IFrame API with clean player logic (removed blocking layers and fixed bubbling).
+9. [x] **Branding Update:** Implement the "CINE LOTTO" logo with Golden Shimmer animation.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
