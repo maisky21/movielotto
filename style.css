@@ -80,7 +80,8 @@ body {
 }
 
 .cine {
-    color: #FFFFFF;
+    color: var(--text);
+    transition: color 0.4s ease;
 }
 
 .lotto {
@@ -250,13 +251,19 @@ body {
 .ticket-icon {
     font-size: 100px;
     filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.4)) drop-shadow(0 0 10px rgba(138, 43, 226, 0.6));
-    animation: ticketPulse 4s infinite ease-in-out;
+    animation: ticketPulse 4s infinite ease-in-out, ticketJitter 0.15s infinite linear;
     will-change: transform, opacity;
 }
 
 @keyframes ticketPulse {
     0%, 100% { transform: scale(1) translate3d(0,0,0); opacity: 0.8; }
     50% { transform: scale(1.1) translate3d(0,0,0); opacity: 1; }
+}
+
+@keyframes ticketJitter {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-1px); }
+    100% { transform: translateY(0); }
 }
 
 .hero-text-area { text-align: center; }
@@ -288,6 +295,24 @@ body {
     position: relative;
     cursor: pointer;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 15px 30px rgba(0,0,0,0.3);
+    padding: 1.5px;
+}
+
+.poster-display::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 32px;
+    padding: 1.5px;
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .poster-display.loading::after {
@@ -432,10 +457,23 @@ body {
     font-size: 17px;
     font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 10px 30px rgba(153, 255, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(153, 255, 0, 0.2), 0 0 15px rgba(153, 255, 0, 0.1);
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     overflow: hidden;
+}
+
+.draw-btn::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: buttonGlowSweep 3s infinite linear;
+}
+
+@keyframes buttonGlowSweep {
+    0% { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(100%) skewX(-15deg); }
 }
 
 .draw-btn:active { transform: scale(0.94); }
