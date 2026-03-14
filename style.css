@@ -81,16 +81,16 @@ body {
 
 .cine {
     color: #000000;
-    text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+    text-shadow: 0.5px 0.5px 0px rgba(0,0,0,0.1), -0.5px -0.5px 0px rgba(0,0,0,0.1);
     transition: color 0.4s ease;
 }
 
 .lotto {
-    background: linear-gradient(90deg, #B8860B, #DAA520, #B8860B);
+    background: linear-gradient(90deg, #FF8C00, #D4AF37, #FF8C00);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 1px rgba(184, 134, 11, 0.2);
+    filter: drop-shadow(0.5px 0.5px 0.5px rgba(0, 0, 0, 0.15));
     animation: goldenShimmer 3s linear infinite;
     position: relative;
 }
@@ -98,10 +98,10 @@ body {
 @media (prefers-color-scheme: light) {
     .cine {
         color: #000000;
-        text-shadow: 0 0 1px rgba(0, 0, 0, 0.15);
     }
     .lotto {
-        background: linear-gradient(90deg, #B8860B, #DAA520, #B8860B);
+        background: linear-gradient(90deg, #FF8C00, #D4AF37, #FF8C00);
+        filter: drop-shadow(0.5px 0.5px 0.5px rgba(0, 0, 0, 0.2));
     }
 }
 
@@ -115,6 +115,7 @@ body.dark-mode .lotto {
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    filter: none;
     text-shadow: none;
 }
 
