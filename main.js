@@ -448,27 +448,6 @@ async function showResult(movie, omdb, credits, ott) {
     const castHtmls = topCast.map(p => getPersonLink(p));
     document.getElementById('res-cast').innerHTML = `${labels.cast}: ${castHtmls.join(', ') || (state.lang === 'KO' ? '정보 없음' : 'N/A')}`;
 
-    // AI Analysis Section Logic
-    const aiTextEl = document.getElementById('res-ai-text');
-    const aiBox = document.getElementById('ai-analysis');
-    const aiTitle = document.getElementById('ai-title');
-
-    if (aiTextEl && aiBox) {
-        const lang = state.lang === 'KO';
-        aiTitle.textContent = lang ? "✨ 시네 로또 AI 분석" : "✨ Cine Lotto AI Analysis";
-        
-        let analysis = lang 
-            ? `이 영화는 TMDB 평점 ${movie.vote_average.toFixed(1)}점을 기록하며 작품성을 인정받은 명작입니다. `
-            : `This film is a masterpiece recognized for its quality, maintaining a TMDB rating of ${movie.vote_average.toFixed(1)}. `;
-        
-        analysis += lang
-            ? `감독 ${directorName}의 섬세한 연출과 주연 배우들의 열연이 돋보이는 이 작품은 특히 해당 장르를 선호하는 관객들에게 깊은 여운을 남길 것으로 분석됩니다. 넷플릭스 및 주요 OTT 플랫폼에서 서비스 중인 이 영화를 통해 당신의 운명적인 시네마틱 경험을 시작해 보세요.`
-            : `Directed by ${directorName}, this work features powerful performances and meticulous direction. Our AI analysis suggests it will leave a lasting impression on fans of this genre. Available on major OTT platforms, it's a perfect choice for your next cinematic journey.`;
-
-        aiTextEl.textContent = analysis;
-        aiBox.style.display = 'block';
-    }
-
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     
