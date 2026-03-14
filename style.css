@@ -93,6 +93,30 @@ body {
     position: relative;
 }
 
+@media (prefers-color-scheme: light) {
+    .cine {
+        color: #000000 !important;
+    }
+    .lotto {
+        color: #D4AF37 !important;
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        -webkit-text-fill-color: initial !important;
+        animation: none !important;
+    }
+}
+
+body.dark-mode .cine {
+    color: var(--text);
+}
+
+body.dark-mode .lotto {
+    background: linear-gradient(90deg, #FFD700, #FFFACD, #FFD700) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    animation: goldenShimmer 3s linear infinite !important;
+}
+
 .ball {
     display: inline-block;
     filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
@@ -172,6 +196,14 @@ body {
     border: 1px solid var(--border);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--sub-text);
+}
+
+.genre-chip.all-chip {
+    padding-left: 20px;
+}
+
+.genre-chip.all-chip {
+    padding-left: 20px;
 }
 
 .genre-chip.active {

@@ -143,7 +143,7 @@ function renderGenres() {
     container.innerHTML = '';
     
     const allChip = document.createElement('div');
-    allChip.className = `genre-chip ${!state.selectedGenre ? 'active' : ''}`;
+    allChip.className = `genre-chip all-chip ${!state.selectedGenre ? 'active' : ''}`;
     allChip.textContent = I18N[state.lang].all;
     allChip.onclick = () => selectGenre(null);
     container.appendChild(allChip);
