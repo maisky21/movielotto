@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /.git/
+Disallow: /.idx/
+Disallow: /.vscode/
+Disallow: /firebase-debug.log
 
-User-agent: Mediapartners-Google
-Allow: /
+Sitemap: https://cinelotto.com/sitemap.xml

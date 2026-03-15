@@ -4,6 +4,10 @@
 Movie Lotto is a "lottery-style" movie recommendation app. This refactored version uses a consolidated engine for better performance, reliable data fetching, and a smoother slot machine experience.
 
 ## Features & Design (New Requirements)
+- **SEO Optimization (robots.txt):**
+    - **Global Access:** All search engine crawlers (User-agent: *) are permitted to index the site (Allow: /).
+    - **Security/Privacy:** Critical system directories (`.git/`, `.idx/`, `.vscode/`) and temporary logs (`firebase-debug.log`) are explicitly disallowed from crawling.
+    - **Sitemap Integration:** The official sitemap URL (`https://cinelotto.com/sitemap.xml`) is linked to guide crawlers efficiently.
 - **Brand Identity (CINE LOTTO):**
     - **Visual Branding:** A premium text-based logo where "CINE" is crisp white (#FFFFFF) and "LOTTO" is radiant gold (#FFD700).
     - **Golden Shimmer Animation:** A low-overhead CSS animation that sends a subtle golden flash across the "LOTTO" text every 3 seconds, creating a high-end feel without performance impact.
@@ -40,6 +44,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
 8. [x] **YouTube API Integration:** Implement the YouTube IFrame API with clean player logic (removed blocking layers and fixed bubbling).
 9. [x] **Branding Update:** Implement the "CINE LOTTO" logo with Golden Shimmer animation.
+10. [x] **SEO Optimization:** Create and configure `robots.txt` for better search engine crawling and security.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
