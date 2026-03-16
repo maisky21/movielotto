@@ -13,6 +13,11 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Golden Shimmer Animation:** A low-overhead CSS animation that sends a subtle golden flash across the "LOTTO" text every 3 seconds, creating a high-end feel without performance impact.
     - **Golden Ball Icon:** The letter 'O' in "LOTTO" is styled as a golden slot machine ball with a soft glow effect.
     - **Interactive Feedback:** Micro-bounce animation on logo hover to enhance the user's "Jackpot" excitement.
+- **Stealth Technical Info (SEO Component):**
+    - **Purpose:** Provide algorithmic transparency and legal disclaimers specifically for search engine crawlers without impacting the user experience.
+    - **Implementation:** A standalone `div` positioned absolutely at `top: 3000px` with a `z-index: -9999`. 
+    - **Visual Stealth:** Text color (`#111`) set nearly identical to the background (`#000`) to remain virtually invisible to users while remaining readable by bots.
+    - **Content:** Includes technical algorithm guide (TMDB 7.0+), probability information (1/N fair chance), and a legal disclaimer.
 - **Consolidated Engine:** A robust `async/await` logic that prevents "stuck" states by expanding genre searches if high-rated (7.0+) movies are scarce.
 - **Slot Machine 2.0:** A visual-first slot machine animation where posters fly by before revealing the final choice. The "Next Movie" button transforms into "Drawing..." and is disabled during the process.
 - **Deep Linking & Interaction:** OTT icons now link directly to the movie's streaming page. `stopPropagation()` is applied to prevent accidental redraws when clicking OTT links.
@@ -45,6 +50,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 8. [x] **YouTube API Integration:** Implement the YouTube IFrame API with clean player logic (removed blocking layers and fixed bubbling).
 9. [x] **Branding Update:** Implement the "CINE LOTTO" logo with Golden Shimmer animation.
 10. [x] **SEO Optimization:** Create and configure `robots.txt` for better search engine crawling and security.
+11. [x] **Stealth SEO:** Add technical info div at the extreme bottom of the DOM for crawler indexing.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
