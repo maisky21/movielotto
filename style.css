@@ -375,6 +375,16 @@ body {
     object-fit: cover;
 }
 
+.ott-link-wrapper {
+    text-decoration: none;
+    display: block;
+    transition: transform 0.2s;
+}
+
+.ott-link-wrapper:active {
+    transform: scale(0.9);
+}
+
 .ott-name {
     font-size: 8px;
     font-weight: 900;

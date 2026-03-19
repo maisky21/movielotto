@@ -182,7 +182,7 @@ function selectGenre(id, isKMovie) {
 
 async function getMovies(genreId, expanded = false) {
     const randomPage = Math.floor(Math.random() * 20) + 1; 
-    const whitelistIds = [8, 337, 119]; // Limit to major OTTs
+    const whitelistIds = [8, 337, 119]; 
     
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
@@ -449,7 +449,13 @@ async function showResult(movie, omdb, credits, ott) {
         providers.forEach(p => {
             const item = document.createElement('div');
             item.className = 'ott-item';
-            item.innerHTML = `<div class="ott-icon-small"><img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}"></div>`;
+            const deepLink = getKROttDeepLink(p.provider_id, movie.title);
+            item.innerHTML = `
+                <a href="${deepLink}" target="_blank" class="ott-link-wrapper" onclick="handleOttClick(event, ${p.provider_id}, '${movie.title.replace(/'/g, "\\'")}')">
+                    <div class="ott-icon-small">
+                        <img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">
+                    </div>
+                </a>`;
             ottList.appendChild(item);
         });
     } else {
@@ -459,6 +465,40 @@ async function showResult(movie, omdb, credits, ott) {
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
     slotView.style.display = 'none';
     resultView.style.display = 'flex';
+}
+
+function getKROttDeepLink(providerId, title) {
+    const encodedTitle = encodeURIComponent(title);
+    const OTT_MAP = {
+        8: `https://www.netflix.com/search?q=${encodedTitle}`,
+        337: `https://www.disneyplus.com/search?q=${encodedTitle}`,
+        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`
+    };
+    return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT`;
+}
+
+function getKROttAppScheme(providerId, title) {
+    const encodedTitle = encodeURIComponent(title);
+    const SCHEME_MAP = {
+        8: `nflx://www.netflix.com/Browse?q=${encodedTitle}`,
+        337: `disneyplus://`,
+        119: `primevideo://`
+    };
+    return SCHEME_MAP[providerId] || null;
+}
+
+function handleOttClick(event, providerId, title) {
+    event.stopPropagation();
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        const scheme = getKROttAppScheme(providerId, title);
+        if (scheme) {
+            // Short delay to allow browser to try opening app
+            setTimeout(() => {
+                // If still in browser, the target="_blank" will handle the fallback
+            }, 500);
+            window.location.href = scheme;
+        }
+    }
 }
 
 function playTrailer(event) {
@@ -598,7 +638,7 @@ window.handleDrawClick = handleDrawClick;
 window.resetApp = resetApp;
 window.toggleTheme = toggleTheme;
 window.toggleLanguage = toggleLanguage;
-window.selectGenre = selectGenre;
 window.playTrailer = playTrailer;
+window.handleOttClick = handleOttClick;
 
 init();
