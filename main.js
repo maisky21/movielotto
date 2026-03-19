@@ -405,13 +405,18 @@ async function showResult(movie, omdb, credits, ott) {
         posterImg.classList.add('loaded');
     };
 
+    const releaseYear = parseInt(movie.release_date?.split('-')[0]) || 0;
+    const currentYear = new Date().getFullYear();
+    const isNew = (releaseYear === currentYear || releaseYear === currentYear - 1);
+    const newBadge = isNew ? `<span class="new-badge">NEW</span>` : '';
+
     const titleEl = document.getElementById('res-title');
     const titleLink = omdb?.imdbId 
         ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank" onclick="event.stopPropagation();">${movie.title}</a>`
         : movie.title;
     
     const releaseYearStr = movie.release_date ? ` (${movie.release_date.split('-')[0]})` : '';
-    titleEl.innerHTML = `${titleLink}${releaseYearStr}`;
+    titleEl.innerHTML = `${titleLink}${releaseYearStr}${newBadge}`;
     
     titleEl.style.cursor = 'pointer';
     titleEl.onclick = (e) => {
