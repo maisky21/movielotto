@@ -567,22 +567,45 @@ function getKROttAppScheme(providerId, title) {
 }
 
 function playTrailer(event) {
+    console.log("playTrailer called", {
+        trailerId: state.currentTrailerId,
+        isApiReady: state.isApiReady,
+        hasPlayer: !!state.player
+    });
+    
     if (event) {
         event.stopPropagation();
         if (event.cancelable) event.preventDefault();
     }
     
-    if (!state.currentTrailerId || !state.isApiReady || state.player) return;
+    if (!state.currentTrailerId) {
+        console.warn("No trailer ID available");
+        return;
+    }
+    if (!state.isApiReady) {
+        console.warn("YouTube API not ready yet");
+        return;
+    }
+    if (state.player) {
+        console.log("Player already exists, skipping init");
+        return;
+    }
 
     trailerContainer.innerHTML = '<div id="yt-player"></div>';
     trailerContainer.style.display = 'block';
-    playOverlay.style.display = 'none';
+    if (playOverlay) playOverlay.style.display = 'none';
 
     // Strongly prevent any clicks or touches within the player area from bubbling up to the poster-area
     const stopBubbling = (e) => e.stopPropagation();
     trailerContainer.addEventListener('click', stopBubbling, { capture: true });
     trailerContainer.addEventListener('touchstart', stopBubbling, { capture: true });
     trailerContainer.addEventListener('mousedown', stopBubbling, { capture: true });
+
+    const origin = window.location.origin.includes('localhost') || window.location.origin.includes('web.app') 
+                   ? window.location.origin 
+                   : 'https://cinelotto.com';
+
+    console.log("Initializing YT Player with origin:", origin);
 
     state.player = new YT.Player('yt-player', {
         height: '100%',
@@ -596,14 +619,21 @@ function playTrailer(event) {
             'iv_load_policy': 3,
             'playsinline': 1,
             'enablejsapi': 1,
-            'origin': window.location.origin
+            'origin': origin
         },
         events: {
             'onReady': (e) => {
+                console.log("YT Player Ready");
                 // Force play for iOS one-click experience
                 e.target.playVideo();
             },
-            'onStateChange': onPlayerStateChange
+            'onStateChange': (e) => {
+                console.log("YT Player State Change:", e.data);
+                onPlayerStateChange(e);
+            },
+            'onError': (e) => {
+                console.error("YT Player Error:", e.data);
+            }
         }
     });
 }
