@@ -26,6 +26,7 @@ const I18N = {
         drawing: "추첨 중...",
         all: "전체",
         kMovie: "K-무비",
+        new: "NEW",
         fail: "영화를 불러오는데 실패했습니다. 다시 시도해주세요.",
         about: "서비스 소개",
         contact: "문의하기",
@@ -43,6 +44,7 @@ const I18N = {
         drawing: "Drawing...",
         all: "All",
         kMovie: "K-Movie",
+        new: "NEW",
         fail: "Failed to load movie. Please try again.",
         about: "About",
         contact: "Contact",
@@ -56,6 +58,7 @@ let state = {
     genres: [],
     selectedGenre: null,
     isKMovie: false,
+    isNewMovie: false,
     movies: [],
     viewedIds: new Set(),
     isDrawing: false,
@@ -150,44 +153,58 @@ function renderGenres() {
     
     // 1. All Chip
     const allChip = document.createElement('div');
-    allChip.className = `genre-chip ${(!state.selectedGenre && !state.isKMovie) ? 'active' : ''}`;
+    allChip.className = `genre-chip ${(!state.selectedGenre && !state.isKMovie && !state.isNewMovie) ? 'active' : ''}`;
     allChip.textContent = I18N[state.lang].all;
-    allChip.onclick = () => selectGenre(null, false);
+    allChip.onclick = () => selectGenre(null, false, false);
     container.appendChild(allChip);
 
     // 2. K-Movie Chip
     const kChip = document.createElement('div');
     kChip.className = `genre-chip ${state.isKMovie ? 'active' : ''}`;
     kChip.textContent = I18N[state.lang].kMovie;
-    kChip.onclick = () => selectGenre(null, true);
+    kChip.onclick = () => selectGenre(null, true, false);
     container.appendChild(kChip);
 
-    // 3. Fetched Genres
+    // 3. NEW Chip
+    const newChip = document.createElement('div');
+    newChip.className = `genre-chip ${state.isNewMovie ? 'active' : ''}`;
+    newChip.textContent = I18N[state.lang].new;
+    newChip.onclick = () => selectGenre(null, false, true);
+    container.appendChild(newChip);
+
+    // 4. Fetched Genres
     state.genres.forEach(g => {
         const chip = document.createElement('div');
-        chip.className = `genre-chip ${(state.selectedGenre === g.id && !state.isKMovie) ? 'active' : ''}`;
+        chip.className = `genre-chip ${(state.selectedGenre === g.id && !state.isKMovie && !state.isNewMovie) ? 'active' : ''}`;
         chip.textContent = g.name;
-        chip.onclick = () => selectGenre(g.id, false);
+        chip.onclick = () => selectGenre(g.id, false, false);
         container.appendChild(chip);
     });
 }
 
-function selectGenre(id, isKMovie) {
+function selectGenre(id, isKMovie, isNewMovie) {
     if (state.isDrawing) return;
     state.selectedGenre = id;
     state.isKMovie = isKMovie;
+    state.isNewMovie = isNewMovie;
     state.movies = []; 
     renderGenres();
 }
 
 async function getMovies(genreId, expanded = false) {
-    const randomPage = Math.floor(Math.random() * 20) + 1; 
+    const currentYear = new Date().getFullYear();
+    const randomPage = (state.isNewMovie || state.isKMovie) ? Math.floor(Math.random() * 10) + 1 : Math.floor(Math.random() * 20) + 1; 
     const whitelistIds = [8, 337, 119]; 
     
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
     if (state.isKMovie) {
         url += `&with_original_language=ko`;
+    }
+
+    if (state.isNewMovie) {
+        // Filter for current year and previous year
+        url += `&primary_release_date.gte=${currentYear - 1}-01-01&primary_release_date.lte=${currentYear}-12-31`;
     }
 
     if (genreId) {
@@ -203,7 +220,7 @@ async function getMovies(genreId, expanded = false) {
         const data = await res.json();
         let results = (data.results || []).filter(m => m.poster_path);
 
-        if (results.length < 5 && !expanded && (genreId || state.isKMovie)) {
+        if (results.length < 5 && !expanded && (genreId || state.isKMovie || state.isNewMovie)) {
             return await getMovies(genreId, true);
         }
 
