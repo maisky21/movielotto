@@ -181,8 +181,8 @@ function selectGenre(id, isKMovie) {
 }
 
 async function getMovies(genreId, expanded = false) {
-    const randomPage = Math.floor(Math.random() * 20) + 1; // Lower range for K-movies to ensure results
-    const whitelistIds = [8, 337, 2, 444, 119]; 
+    const randomPage = Math.floor(Math.random() * 20) + 1; 
+    const whitelistIds = [8, 337, 119]; // Limit to major OTTs
     
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
@@ -204,7 +204,6 @@ async function getMovies(genreId, expanded = false) {
         let results = (data.results || []).filter(m => m.poster_path);
 
         if (results.length < 5 && !expanded && (genreId || state.isKMovie)) {
-            // If K-movie or specific genre result is low, we might need a broader search, but let's stick to language if set
             return await getMovies(genreId, true);
         }
 
@@ -240,7 +239,7 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
-        const whitelistIds = [8, 337, 2, 444, 119]; 
+        const whitelistIds = [8, 337, 119]; 
 
         while (!selectedMovie && retryCount < 30) { 
             moviePool = await getMovies(state.selectedGenre);
@@ -439,15 +438,18 @@ async function showResult(movie, omdb, credits, ott) {
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
     const krData = ott?.KR || {};
+    
+    const allowedIds = [8, 337, 119]; // Netflix, Disney+, Prime Video
     let providers = [...(krData.flatrate || []), ...(krData.rent || []), ...(krData.buy || [])]
         .filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i)
-        .slice(0, 5);
+        .filter(p => allowedIds.includes(p.provider_id))
+        .slice(0, 3);
 
     if (providers.length > 0) {
         providers.forEach(p => {
             const item = document.createElement('div');
             item.className = 'ott-item';
-            item.innerHTML = `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">`;
+            item.innerHTML = `<div class="ott-icon-small"><img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}"></div>`;
             ottList.appendChild(item);
         });
     } else {

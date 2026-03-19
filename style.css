@@ -360,8 +360,20 @@ body {
 .ott-section { margin-top: auto; padding-top: 4px; }
 .ott-list { display: flex; gap: 8px; flex-wrap: wrap; }
 .ott-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-.ott-link { width: 30px; height: 30px; border-radius: 7px; overflow: hidden; display: block; border: 1px solid rgba(0,0,0,0.08); }
-.ott-link img { width: 100%; height: 100%; object-fit: cover; }
+
+.ott-icon-small {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+.ott-icon-small img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
 .ott-name {
     font-size: 8px;
@@ -491,7 +503,7 @@ body {
         margin-bottom: 6px;
     }
 
-    .ott-link { width: 26px; height: 26px; }
+    .ott-icon-small { width: 22px; height: 22px; }
     .ott-name { font-size: 7.5px; }
 
     .main-card { margin-bottom: 115px; } /* Adjust for footer */
