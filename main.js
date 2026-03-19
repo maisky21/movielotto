@@ -624,6 +624,9 @@ function resetApp() {
     trailerContainer.style.display = 'none';
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
+    
+    // Completely reset to landing state
+    startInfiniteSpin(); 
     updateButtonState(false);
 }
 
