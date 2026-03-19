@@ -25,6 +25,7 @@ const I18N = {
         draw: "다음 영화 뽑기",
         drawing: "추첨 중...",
         all: "전체",
+        kMovie: "K-무비",
         fail: "영화를 불러오는데 실패했습니다. 다시 시도해주세요.",
         about: "서비스 소개",
         contact: "문의하기",
@@ -41,6 +42,7 @@ const I18N = {
         draw: "Next Movie",
         drawing: "Drawing...",
         all: "All",
+        kMovie: "K-Movie",
         fail: "Failed to load movie. Please try again.",
         about: "About",
         contact: "Contact",
@@ -53,6 +55,7 @@ const I18N = {
 let state = {
     genres: [],
     selectedGenre: null,
+    isKMovie: false,
     movies: [],
     viewedIds: new Set(),
     isDrawing: false,
@@ -75,7 +78,7 @@ const langToggle = document.getElementById('lang-toggle');
 const trailerContainer = document.getElementById('trailer-container');
 const playOverlay = document.getElementById('play-overlay');
 
-// YouTube IFrame API
+// YouTube IFrame API Callback
 window.onYouTubeIframeAPIReady = () => {
     state.isApiReady = true;
 };
@@ -86,13 +89,16 @@ async function init() {
     await fetchGenres();
     renderGenres();
     setupGenreNavScroll();
+    
+    if (typeof YT !== 'undefined' && YT.Player) {
+        state.isApiReady = true;
+    }
 }
 
 function setupGenreNavScroll() {
     const nav = document.getElementById('genre-container');
     if (!nav) return;
 
-    // 1. Wheel Scroll (Vertical to Horizontal)
     nav.addEventListener('wheel', (e) => {
         if (e.deltaY !== 0) {
             e.preventDefault();
@@ -100,7 +106,6 @@ function setupGenreNavScroll() {
         }
     }, { passive: false });
 
-    // 2. Click Drag Scroll
     let isDown = false;
     let startX;
     let scrollLeft;
@@ -109,7 +114,7 @@ function setupGenreNavScroll() {
         isDown = true;
         startX = e.pageX - nav.offsetLeft;
         scrollLeft = nav.scrollLeft;
-        nav.style.scrollBehavior = 'auto'; // Disable smooth scroll during drag for responsiveness
+        nav.style.scrollBehavior = 'auto';
     };
 
     window.addEventListener('mouseup', () => {
@@ -140,37 +145,51 @@ async function fetchGenres() {
 
 function renderGenres() {
     const container = document.getElementById('genre-container');
+    if (!container) return;
     container.innerHTML = '';
     
+    // 1. All Chip
     const allChip = document.createElement('div');
-    allChip.className = `genre-chip ${!state.selectedGenre ? 'active' : ''}`;
+    allChip.className = `genre-chip ${(!state.selectedGenre && !state.isKMovie) ? 'active' : ''}`;
     allChip.textContent = I18N[state.lang].all;
-    allChip.onclick = () => selectGenre(null);
+    allChip.onclick = () => selectGenre(null, false);
     container.appendChild(allChip);
 
+    // 2. K-Movie Chip
+    const kChip = document.createElement('div');
+    kChip.className = `genre-chip ${state.isKMovie ? 'active' : ''}`;
+    kChip.textContent = I18N[state.lang].kMovie;
+    kChip.onclick = () => selectGenre(null, true);
+    container.appendChild(kChip);
+
+    // 3. Fetched Genres
     state.genres.forEach(g => {
         const chip = document.createElement('div');
-        chip.className = `genre-chip ${state.selectedGenre === g.id ? 'active' : ''}`;
+        chip.className = `genre-chip ${(state.selectedGenre === g.id && !state.isKMovie) ? 'active' : ''}`;
         chip.textContent = g.name;
-        chip.onclick = () => selectGenre(g.id);
+        chip.onclick = () => selectGenre(g.id, false);
         container.appendChild(chip);
     });
 }
 
-function selectGenre(id) {
+function selectGenre(id, isKMovie) {
     if (state.isDrawing) return;
     state.selectedGenre = id;
+    state.isKMovie = isKMovie;
     state.movies = []; 
     renderGenres();
 }
 
 async function getMovies(genreId, expanded = false) {
-    const randomPage = Math.floor(Math.random() * 80) + 1; 
-    // CORRECT WHITELIST: Netflix(8), Disney+(337), Apple TV+(2), Coupang Play(444), Prime(119)
+    const randomPage = Math.floor(Math.random() * 20) + 1; // Lower range for K-movies to ensure results
     const whitelistIds = [8, 337, 2, 444, 119]; 
     
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
+    if (state.isKMovie) {
+        url += `&with_original_language=ko`;
+    }
+
     if (genreId) {
         let genreIds = [genreId];
         if (expanded && GENRE_EXPANSION[genreId]) {
@@ -184,7 +203,8 @@ async function getMovies(genreId, expanded = false) {
         const data = await res.json();
         let results = (data.results || []).filter(m => m.poster_path);
 
-        if (results.length < 5 && !expanded && genreId) {
+        if (results.length < 5 && !expanded && (genreId || state.isKMovie)) {
+            // If K-movie or specific genre result is low, we might need a broader search, but let's stick to language if set
             return await getMovies(genreId, true);
         }
 
@@ -200,7 +220,7 @@ async function handleDrawClick() {
     
     stopTrailer();
     trailerContainer.style.display = 'none';
-    playOverlay.style.display = 'flex';
+    if (playOverlay) playOverlay.style.display = 'flex';
     state.currentTrailerId = null;
 
     state.isDrawing = true;
@@ -232,15 +252,7 @@ async function handleDrawClick() {
                     .some(p => whitelistIds.includes(p.provider_id));
                 
                 let weight = Math.random();
-                const releaseYear = parseInt(m.release_date?.split('-')[0]) || 0;
-                if (releaseYear >= 2025) weight += 0.1;
-
-                const isLikelyOriginal = (m.production_companies || []).some(c => 
-                    ['Apple', 'Netflix', 'Disney', 'Amazon', 'Coupang'].some(brand => c.name.toLowerCase().includes(brand.toLowerCase()))
-                );
-                
                 if (availableOnWhitelist) weight += 10.0;
-                if (isLikelyOriginal) weight += 5.0;
 
                 return { ...m, weight, fullInfo, availableOnWhitelist };
             }));
@@ -385,7 +397,6 @@ async function showResult(movie, omdb, credits, ott) {
     const posterArea = document.getElementById('poster-area');
     const posterImg = document.getElementById('res-poster');
     
-    // Skeleton UI Activation
     posterArea.classList.add('loading');
     posterImg.classList.remove('loaded');
     posterImg.src = `${CONFIG.IMG_URL}${movie.poster_path}`;
@@ -395,19 +406,24 @@ async function showResult(movie, omdb, credits, ott) {
         posterImg.classList.add('loaded');
     };
 
-    const releaseYear = parseInt(movie.release_date?.split('-')[0]) || 0;
-    const isNew = releaseYear >= 2025;
-    const newBadge = isNew ? `<span class="new-badge">NEW</span>` : '';
-
     const titleEl = document.getElementById('res-title');
-    const titleContent = omdb?.imdbId 
-        ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank">${movie.title}</a>`
+    const titleLink = omdb?.imdbId 
+        ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank" onclick="event.stopPropagation();">${movie.title}</a>`
         : movie.title;
     
     const releaseYearStr = movie.release_date ? ` (${movie.release_date.split('-')[0]})` : '';
-    const dateSpan = releaseYearStr ? `<span class="release-date">${releaseYearStr}</span>` : '';
+    titleEl.innerHTML = `${titleLink}${releaseYearStr}`;
     
-    titleEl.innerHTML = `${titleContent}${dateSpan} ${newBadge}`;
+    titleEl.style.cursor = 'pointer';
+    titleEl.onclick = (e) => {
+        if (e.target.tagName !== 'A') playTrailer(e);
+    };
+
+    const ratingRow = document.querySelector('.rating-row');
+    if (ratingRow) {
+        ratingRow.style.cursor = 'pointer';
+        ratingRow.onclick = playTrailer;
+    }
 
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     
@@ -416,196 +432,59 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
-    const topCast = credits?.cast?.slice(0, 3) || [];
-
-    const peopleToFetch = [
-        ...(directorObj ? [directorObj] : []),
-        ...topCast
-    ];
-
-    const personImdbData = await Promise.all(peopleToFetch.map(async p => {
-        const imdbId = await fetchPersonImdbId(p.id);
-        return { id: p.id, imdbId };
-    }));
-
-    const getPersonLink = (p) => {
-        const data = personImdbData.find(d => d.id === p.id);
-        const displayName = p.name || p.original_name;
-        const searchName = p.original_name || p.name;
-        if (data?.imdbId) {
-            return `<a class="credit-link" href="https://www.imdb.com/name/${data.imdbId}/" target="_blank">${displayName}</a>`;
-        } else {
-            return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank">${displayName}</a>`;
-        }
-    };
-
     const labels = I18N[state.lang];
-    const directorName = directorObj ? (directorObj.name || directorObj.original_name) : (state.lang === 'KO' ? '정보 없음' : 'N/A');
-    document.getElementById('res-director').innerHTML = directorObj 
-        ? `${labels.director}: ${getPersonLink(directorObj)}`
-        : `${labels.director}: ${directorName}`;
-
-    const castHtmls = topCast.map(p => getPersonLink(p));
-    document.getElementById('res-cast').innerHTML = `${labels.cast}: ${castHtmls.join(', ') || (state.lang === 'KO' ? '정보 없음' : 'N/A')}`;
+    document.getElementById('res-director').innerHTML = `${labels.director}: ${directorObj ? directorObj.name : '--'}`;
+    document.getElementById('res-cast').innerHTML = `${labels.cast}: ${credits?.cast?.slice(0, 3).map(c => c.name).join(', ') || '--'}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
-    
     const krData = ott?.KR || {};
-    let allProviders = [
-        ...(krData.flatrate || []),
-        ...(krData.rent || []),
-        ...(krData.buy || [])
-    ].filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i);
-
-    const whitelistIds = [8, 337, 2, 444, 119];
-    let providers = allProviders.filter(p => whitelistIds.includes(p.provider_id));
-
-    const prodCompanies = movie.production_companies || [];
-    const originalPlatforms = [
-        { name: 'Netflix', id: 8, keywords: ['Netflix'] },
-        { name: 'Disney Plus', id: 337, keywords: ['Disney'] },
-        { name: 'Apple TV Plus', id: 2, keywords: ['Apple'] },
-        { name: 'Amazon Prime Video', id: 119, keywords: ['Amazon'] },
-        { name: 'Coupang Play', id: 444, keywords: ['Coupang', '쿠팡'] } 
-    ];
-
-    originalPlatforms.forEach(p => {
-        const isOriginal = prodCompanies.some(c => p.keywords.some(kw => c.name.toLowerCase().includes(kw.toLowerCase())));
-        const alreadyExists = providers.some(pr => pr.provider_id === p.id);
-        if (isOriginal && !alreadyExists) {
-            providers.push({
-                provider_id: p.id,
-                provider_name: p.name,
-                logo_path: getPlatformLogo(p.name)
-            });
-        }
-    });
-
-    providers.sort((a, b) => whitelistIds.indexOf(a.provider_id) - whitelistIds.indexOf(b.provider_id));
-    providers = providers.slice(0, 5);
+    let providers = [...(krData.flatrate || []), ...(krData.rent || []), ...(krData.buy || [])]
+        .filter((v, i, a) => a.findIndex(t => t.provider_id === v.provider_id) === i)
+        .slice(0, 5);
 
     if (providers.length > 0) {
         providers.forEach(p => {
             const item = document.createElement('div');
             item.className = 'ott-item';
-            
-            const link = document.createElement('a');
-            link.href = getKROttDeepLink(p.provider_id, movie.title, movie.original_title);
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.className = 'ott-link';
-            link.onclick = (e) => {
-                e.stopPropagation();
-                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                    const scheme = getKROttAppScheme(p.provider_id, movie.title);
-                    if (scheme) { window.location.href = scheme; }
-                }
-            };
-            const logoSrc = p.logo_path.startsWith('/') ? `https://image.tmdb.org/t/p/original${p.logo_path}` : p.logo_path;
-            link.innerHTML = `<img src="${logoSrc}" alt="${p.provider_name}">`;
-            
-            const name = document.createElement('span');
-            name.className = 'ott-name';
-            name.textContent = p.provider_name;
-            
-            item.appendChild(link);
-            item.appendChild(name);
+            item.innerHTML = `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" alt="${p.provider_name}">`;
             ottList.appendChild(item);
         });
     } else {
-        ottList.innerHTML = `<span style="color:rgba(0,0,0,0.4); font-weight:800; font-size:10px;">${labels.noOtt}</span>`;
+        ottList.innerHTML = `<span style="opacity:0.5;">${labels.noOtt}</span>`;
     }
-
-    const historyItem = {
-        id: movie.id,
-        title: movie.title,
-        poster: movie.poster_path,
-        year: movie.release_date?.split('-')[0]
-    };
-    state.history = [historyItem, ...state.history.filter(h => h.id !== movie.id)].slice(0, 5);
-    localStorage.setItem('history', JSON.stringify(state.history));
 
     playOverlay.style.display = state.currentTrailerId ? 'flex' : 'none';
     slotView.style.display = 'none';
     resultView.style.display = 'flex';
 }
 
-function getPlatformLogo(name) {
-    const MAP = {
-        'Netflix': '/wwemzKWzjKYJFfCeiB57q3r4Bcm.jpg',
-        'Disney Plus': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg',
-        'Apple TV Plus': '/68vAnUiqHpkS9jY7-ZpCkYW9Iba.jpg',
-        'Amazon Prime Video': '/if8Q9jy96OuwFyH4o0vUBTMpS3M.jpg',
-        'Coupang Play': '/7rwE0vEbsnBp6FocCD9b6FZ7vJu.jpg' 
-    };
-    return MAP[name] || '';
-}
-
-function getKROttDeepLink(providerId, title, originalTitle) {
-    const encodedTitle = encodeURIComponent(title);
-    const OTT_MAP = {
-        8: `https://www.netflix.com/search?q=${encodedTitle}`,
-        337: `https://www.disneyplus.com/ko-kr/search?q=${encodedTitle}`,
-        2: `https://tv.apple.com/kr/search?term=${encodedTitle}`,
-        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`,
-        444: `https://www.coupangplay.com/search?q=${encodedTitle}`
-    };
-    return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT+보러가기`;
-}
-
-function getKROttAppScheme(providerId, title) {
-    const encodedTitle = encodeURIComponent(title);
-    const SCHEME_MAP = {
-        8: `nflx://www.netflix.com/Browse?q=${encodedTitle}`,
-        337: `disneyplus://`,
-        2: `atve://`,
-        119: `primevideo://`,
-        444: `coupangplay://`
-    };
-    return SCHEME_MAP[providerId] || null;
-}
-
 function playTrailer(event) {
-    console.log("playTrailer called", {
-        trailerId: state.currentTrailerId,
-        isApiReady: state.isApiReady,
-        hasPlayer: !!state.player
-    });
-    
     if (event) {
         event.stopPropagation();
         if (event.cancelable) event.preventDefault();
     }
     
-    if (!state.currentTrailerId) {
-        console.warn("No trailer ID available");
-        return;
+    if (!state.currentTrailerId) return;
+    
+    if (!state.isApiReady || typeof YT === 'undefined' || !YT.Player) {
+        if (typeof YT !== 'undefined' && YT.Player) {
+            state.isApiReady = true;
+        } else {
+            return;
+        }
     }
-    if (!state.isApiReady) {
-        console.warn("YouTube API not ready yet");
-        return;
-    }
-    if (state.player) {
-        console.log("Player already exists, skipping init");
-        return;
-    }
+
+    stopTrailer();
 
     trailerContainer.innerHTML = '<div id="yt-player"></div>';
     trailerContainer.style.display = 'block';
     if (playOverlay) playOverlay.style.display = 'none';
 
-    // Strongly prevent any clicks or touches within the player area from bubbling up to the poster-area
     const stopBubbling = (e) => e.stopPropagation();
     trailerContainer.addEventListener('click', stopBubbling, { capture: true });
     trailerContainer.addEventListener('touchstart', stopBubbling, { capture: true });
     trailerContainer.addEventListener('mousedown', stopBubbling, { capture: true });
-
-    const origin = window.location.origin.includes('localhost') || window.location.origin.includes('web.app') 
-                   ? window.location.origin 
-                   : 'https://cinelotto.com';
-
-    console.log("Initializing YT Player with origin:", origin);
 
     state.player = new YT.Player('yt-player', {
         height: '100%',
@@ -615,51 +494,25 @@ function playTrailer(event) {
             'autoplay': 1,
             'controls': 1,
             'rel': 0,
-            'modestbranding': 1,
-            'iv_load_policy': 3,
+            'origin': 'https://cinelotto.com',
             'playsinline': 1,
-            'enablejsapi': 1,
-            'origin': origin
+            'enablejsapi': 1
         },
         events: {
-            'onReady': (e) => {
-                console.log("YT Player Ready");
-                // Force play for iOS one-click experience
-                e.target.playVideo();
-            },
-            'onStateChange': (e) => {
-                console.log("YT Player State Change:", e.data);
-                onPlayerStateChange(e);
-            },
-            'onError': (e) => {
-                console.error("YT Player Error:", e.data);
-            }
+            'onReady': (e) => e.target.playVideo(),
+            'onError': (e) => console.error("YT Player Error:", e.data)
         }
     });
 }
 
-function onPlayerStateChange(event) {
-}
-
 function stopTrailer() {
-    if (state.player && state.player.stopVideo) {
+    if (state.player) {
         try {
-            state.player.stopVideo();
-            state.player.destroy();
-        } catch (e) {
-            console.error("Error stopping trailer", e);
-        }
+            if (state.player.destroy) state.player.destroy();
+        } catch (e) { console.error("Error stopping trailer", e); }
         state.player = null;
     }
     trailerContainer.innerHTML = '';
-}
-
-async function fetchOTT(movieId) {
-    try {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}/watch/providers?api_key=${CONFIG.TMDB_KEY}`);
-        const data = await res.json();
-        return data.results || {};
-    } catch (e) { return {}; }
 }
 
 async function fetchOMDb(movie) {
@@ -667,16 +520,16 @@ async function fetchOMDb(movie) {
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
         let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
-        if (extData.imdb_id) { url += `&i=${extData.imdb_id}`; } 
-        else { url += `&t=${encodeURIComponent(movie.title)}&y=${movie.release_date?.split('-')[0] || ''}`; }
+        if (extData.imdb_id) url += `&i=${extData.imdb_id}`;
+        else url += `&t=${encodeURIComponent(movie.title)}`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.Response === 'True') {
             const rt = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value;
-            return { imdbRating: data.imdbRating && data.imdbRating !== "N/A" ? data.imdbRating : null, rtRating: rt || null, imdbId: extData.imdb_id || data.imdbID };
+            return { imdbRating: data.imdbRating, rtRating: rt, imdbId: extData.imdb_id || data.imdbID };
         }
-        return null;
     } catch (e) { return null; }
+    return null;
 }
 
 async function fetchFullInfo(movieId, overrideLang = null) {
@@ -703,7 +556,6 @@ function resetApp() {
     trailerContainer.style.display = 'none';
     resultView.style.display = 'none';
     slotView.style.display = 'flex';
-    startInfiniteSpin();
     updateButtonState(false);
 }
 
@@ -725,15 +577,6 @@ async function toggleLanguage() {
     
     await fetchGenres();
     renderGenres();
-
-    if (state.currentMovie && resultView.style.display !== 'none') {
-        const [ott, omdb, fullInfo] = await Promise.all([
-            fetchOTT(state.currentMovie.id),
-            fetchOMDb(state.currentMovie),
-            fetchFullInfo(state.currentMovie.id)
-        ]);
-        await showResult(fullInfo, omdb, fullInfo.credits, ott);
-    }
 }
 
 function updateLangUI() {
