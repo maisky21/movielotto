@@ -420,8 +420,10 @@ async function showResult(movie, omdb, credits, ott) {
 
     const ratingRow = document.querySelector('.rating-row');
     if (ratingRow) {
-        ratingRow.style.cursor = 'pointer';
-        ratingRow.onclick = playTrailer;
+        ratingRow.style.cursor = 'default';
+        ratingRow.onclick = (e) => {
+            e.stopPropagation();
+        };
     }
 
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
@@ -431,9 +433,37 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
+    const topCast = credits?.cast?.slice(0, 3) || [];
+
+    const peopleToFetch = [
+        ...(directorObj ? [directorObj] : []),
+        ...topCast
+    ];
+
+    const personImdbData = await Promise.all(peopleToFetch.map(async p => {
+        const imdbId = await fetchPersonImdbId(p.id);
+        return { id: p.id, imdbId };
+    }));
+
+    const getPersonLink = (p) => {
+        const data = personImdbData.find(d => d.id === p.id);
+        const displayName = p.name || p.original_name;
+        const searchName = p.original_name || p.name;
+        if (data?.imdbId) {
+            return `<a class="credit-link" href="https://www.imdb.com/name/${data.imdbId}/" target="_blank" onclick="event.stopPropagation();">${displayName}</a>`;
+        } else {
+            return `<a class="credit-link" href="https://www.imdb.com/find?q=${encodeURIComponent(searchName)}" target="_blank" onclick="event.stopPropagation();">${displayName}</a>`;
+        }
+    };
+
     const labels = I18N[state.lang];
-    document.getElementById('res-director').innerHTML = `${labels.director}: ${directorObj ? directorObj.name : '--'}`;
-    document.getElementById('res-cast').innerHTML = `${labels.cast}: ${credits?.cast?.slice(0, 3).map(c => c.name).join(', ') || '--'}`;
+    const directorName = directorObj ? (directorObj.name || directorObj.original_name) : (state.lang === 'KO' ? '정보 없음' : 'N/A');
+    document.getElementById('res-director').innerHTML = directorObj 
+        ? `${labels.director}: ${getPersonLink(directorObj)}`
+        : `${labels.director}: ${directorName}`;
+
+    const castHtmls = topCast.map(p => getPersonLink(p));
+    document.getElementById('res-cast').innerHTML = `${labels.cast}: ${castHtmls.join(', ') || (state.lang === 'KO' ? '정보 없음' : 'N/A')}`;
 
     const ottList = document.getElementById('ott-list');
     ottList.innerHTML = '';
@@ -492,10 +522,6 @@ function handleOttClick(event, providerId, title) {
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         const scheme = getKROttAppScheme(providerId, title);
         if (scheme) {
-            // Short delay to allow browser to try opening app
-            setTimeout(() => {
-                // If still in browser, the target="_blank" will handle the fallback
-            }, 500);
             window.location.href = scheme;
         }
     }
