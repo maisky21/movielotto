@@ -645,6 +645,13 @@ async function toggleLanguage() {
     
     await fetchGenres();
     renderGenres();
+
+    if (state.currentMovie && resultView.style.display !== 'none') {
+        const fullInfo = await fetchFullInfo(state.currentMovie.id);
+        const omdb = await fetchOMDb(state.currentMovie);
+        const ott = fullInfo['watch/providers']?.results || {};
+        await showResult(fullInfo, omdb, fullInfo.credits, ott);
+    }
 }
 
 function updateLangUI() {
