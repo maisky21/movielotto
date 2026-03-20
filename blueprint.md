@@ -46,7 +46,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 4. [x] **Interaction Fixes:** Apply `stopPropagation` and deep link logic to OTT providers.
 5. [x] **Validation:** Test on mobile viewports and verify dark/light mode contrast.
 6. [x] **UI/UX Polish:** Refactor poster/card ratios for better visual balance on all devices.
-7. [x] **Cache Busting:** Add version parameters (`?v=20260311`) to `style.css` and `main.js` to force latest updates on mobile.
+7. [x] **Cache Busting:** Add version parameters (`?v=20260320`) to `style.css` and `main.js` to force latest updates on mobile.
 8. [x] **YouTube API Integration:** Implement the YouTube IFrame API with clean player logic (removed blocking layers and fixed bubbling).
 9. [x] **Branding Update:** Implement the "CINE LOTTO" logo with Golden Shimmer animation.
 10. [x] **SEO Optimization:** Create and configure `robots.txt` for better search engine crawling and security.
