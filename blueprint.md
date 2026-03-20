@@ -31,6 +31,10 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Mobile Playback Stability:** `playsinline: 1` is enforced for immediate playback within the browser on mobile devices.
     - **Event Propagation Control:** Clicks on the trailer container are isolated (`stopPropagation`) to prevent accidental app resets or rewinding on PC.
     - **Session Sync:** Video stops automatically when drawing a new movie or resetting the app, ensuring clean state transitions.
+- **UI Refinements (Polishing):**
+    - **Poster Fade-in:** 0.5s smooth fade-in animation when the movie poster is loaded.
+    - **Rating Badges:** High-visibility black badges with `border-radius: 20px` and bold fonts.
+    - **Button Interaction:** "Next Movie" button features a brightness boost and a 2px lift on hover for better tactile feedback.
 
 ## Technical Stack
 - **HTML5/CSS3:** Vanilla CSS for maximum control and performance (using CSS variables, `@keyframes`, and `background-clip: text`).
@@ -51,6 +55,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 9. [x] **Branding Update:** Implement the "CINE LOTTO" logo with Golden Shimmer animation.
 10. [x] **SEO Optimization:** Create and configure `robots.txt` for better search engine crawling and security.
 11. [x] **Stealth SEO:** Add technical info div at the extreme bottom of the DOM for crawler indexing.
+12. [x] **UI Polishing:** Implement 0.5s poster fade-in, rounded rating badges, and button hover effects.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.

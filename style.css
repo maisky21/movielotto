@@ -274,7 +274,7 @@ body {
     width: 100%; 
     height: 100%; 
     object-fit: cover; 
-    transition: opacity 0.3s ease;
+    transition: opacity 0.5s ease;
     opacity: 0;
 }
 .poster-display img.loaded {
@@ -348,7 +348,14 @@ body {
 }
 
 .rating-row { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
-.rating-badge { background: #000; color: #fff; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 900; }
+.rating-badge { 
+    background: #000; 
+    color: #fff; 
+    padding: 3px 10px; 
+    border-radius: 20px; 
+    font-size: 10px; 
+    font-weight: 800; 
+}
 
 .movie-title { font-size: 20px; font-weight: 900; margin-bottom: 2px; line-height: 1.2; display: flex; align-items: center; gap: 8px; }
 .movie-title a { text-decoration: none; color: inherit; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
@@ -454,12 +461,18 @@ body {
     font-weight: 900;
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(153, 255, 0, 0.2);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     position: relative;
     overflow: hidden;
 }
 
-.draw-btn:active { transform: scale(0.94); }
+.draw-btn:hover {
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(153, 255, 0, 0.3);
+}
+
+.draw-btn:active { transform: scale(0.94) translateY(0); }
 
 .draw-btn.drawing {
     animation: glowPulse 1.5s infinite ease-in-out;
