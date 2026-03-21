@@ -56,6 +56,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 10. [x] **SEO Optimization:** Create and configure `robots.txt` for better search engine crawling and security.
 11. [x] **Stealth SEO:** Add technical info div at the extreme bottom of the DOM for crawler indexing.
 12. [x] **UI Polishing:** Implement 0.5s poster fade-in, rounded rating badges, and button hover effects.
+13. [x] **Analytics Integration:** Insert GA4 tracking tags (G-XXMZ7HLXWQ) into the `<head>` of all HTML files (`index.html`, `about.html`, `contact.html`, `privacy.html`, `terms.html`) for visitor tracking.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
