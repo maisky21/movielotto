@@ -58,6 +58,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 12. [x] **UI Polishing:** Implement 0.5s poster fade-in, rounded rating badges, and button hover effects.
 13. [x] **Analytics Integration:** Insert GA4 tracking tags (G-XXMZ7HLXWQ) into the `<head>` of all HTML files (`index.html`, `about.html`, `contact.html`, `privacy.html`, `terms.html`) for visitor tracking.
 14. [x] **SEO Meta Optimization:** Update `<title>`, `<meta name="description">`, and `<meta name="keywords">` in `index.html` to improve search engine ranking and clarity.
+15. [x] **OG Image Localization:** Download the external Open Graph image to the local `images/` folder and update `index.html` to use the absolute URL (`https://cinelotto.com/images/og-image.jpg`).
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
