@@ -194,7 +194,7 @@ function selectGenre(id, isKMovie, isNewMovie) {
 async function getMovies(genreId, expanded = false) {
     const currentYear = new Date().getFullYear();
     const randomPage = (state.isNewMovie || state.isKMovie) ? Math.floor(Math.random() * 10) + 1 : Math.floor(Math.random() * 20) + 1; 
-    const whitelistIds = [8, 337, 119]; 
+    const whitelistIds = [8, 337, 119, 356]; 
     
     let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
     
@@ -256,7 +256,7 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
-        const whitelistIds = [8, 337, 119]; 
+        const whitelistIds = [8, 337, 119, 356]; 
 
         while (!selectedMovie && retryCount < 30) { 
             moviePool = await getMovies(state.selectedGenre);
@@ -523,8 +523,9 @@ function getKROttDeepLink(providerId, title) {
     const encodedTitle = encodeURIComponent(title);
     const OTT_MAP = {
         8: `https://www.netflix.com/search?q=${encodedTitle}`,
-        337: `https://www.disneyplus.com/search?q=${encodedTitle}`,
-        119: `https://www.amazon.com/gp/video/storefront/search?phrase=${encodedTitle}`
+        337: `https://www.disneyplus.com/ko-kr/browse/search`,
+        119: `https://www.primevideo.com/search/ref=atv_nb_sug?ie=UTF8&phrase=${encodedTitle}`,
+        356: `https://www.coupangplay.com/query?src=page_search&keyword=${encodedTitle}`
     };
     return OTT_MAP[providerId] || `https://www.google.com/search?q=${encodedTitle}+OTT`;
 }
@@ -534,7 +535,8 @@ function getKROttAppScheme(providerId, title) {
     const SCHEME_MAP = {
         8: `nflx://www.netflix.com/Browse?q=${encodedTitle}`,
         337: `disneyplus://`,
-        119: `primevideo://`
+        119: `primevideo://`,
+        356: `coupangplay://`
     };
     return SCHEME_MAP[providerId] || null;
 }
