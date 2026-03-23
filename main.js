@@ -438,12 +438,16 @@ async function showResult(movie, omdb, credits, ott) {
     const newBadge = isNew ? `<span class="new-badge">NEW</span>` : '';
 
     const titleEl = document.getElementById('res-title');
-    const titleLink = omdb?.imdbId 
-        ? `<a href="https://www.imdb.com/title/${omdb.imdbId}/" target="_blank" onclick="event.stopPropagation();">${movie.title}</a>`
-        : movie.title;
-    
+    const imdbId = omdb?.imdbId;
     const releaseYearStr = movie.release_date ? ` (${movie.release_date.split('-')[0]})` : '';
-    titleEl.innerHTML = `${titleLink}${releaseYearStr}${newBadge}`;
+    const fullTitleText = `${movie.title}${releaseYearStr}`;
+    
+    // Direct IMDb Link using ID (entire title area)
+    const titleLink = imdbId 
+        ? `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" onclick="event.stopPropagation();">${fullTitleText}</a>`
+        : `<span>${fullTitleText}</span>`;
+    
+    titleEl.innerHTML = `${titleLink}${newBadge}`;
     
     titleEl.style.cursor = 'pointer';
     titleEl.onclick = (e) => {
@@ -622,8 +626,11 @@ async function fetchOMDb(movie) {
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
         let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
+        
+        // Search by English original_title for better accuracy
         if (extData.imdb_id) url += `&i=${extData.imdb_id}`;
-        else url += `&t=${encodeURIComponent(movie.title)}`;
+        else url += `&t=${encodeURIComponent(movie.original_title || movie.title)}`;
+        
         const res = await fetch(url);
         const data = await res.json();
         if (data.Response === 'True') {
