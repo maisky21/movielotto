@@ -316,6 +316,7 @@ async function handleDrawClick() {
         state.currentTrailerId = trailerId;
 
         await performFinalSpin(selectedMovie, moviePool);
+        // showResult 호출 시 selectedOmdb를 두 번째 인자로 정확히 전달
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
@@ -332,26 +333,15 @@ async function fetchOMDb(movie) {
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
         const realImdbId = extData.imdb_id;
-
-        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
-        // 영문 제목으로 검색하여 매칭률 극대화
-        if (realImdbId) url += `&i=${realImdbId}`;
-        else url += `&t=${encodeURIComponent(movie.original_title || movie.title)}`;
-        
+        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&i=${realImdbId || ''}&t=${encodeURIComponent(movie.original_title || movie.title)}`;
         const res = await fetch(url);
         const data = await res.json();
-        
-        if (data.Response === 'True') {
-            const rtRating = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value || '--';
-            return { 
-                imdbRating: data.imdbRating || '--', 
-                rtRating: rtRating, 
-                imdbId: realImdbId || data.imdbID 
-            };
-        }
-    } catch (e) { console.error("OMDb Error:", e); }
-    // 실패 시에도 기본값을 반환하여 화면 렌더링 유지
-    return { imdbRating: '--', rtRating: '--', imdbId: null };
+        return { 
+            imdbRating: data.imdbRating || '--', 
+            rtRating: data.Ratings?.find(r => r.Source.includes('Rotten'))?.Value || '--',
+            imdbId: realImdbId || data.imdbID 
+        };
+    } catch (e) { return { imdbRating: '--', rtRating: '--', imdbId: null }; }
 }
 
 async function fetchFullInfo(movieId, overrideLang = null) {
