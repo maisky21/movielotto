@@ -329,35 +329,28 @@ async function handleDrawClick() {
 
 async function fetchOMDb(movie) {
     try {
-        // 1. TMDB에서 '진짜' IMDb ID(tt...)부터 가져옵니다.
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
-        const realImdbId = extData.imdb_id; // 예: tt3606756
+        const realImdbId = extData.imdb_id;
 
         let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
-        
-        // 2. ID가 있으면 ID로, 없으면 영문 제목(original_title)으로 검색!
-        if (realImdbId) {
-            url += `&i=${realImdbId}`;
-        } else {
-            url += `&t=${encodeURIComponent(movie.original_title || movie.title)}`;
-        }
+        // 영문 제목으로 검색하여 매칭률 극대화
+        if (realImdbId) url += `&i=${realImdbId}`;
+        else url += `&t=${encodeURIComponent(movie.original_title || movie.title)}`;
         
         const res = await fetch(url);
         const data = await res.json();
         
         if (data.Response === 'True') {
-            // 로튼 토마토 점수 추출 로직
-            const rtScore = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value || '--';
+            const rtRating = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value || '--';
             return { 
                 imdbRating: data.imdbRating || '--', 
-                rtRating: rtScore, 
+                rtRating: rtRating, 
                 imdbId: realImdbId || data.imdbID 
             };
         }
-    } catch (e) {
-        console.error("OMDb 호출 에러:", e);
-    }
+    } catch (e) { console.error("OMDb Error:", e); }
+    // 실패 시에도 기본값을 반환하여 화면 렌더링 유지
     return { imdbRating: '--', rtRating: '--', imdbId: null };
 }
 
@@ -443,17 +436,20 @@ async function showResult(movie, omdb, credits, ott) {
     const imdbId = omdb?.imdbId; 
     const fullTitleText = `${movie.title} (${releaseYear})`;
 
+    // 제목 링크 및 예고편 버그 박멸
     if (imdbId && imdbId.startsWith('tt')) {
-        titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank">${fullTitleText}</a>${newBadge}`;
+        titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" style="color:inherit; text-decoration:none;">${fullTitleText}</a>${newBadge}`;
     } else {
         const searchUrl = `https://www.imdb.com/find?q=${encodeURIComponent(movie.original_title || movie.title)}&s=tt`;
-        titleEl.innerHTML = `<a href="${searchUrl}" target="_blank">${fullTitleText}</a>${newBadge}`;
+        titleEl.innerHTML = `<a href="${searchUrl}" target="_blank" style="color:inherit; text-decoration:none;">${fullTitleText}</a>${newBadge}`;
     }
     
     titleEl.style.cursor = 'default';
-    titleEl.onclick = (e) => e.stopPropagation();
+    titleEl.onclick = (e) => e.stopPropagation(); // 노란 영역 클릭 시 예고편 차단
 
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
+    
+    // 별점 데이터 정확히 매핑
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
