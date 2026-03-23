@@ -438,16 +438,12 @@ async function showResult(movie, omdb, credits, ott) {
     const newBadge = isNew ? `<span class="new-badge">NEW</span>` : '';
 
     const titleEl = document.getElementById('res-title');
-    const imdbId = omdb?.imdbId;
+    const imdbId = omdb?.imdbId || movie.id;
     const releaseYearStr = movie.release_date ? ` (${movie.release_date.split('-')[0]})` : '';
     const fullTitleText = `${movie.title}${releaseYearStr}`;
     
-    // Direct IMDb Link using ID (entire title area)
-    const titleLink = imdbId 
-        ? `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" onclick="event.stopPropagation();">${fullTitleText}</a>`
-        : `<span>${fullTitleText}</span>`;
-    
-    titleEl.innerHTML = `${titleLink}${newBadge}`;
+    // Forced Direct IMDb Link
+    titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" onclick="event.stopPropagation();">${fullTitleText}</a>${newBadge}`;
     
     titleEl.style.cursor = 'pointer';
     titleEl.onclick = (e) => {
