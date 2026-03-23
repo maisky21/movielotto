@@ -333,17 +333,16 @@ async function fetchOMDb(movie) {
         const extData = await extRes.json();
         const realImdbId = extData.imdb_id;
 
-        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
-        if (realImdbId) url += `&i=${realImdbId}`;
-        else url += `&t=${encodeURIComponent(movie.original_title || movie.title)}`;
+        // 무조건 original_title 사용
+        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&t=${encodeURIComponent(movie.original_title)}`;
         
         const res = await fetch(url);
         const data = await res.json();
         if (data.Response === 'True') {
             const rt = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value;
-            return { imdbRating: data.imdbRating, rtRating: rt, imdbId: realImdbId || data.imdbID };
+            return { imdbRating: data.imdbRating, rtRating: rt || '--', imdbId: realImdbId || data.imdbID };
         }
-        return { imdbId: realImdbId };
+        return { imdbRating: '--', rtRating: '--', imdbId: realImdbId };
     } catch (e) { return { imdbRating: '--', rtRating: '--', imdbId: null }; }
 }
 
@@ -430,16 +429,14 @@ async function showResult(movie, omdb, credits, ott) {
     const fullTitleText = `${movie.title} (${releaseYear})`;
 
     if (imdbId && imdbId.startsWith('tt')) {
-        titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" onclick="event.stopPropagation();">${fullTitleText}</a>${newBadge}`;
+        titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank">${fullTitleText}</a>${newBadge}`;
     } else {
         const searchUrl = `https://www.imdb.com/find?q=${encodeURIComponent(movie.original_title || movie.title)}&s=tt`;
-        titleEl.innerHTML = `<a href="${searchUrl}" target="_blank" onclick="event.stopPropagation();">${fullTitleText}</a>${newBadge}`;
+        titleEl.innerHTML = `<a href="${searchUrl}" target="_blank">${fullTitleText}</a>${newBadge}`;
     }
     
-    titleEl.style.cursor = 'pointer';
-    titleEl.onclick = (e) => {
-        if (e.target.tagName !== 'A') playTrailer(e);
-    };
+    titleEl.style.cursor = 'default';
+    titleEl.onclick = (e) => e.stopPropagation();
 
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
