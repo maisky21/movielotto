@@ -329,21 +329,36 @@ async function handleDrawClick() {
 
 async function fetchOMDb(movie) {
     try {
+        // 1. TMDB에서 '진짜' IMDb ID(tt...)부터 가져옵니다.
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
-        const realImdbId = extData.imdb_id;
+        const realImdbId = extData.imdb_id; // 예: tt3606756
 
-        // 무조건 original_title 사용
-        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&t=${encodeURIComponent(movie.original_title)}`;
+        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}`;
+        
+        // 2. ID가 있으면 ID로, 없으면 영문 제목(original_title)으로 검색!
+        if (realImdbId) {
+            url += `&i=${realImdbId}`;
+        } else {
+            url += `&t=${encodeURIComponent(movie.original_title || movie.title)}`;
+        }
         
         const res = await fetch(url);
         const data = await res.json();
+        
         if (data.Response === 'True') {
-            const rt = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value;
-            return { imdbRating: data.imdbRating, rtRating: rt || '--', imdbId: realImdbId || data.imdbID };
+            // 로튼 토마토 점수 추출 로직
+            const rtScore = data.Ratings?.find(r => r.Source.includes("Rotten Tomatoes"))?.Value || '--';
+            return { 
+                imdbRating: data.imdbRating || '--', 
+                rtRating: rtScore, 
+                imdbId: realImdbId || data.imdbID 
+            };
         }
-        return { imdbRating: '--', rtRating: '--', imdbId: realImdbId };
-    } catch (e) { return { imdbRating: '--', rtRating: '--', imdbId: null }; }
+    } catch (e) {
+        console.error("OMDb 호출 에러:", e);
+    }
+    return { imdbRating: '--', rtRating: '--', imdbId: null };
 }
 
 async function fetchFullInfo(movieId, overrideLang = null) {
