@@ -316,7 +316,6 @@ async function handleDrawClick() {
         state.currentTrailerId = trailerId;
 
         await performFinalSpin(selectedMovie, moviePool);
-        // showResult 호출 시 selectedOmdb를 두 번째 인자로 정확히 전달
         await showResult(selectedMovie, selectedOmdb, selectedCredits, selectedOtt);
     } catch (e) {
         console.error("Draw failed", e);
@@ -333,7 +332,8 @@ async function fetchOMDb(movie) {
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
         const extData = await extRes.json();
         const realImdbId = extData.imdb_id;
-        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&i=${realImdbId || ''}&t=${encodeURIComponent(movie.original_title || movie.title)}`;
+        let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&t=${encodeURIComponent(movie.original_title || movie.title)}`;
+        if (realImdbId) url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&i=${realImdbId}`;
         const res = await fetch(url);
         const data = await res.json();
         return { 
@@ -417,29 +417,12 @@ async function showResult(movie, omdb, credits, ott) {
     posterImg.src = `${CONFIG.IMG_URL}${movie.poster_path}`;
     posterImg.onload = () => posterImg.classList.add('loaded');
 
-    const releaseYear = movie.release_date?.split('-')[0] || '';
-    const currentYear = new Date().getFullYear().toString();
-    const isNew = (releaseYear === currentYear || releaseYear === (currentYear - 1).toString());
-    const newBadge = isNew ? `<span class="new-badge">NEW</span>` : '';
-
-    const titleEl = document.getElementById('res-title');
-    const imdbId = omdb?.imdbId; 
-    const fullTitleText = `${movie.title} (${releaseYear})`;
-
-    // 제목 링크 및 예고편 버그 박멸
-    if (imdbId && imdbId.startsWith('tt')) {
-        titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId}/" target="_blank" style="color:inherit; text-decoration:none;">${fullTitleText}</a>${newBadge}`;
-    } else {
-        const searchUrl = `https://www.imdb.com/find?q=${encodeURIComponent(movie.original_title || movie.title)}&s=tt`;
-        titleEl.innerHTML = `<a href="${searchUrl}" target="_blank" style="color:inherit; text-decoration:none;">${fullTitleText}</a>${newBadge}`;
-    }
-    
-    titleEl.style.cursor = 'default';
-    titleEl.onclick = (e) => e.stopPropagation(); // 노란 영역 클릭 시 예고편 차단
-
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     
-    // 별점 데이터 정확히 매핑
+    const titleEl = document.getElementById('res-title');
+    const imdbId = omdb?.imdbId; 
+    titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId || ''}/" target="_blank" style="color:inherit; text-decoration:none;" onclick="event.stopPropagation();">${movie.title}</a>`;
+    titleEl.onclick = (e) => e.stopPropagation();
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
