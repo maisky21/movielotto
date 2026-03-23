@@ -60,13 +60,11 @@ let state = {
     isKMovie: false,
     isNewMovie: false,
     movies: [],
-    viewedIds: new Set(),
     isDrawing: false,
     theme: localStorage.getItem('theme') || 'dark',
     lang: localStorage.getItem('lang') || 'KO',
     currentTrailerId: null,
     currentMovie: null,
-    history: JSON.parse(localStorage.getItem('history') || '[]'),
     player: null,
     isApiReady: false
 };
@@ -191,19 +189,34 @@ function selectGenre(id, isKMovie, isNewMovie) {
     renderGenres();
 }
 
+// v2.6 History Logic: Track last 20 IDs in sessionStorage
+function getHistory() {
+    try {
+        const h = sessionStorage.getItem('recommend_history');
+        return h ? JSON.parse(h) : [];
+    } catch(e) { return []; }
+}
+
+function saveToHistory(id) {
+    let h = getHistory();
+    h = h.filter(existingId => existingId !== id);
+    h.unshift(id);
+    if (h.length > 20) h = h.slice(0, 20);
+    sessionStorage.setItem('recommend_history', JSON.stringify(h));
+}
+
 async function getMovies(genreId, expanded = false) {
     const currentYear = new Date().getFullYear();
     const randomPage = (state.isNewMovie || state.isKMovie) ? Math.floor(Math.random() * 10) + 1 : Math.floor(Math.random() * 20) + 1; 
-    const whitelistIds = [8, 337, 119, 356]; 
+    const whitelistIds = [8, 337, 119]; // Strict 3-OTT Whitelist
     
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}`;
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}&with_watch_monetization_types=flatrate`;
     
     if (state.isKMovie) {
         url += `&with_original_language=ko`;
     }
 
     if (state.isNewMovie) {
-        // Filter for current year and previous year
         url += `&primary_release_date.gte=${currentYear - 1}-01-01&primary_release_date.lte=${currentYear}-12-31`;
     }
 
@@ -256,41 +269,31 @@ async function handleDrawClick() {
         
         let moviePool = [];
         let retryCount = 0;
-        const whitelistIds = [8, 337, 119, 356]; 
+        const whitelistIds = [8, 337, 119]; 
+        const history = getHistory();
 
         while (!selectedMovie && retryCount < 30) { 
             moviePool = await getMovies(state.selectedGenre);
             
-            const candidates = await Promise.all(moviePool.map(async m => {
+            for (const m of moviePool) {
+                // Deduplication Check (Last 20)
+                if (history.includes(m.id)) continue;
+
                 const fullInfo = await fetchFullInfo(m.id);
                 const ott = fullInfo['watch/providers']?.results?.KR || {};
-                const availableOnWhitelist = [...(ott.flatrate || []), ...(ott.rent || []), ...(ott.buy || [])]
-                    .some(p => whitelistIds.includes(p.provider_id));
+                const flatrate = ott.flatrate || [];
                 
-                let weight = Math.random();
-                if (availableOnWhitelist) weight += 10.0;
+                // Strict 3-OTT Flatrate Check
+                const availableOnStrictWhitelist = flatrate.some(p => whitelistIds.includes(p.provider_id));
+                if (!availableOnStrictWhitelist) continue;
 
-                return { ...m, weight, fullInfo, availableOnWhitelist };
-            }));
-
-            let filteredCandidates = candidates.filter(c => c.availableOnWhitelist);
-            if (filteredCandidates.length === 0) {
-                retryCount++;
-                continue;
-            }
-
-            filteredCandidates.sort((a, b) => b.weight - a.weight);
-            for (const candidate of filteredCandidates) {
-                const fullInfo = candidate.fullInfo;
-                const ott = fullInfo['watch/providers']?.results?.KR || {};
-                const omdb = await fetchOMDb(candidate);
-
-                const tmdbScore = candidate.vote_average || 0;
+                const omdb = await fetchOMDb(m);
+                const tmdbScore = m.vote_average || 0;
                 const imdbScore = parseFloat(omdb?.imdbRating) || 0;
                 const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
 
                 if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
-                    selectedMovie = candidate;
+                    selectedMovie = m;
                     selectedOmdb = omdb;
                     selectedCredits = fullInfo.credits;
                     selectedOtt = { KR: ott }; 
@@ -302,16 +305,23 @@ async function handleDrawClick() {
         }
 
         if (!selectedMovie) {
-            selectedMovie = moviePool[0];
-            const fullInfo = await fetchFullInfo(selectedMovie.id);
-            const ott = fullInfo['watch/providers']?.results?.KR || {};
-            const omdb = await fetchOMDb(selectedMovie);
-            selectedCredits = fullInfo.credits;
-            selectedVideos = fullInfo.videos;
-            selectedOtt = { KR: ott };
+            // Fallback: Pick any non-duplicate on whitelist
+            for (const m of moviePool) {
+                if (!history.includes(m.id)) {
+                    selectedMovie = m;
+                    const fullInfo = await fetchFullInfo(m.id);
+                    selectedOmdb = await fetchOMDb(m);
+                    selectedCredits = fullInfo.credits;
+                    selectedVideos = fullInfo.videos;
+                    selectedOtt = { KR: fullInfo['watch/providers']?.results?.KR };
+                    break;
+                }
+            }
         }
 
-        state.viewedIds.add(selectedMovie.id);
+        if (!selectedMovie) throw new Error("No unique movies found on major OTTs.");
+
+        saveToHistory(selectedMovie.id);
         state.currentMovie = selectedMovie; 
 
         let trailerId = findBestTrailer(selectedVideos?.results);
@@ -642,7 +652,7 @@ async function fetchPersonImdbId(personId) {
 
 function resetApp() {
     if (state.isDrawing) return;
-    state.viewedIds.clear();
+    sessionStorage.removeItem('recommend_history'); // Clear session history on reset
     state.currentMovie = null;
     stopTrailer();
     trailerContainer.style.display = 'none';

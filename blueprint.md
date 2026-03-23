@@ -35,6 +35,9 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Poster Fade-in:** 0.5s smooth fade-in animation when the movie poster is loaded.
     - **Rating Badges:** High-visibility black badges with `border-radius: 20px` and bold fonts.
     - **Button Interaction:** "Next Movie" button features a brightness boost and a 2px lift on hover for better tactile feedback.
+- **v2.6 Recommendation Logic Updates:**
+    - **3-OTT Exclusive Filter:** Only movies available on Netflix, Disney+, or Prime Video are recommended.
+    - **20-Item Deduplication:** Uses `sessionStorage` to track the last 20 recommended movies and prioritize fresh content.
 
 ## Technical Stack
 - **HTML5/CSS3:** Vanilla CSS for maximum control and performance (using CSS variables, `@keyframes`, and `background-clip: text`).
@@ -56,6 +59,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 10. [x] **SEO Optimization:** Create and configure `robots.txt` for better search engine crawling and security.
 11. [x] **Stealth SEO:** Add technical info div at the extreme bottom of the DOM for crawler indexing.
 12. [x] **UI Polishing:** Implement 0.5s poster fade-in, rounded rating badges, and button hover effects.
+13. [x] **v2.6 Recommendation Logic:** Implement strict 3-OTT filtering and 20-item deduplication using `sessionStorage`.
 
 ## Future Roadmap
 1. [x] **Recommendation History:** Store the last 5 recommended movies in `localStorage` for users to revisit.
