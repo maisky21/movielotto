@@ -103,6 +103,16 @@ function setupGenreNavScroll() {
     const nav = document.getElementById('genre-container');
     if (!nav) return;
 
+    const wrapper = document.getElementById('genre-nav-wrapper');
+    const updateFade = () => {
+        if (!wrapper) return;
+        const atEnd = nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 4;
+        wrapper.classList.toggle('scrolled-end', atEnd);
+    };
+    nav.addEventListener('scroll', updateFade, { passive: true });
+    // initial check after chips render
+    setTimeout(updateFade, 100);
+
     nav.addEventListener('wheel', (e) => {
         if (e.deltaY !== 0) {
             e.preventDefault();

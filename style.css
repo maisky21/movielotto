@@ -93,6 +93,28 @@ body {
 }
 
 /* Genre Nav */
+.genre-nav-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.genre-nav-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 48px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.3s ease;
+}
+
+.genre-nav-wrapper.scrolled-end::after {
+    opacity: 0;
+}
+
 .genre-nav {
     display: flex;
     gap: 10px;
@@ -101,7 +123,6 @@ body {
     margin-bottom: 10px;
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
-    flex-shrink: 0;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     cursor: grab;
