@@ -10,12 +10,6 @@
     --border: #efefef;
     --chip-bg: #f0f0f0;
     --legal-text: #8E8E8E;
-    --glass-bg: rgba(0, 0, 0, 0.06);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    --glass-text: #0a0a0a;
-    --glass-badge-bg: rgba(0, 0, 0, 0.08);
-    --glass-badge-border: rgba(0, 0, 0, 0.15);
 }
 
 body.dark-mode {
@@ -29,12 +23,6 @@ body.dark-mode {
     --border: #262626;
     --chip-bg: #1A1A1A;
     --legal-text: #8E8E8E;
-    --glass-bg: rgba(255, 255, 255, 0.08);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    --glass-text: #ffffff;
-    --glass-badge-bg: rgba(255, 255, 255, 0.15);
-    --glass-badge-border: rgba(255, 255, 255, 0.2);
 }
 
 * {
@@ -362,29 +350,25 @@ body {
 /* INFO CARD */
 .movie-info-box {
     margin-top: 10px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    background: var(--yellow);
     border-radius: 28px;
     padding: 14px 18px 18px 18px;
-    color: var(--glass-text);
+    color: #000;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .rating-row { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
 .rating-badge {
-    background: var(--glass-badge-bg);
-    color: var(--glass-text);
+    background: #000;
+    color: #fff;
     padding: 3px 10px;
     border-radius: 20px;
     font-size: 10px;
     font-weight: 800;
-    border: 1px solid var(--glass-badge-border);
 }
 
 .movie-title { font-size: 20px; font-weight: 900; margin-bottom: 2px; line-height: 1.2; display: flex; align-items: center; gap: 8px; }
@@ -442,7 +426,7 @@ body {
     height: 24px;
     border-radius: 6px;
     overflow: hidden;
-    border: 1px solid var(--glass-badge-border);
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 .ott-icon-small img {
