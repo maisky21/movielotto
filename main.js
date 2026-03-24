@@ -445,6 +445,16 @@ async function showResult(movie, omdb, credits, ott) {
     titleLink.addEventListener('click', e => e.stopPropagation());
     titleLink.textContent = movie.title;
     titleEl.appendChild(titleLink);
+
+    const releaseDate = movie.release_date ? new Date(movie.release_date) : null;
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    if (releaseDate && releaseDate >= oneYearAgo) {
+        const badge = document.createElement('span');
+        badge.className = 'new-badge';
+        badge.textContent = 'NEW';
+        titleEl.appendChild(badge);
+    }
     titleEl.onclick = (e) => e.stopPropagation();
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${(movie.vote_average ?? 0).toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
