@@ -447,13 +447,20 @@ async function showResult(movie, omdb, credits, ott) {
     titleEl.appendChild(titleLink);
 
     const releaseDate = movie.release_date ? new Date(movie.release_date) : null;
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    if (releaseDate && releaseDate >= oneYearAgo) {
-        const badge = document.createElement('span');
-        badge.className = 'new-badge';
-        badge.textContent = 'NEW';
-        titleEl.appendChild(badge);
+    if (releaseDate) {
+        const yearSpan = document.createElement('span');
+        yearSpan.className = 'release-year';
+        yearSpan.textContent = `(${releaseDate.getFullYear()})`;
+        titleEl.appendChild(yearSpan);
+
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        if (releaseDate >= oneYearAgo) {
+            const badge = document.createElement('span');
+            badge.className = 'new-badge';
+            badge.textContent = 'NEW';
+            titleEl.appendChild(badge);
+        }
     }
     titleEl.onclick = (e) => e.stopPropagation();
     document.getElementById('res-rating-tmdb').textContent = `TMDB ${(movie.vote_average ?? 0).toFixed(1)}`;
