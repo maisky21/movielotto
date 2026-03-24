@@ -439,9 +439,10 @@ async function showResult(movie, omdb, credits, ott) {
     const imdbId = omdb?.imdbId;
     titleEl.innerHTML = '';
     const titleLink = document.createElement('a');
-    titleLink.href = imdbId ? `https://www.imdb.com/title/${imdbId}/` : '#';
-    titleLink.target = '_blank';
-    titleLink.style.cssText = 'color:inherit; text-decoration:none;';
+    if (imdbId) {
+        titleLink.href = `https://www.imdb.com/title/${imdbId}/`;
+        titleLink.target = '_blank';
+    }
     titleLink.addEventListener('click', e => e.stopPropagation());
     titleLink.textContent = movie.title;
     titleEl.appendChild(titleLink);

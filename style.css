@@ -359,7 +359,8 @@ body {
 
 .movie-title { font-size: 20px; font-weight: 900; margin-bottom: 2px; line-height: 1.2; display: flex; align-items: center; gap: 8px; }
 .movie-title a { text-decoration: none; color: inherit; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-.movie-title a:hover { text-decoration: underline; }
+.movie-title a[href]:hover { text-decoration: underline; cursor: pointer; }
+.movie-title a:not([href]) { cursor: default; }
 
 .release-year {
     font-size: 14px;
