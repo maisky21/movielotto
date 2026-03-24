@@ -66,6 +66,7 @@ let state = {
     lang: localStorage.getItem('lang') || 'KO',
     currentTrailerId: null,
     currentMovie: null,
+    currentOmdb: null,
     player: null,
     isApiReady: false,
     moviePoolCache: { key: null, movies: [] }
@@ -346,6 +347,7 @@ async function handleDrawClick() {
             fetchFullInfo(selectedMovie.id),
             fetchOMDb(selectedMovie),
         ]);
+        state.currentOmdb = selectedOmdb;
 
         const selectedCredits = fullInfo.credits;
         const selectedVideos = fullInfo.videos;
@@ -605,6 +607,16 @@ async function toggleLanguage() {
     state.moviePoolCache = { key: null, movies: [] };
     await fetchGenres();
     renderGenres();
+
+    // 결과 카드가 표시 중이면 새 언어로 즉시 재렌더
+    if (state.currentMovie && resultView.style.display !== 'none') {
+        const fullInfo = await fetchFullInfo(state.currentMovie.id);
+        // TMDB가 현재 언어로 제목/줄거리를 반환하므로 movie 객체도 업데이트
+        state.currentMovie = { ...state.currentMovie, ...fullInfo };
+        const credits = fullInfo.credits;
+        const ott = { KR: fullInfo['watch/providers']?.results?.KR || {} };
+        await showResult(state.currentMovie, state.currentOmdb, credits, ott);
+    }
 }
 
 function updateLangUI() {
