@@ -66,7 +66,8 @@ let state = {
     currentTrailerId: null,
     currentMovie: null,
     player: null,
-    isApiReady: false
+    isApiReady: false,
+    moviePoolCache: { key: null, movies: [] }
 };
 
 // UI Elements
@@ -185,7 +186,8 @@ function selectGenre(id, isKMovie, isNewMovie) {
     state.selectedGenre = id;
     state.isKMovie = isKMovie;
     state.isNewMovie = isNewMovie;
-    state.movies = []; 
+    state.movies = [];
+    state.moviePoolCache = { key: null, movies: [] };
     renderGenres();
 }
 
@@ -204,13 +206,14 @@ function saveToHistory(id) {
     sessionStorage.setItem('recommend_history', JSON.stringify(h));
 }
 
-async function getMovies(genreId, expanded = false) {
+async function getMovies(genreId, sortBy = 'popularity.desc', expanded = false) {
     const currentYear = new Date().getFullYear();
-    const randomPage = (state.isNewMovie || state.isKMovie) ? Math.floor(Math.random() * 10) + 1 : Math.floor(Math.random() * 20) + 1; 
-    const whitelistIds = [8, 337, 119]; 
-    
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=popularity.desc&include_adult=false&vote_count.gte=50&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}&with_watch_monetization_types=flatrate`;
-    
+    const randomPage = (state.isNewMovie || state.isKMovie) ? Math.floor(Math.random() * 10) + 1 : Math.floor(Math.random() * 20) + 1;
+    const whitelistIds = [8, 337, 119];
+    const minVotes = (state.isNewMovie || state.isKMovie) ? 50 : 100;
+
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=${sortBy}&include_adult=false&vote_count.gte=${minVotes}&vote_average.gte=6.8&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}&with_watch_monetization_types=flatrate`;
+
     if (state.isKMovie) url += `&with_original_language=ko`;
     if (state.isNewMovie) url += `&primary_release_date.gte=${currentYear - 1}-01-01&primary_release_date.lte=${currentYear}-12-31`;
 
@@ -222,10 +225,11 @@ async function getMovies(genreId, expanded = false) {
 
     try {
         const res = await fetch(url);
+        if (!res.ok) return [];
         const data = await res.json();
         let results = (data.results || []).filter(m => m.poster_path);
         if (results.length < 5 && !expanded && (genreId || state.isKMovie || state.isNewMovie)) {
-            return await getMovies(genreId, true);
+            return await getMovies(genreId, sortBy, true);
         }
         return results;
     } catch (e) {
@@ -250,63 +254,50 @@ async function handleDrawClick() {
     startInfiniteSpin();
 
     try {
-        let selectedMovie = null;
-        let selectedOmdb = null;
-        let selectedCredits = null;
-        let selectedOtt = null;
-        let selectedVideos = null;
-        
-        let moviePool = [];
-        let retryCount = 0;
-        const whitelistIds = [8, 337, 119]; 
         const history = getHistory();
+        const cacheKey = `${state.selectedGenre}-${state.isKMovie}-${state.isNewMovie}-${state.lang}`;
 
-        while (!selectedMovie && retryCount < 20) { 
-            moviePool = await getMovies(state.selectedGenre);
-            for (const m of moviePool) {
-                if (history.includes(m.id)) continue;
-
-                const fullInfo = await fetchFullInfo(m.id);
-                const ott = fullInfo['watch/providers']?.results?.KR || {};
-                const flatrate = ott.flatrate || [];
-                const availableOnStrictWhitelist = flatrate.some(p => whitelistIds.includes(p.provider_id));
-                if (!availableOnStrictWhitelist) continue;
-
-                const omdb = await fetchOMDb(m);
-                const tmdbScore = m.vote_average || 0;
-                const imdbScore = parseFloat(omdb?.imdbRating) || 0;
-                const rtScore = parseInt(omdb?.rtRating?.replace('%', '')) || 0;
-
-                if (tmdbScore >= 7.0 || imdbScore >= 7.0 || rtScore >= 70) {
-                    selectedMovie = m;
-                    selectedOmdb = omdb;
-                    selectedCredits = fullInfo.credits;
-                    selectedOtt = { KR: ott }; 
-                    selectedVideos = fullInfo.videos;
-                    break;
-                }
-            }
-            retryCount++;
+        // 방안 B: 캐시 히트 시 재fetch 없이 재사용
+        let moviePool;
+        if (state.moviePoolCache.key === cacheKey && state.moviePoolCache.movies.length > 0) {
+            moviePool = state.moviePoolCache.movies;
+        } else {
+            // 방안 B: 3가지 정렬로 병렬 fetch → 합산 후 중복 제거
+            const [pool1, pool2, pool3] = await Promise.all([
+                getMovies(state.selectedGenre, 'popularity.desc'),
+                getMovies(state.selectedGenre, 'vote_average.desc'),
+                getMovies(state.selectedGenre, 'revenue.desc'),
+            ]);
+            const seen = new Set();
+            moviePool = [...pool1, ...pool2, ...pool3].filter(m => {
+                if (seen.has(m.id)) return false;
+                seen.add(m.id);
+                return true;
+            });
+            state.moviePoolCache = { key: cacheKey, movies: moviePool };
         }
 
-        if (!selectedMovie) {
-            for (const m of moviePool) {
-                if (!history.includes(m.id)) {
-                    selectedMovie = m;
-                    const fullInfo = await fetchFullInfo(m.id);
-                    selectedOmdb = await fetchOMDb(m);
-                    selectedCredits = fullInfo.credits;
-                    selectedVideos = fullInfo.videos;
-                    selectedOtt = { KR: fullInfo['watch/providers']?.results?.KR };
-                    break;
-                }
-            }
-        }
+        if (moviePool.length === 0) throw new Error("No movies found.");
 
-        if (!selectedMovie) throw new Error("No unique movies found.");
+        // 히스토리 제외 후 후보 선정, 없으면 전체 pool 재사용
+        let candidates = moviePool.filter(m => !history.includes(m.id));
+        if (candidates.length === 0) candidates = moviePool;
+
+        // 방안 A: pool이 이미 TMDB 기준 6.8+ 품질 보장 → 랜덤 선택
+        const selectedMovie = candidates[Math.floor(Math.random() * candidates.length)];
 
         saveToHistory(selectedMovie.id);
-        state.currentMovie = selectedMovie; 
+        state.currentMovie = selectedMovie;
+
+        // 선택된 1편에 대해서만 상세 정보 병렬 fetch
+        const [fullInfo, selectedOmdb] = await Promise.all([
+            fetchFullInfo(selectedMovie.id),
+            fetchOMDb(selectedMovie),
+        ]);
+
+        const selectedCredits = fullInfo.credits;
+        const selectedVideos = fullInfo.videos;
+        const selectedOtt = { KR: fullInfo['watch/providers']?.results?.KR || {} };
 
         let trailerId = findBestTrailer(selectedVideos?.results);
         if (!trailerId) {
@@ -541,6 +532,7 @@ async function toggleLanguage() {
     state.lang = state.lang === 'KO' ? 'EN' : 'KO';
     localStorage.setItem('lang', state.lang);
     updateLangUI();
+    state.moviePoolCache = { key: null, movies: [] };
     await fetchGenres();
     renderGenres();
 }
