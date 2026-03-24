@@ -330,16 +330,18 @@ async function handleDrawClick() {
 async function fetchOMDb(movie) {
     try {
         const extRes = await fetch(`${CONFIG.TMDB_BASE}/movie/${movie.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
+        if (!extRes.ok) return { imdbRating: '--', rtRating: '--', imdbId: null };
         const extData = await extRes.json();
         const realImdbId = extData.imdb_id;
         let url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&t=${encodeURIComponent(movie.original_title || movie.title)}`;
         if (realImdbId) url = `${CONFIG.OMDB_BASE}?apikey=${CONFIG.OMDB_KEY}&i=${realImdbId}`;
         const res = await fetch(url);
+        if (!res.ok) return { imdbRating: '--', rtRating: '--', imdbId: realImdbId || null };
         const data = await res.json();
-        return { 
-            imdbRating: data.imdbRating || '--', 
+        return {
+            imdbRating: data.imdbRating || '--',
             rtRating: data.Ratings?.find(r => r.Source.includes('Rotten'))?.Value || '--',
-            imdbId: realImdbId || data.imdbID 
+            imdbId: realImdbId || data.imdbID
         };
     } catch (e) { return { imdbRating: '--', rtRating: '--', imdbId: null }; }
 }
@@ -348,6 +350,7 @@ async function fetchFullInfo(movieId, overrideLang = null) {
     try {
         const lang = overrideLang || (state.lang === 'KO' ? 'ko-KR' : 'en-US');
         const res = await fetch(`${CONFIG.TMDB_BASE}/movie/${movieId}?api_key=${CONFIG.TMDB_KEY}&language=${lang}&append_to_response=videos,credits,watch/providers`);
+        if (!res.ok) return {};
         return await res.json();
     } catch (e) { return {}; }
 }
@@ -420,24 +423,37 @@ async function showResult(movie, omdb, credits, ott) {
     document.getElementById('res-overview').textContent = movie.overview || (state.lang === 'KO' ? "영화 설명이 없습니다." : "No overview available.");
     
     const titleEl = document.getElementById('res-title');
-    const imdbId = omdb?.imdbId; 
-    titleEl.innerHTML = `<a href="https://www.imdb.com/title/${imdbId || ''}/" target="_blank" style="color:inherit; text-decoration:none;" onclick="event.stopPropagation();">${movie.title}</a>`;
+    const imdbId = omdb?.imdbId;
+    titleEl.innerHTML = '';
+    const titleLink = document.createElement('a');
+    titleLink.href = imdbId ? `https://www.imdb.com/title/${imdbId}/` : '#';
+    titleLink.target = '_blank';
+    titleLink.style.cssText = 'color:inherit; text-decoration:none;';
+    titleLink.addEventListener('click', e => e.stopPropagation());
+    titleLink.textContent = movie.title;
+    titleEl.appendChild(titleLink);
     titleEl.onclick = (e) => e.stopPropagation();
-    document.getElementById('res-rating-tmdb').textContent = `TMDB ${movie.vote_average.toFixed(1)}`;
+    document.getElementById('res-rating-tmdb').textContent = `TMDB ${(movie.vote_average ?? 0).toFixed(1)}`;
     document.getElementById('res-rating-imdb').textContent = `IMDb ${omdb?.imdbRating || '--'}`;
     document.getElementById('res-rating-rt').textContent = `Rotten ${omdb?.rtRating || '--'}`;
 
     const directorObj = credits?.crew?.find(c => c.job === 'Director');
     const topCast = credits?.cast?.slice(0, 3) || [];
     const peopleImdb = await Promise.all([...(directorObj ? [directorObj] : []), ...topCast].map(async p => {
-        const res = await fetch(`${CONFIG.TMDB_BASE}/person/${p.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
-        const data = await res.json();
-        return { id: p.id, imdbId: data.imdb_id };
+        try {
+            const res = await fetch(`${CONFIG.TMDB_BASE}/person/${p.id}/external_ids?api_key=${CONFIG.TMDB_KEY}`);
+            if (!res.ok) return { id: p.id, imdbId: null };
+            const data = await res.json();
+            return { id: p.id, imdbId: data.imdb_id };
+        } catch {
+            return { id: p.id, imdbId: null };
+        }
     }));
 
+    const escapeHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     const getPLink = (p) => {
         const d = peopleImdb.find(x => x.id === p.id);
-        const name = p.name || p.original_name;
+        const name = escapeHtml(p.name || p.original_name);
         if (d?.imdbId) return `<a class="credit-link" href="https://www.imdb.com/name/${d.imdbId}/" target="_blank" onclick="event.stopPropagation();">${name}</a>`;
         return `<span>${name}</span>`;
     };
@@ -474,7 +490,7 @@ async function showResult(movie, omdb, credits, ott) {
 function getKROttDeepLink(pId, title) {
     const q = encodeURIComponent(title);
     if (pId === 8) return `https://www.netflix.com/search?q=${q}`;
-    if (pId === 337) return `https://www.disneyplus.com/ko-kr/browse/search`;
+    if (pId === 337) return `https://www.disneyplus.com/ko-kr/search?q=${q}`;
     if (pId === 119) return `https://www.primevideo.com/search/ref=atv_nb_sug?ie=UTF8&phrase=${q}`;
     return `https://www.google.com/search?q=${q}+OTT`;
 }
