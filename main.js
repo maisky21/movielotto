@@ -206,13 +206,13 @@ function saveToHistory(id) {
     sessionStorage.setItem('recommend_history', JSON.stringify(h));
 }
 
-async function getMovies(genreId, sortBy = 'popularity.desc', expanded = false) {
+async function getMovies(genreId, sortBy = 'popularity.desc', providerId = null, expanded = false) {
     const currentYear = new Date().getFullYear();
     const randomPage = (state.isNewMovie || state.isKMovie) ? Math.floor(Math.random() * 10) + 1 : Math.floor(Math.random() * 20) + 1;
-    const whitelistIds = [8, 337, 119];
     const minVotes = (state.isNewMovie || state.isKMovie) ? 50 : 100;
+    const providerParam = providerId ? String(providerId) : '8|337|119';
 
-    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=${sortBy}&include_adult=false&vote_count.gte=${minVotes}&vote_average.gte=6.8&page=${randomPage}&watch_region=KR&with_watch_providers=${whitelistIds.join('|')}&with_watch_monetization_types=flatrate`;
+    let url = `${CONFIG.TMDB_BASE}/discover/movie?api_key=${CONFIG.TMDB_KEY}&language=${state.lang === 'KO' ? 'ko-KR' : 'en-US'}&sort_by=${sortBy}&include_adult=false&vote_count.gte=${minVotes}&vote_average.gte=6.8&page=${randomPage}&watch_region=KR&with_watch_providers=${providerParam}&with_watch_monetization_types=flatrate`;
 
     if (state.isKMovie) url += `&with_original_language=ko`;
     if (state.isNewMovie) url += `&primary_release_date.gte=${currentYear - 1}-01-01&primary_release_date.lte=${currentYear}-12-31`;
@@ -229,7 +229,7 @@ async function getMovies(genreId, sortBy = 'popularity.desc', expanded = false) 
         const data = await res.json();
         let results = (data.results || []).filter(m => m.poster_path);
         if (results.length < 5 && !expanded && (genreId || state.isKMovie || state.isNewMovie)) {
-            return await getMovies(genreId, sortBy, true);
+            return await getMovies(genreId, sortBy, providerId, true);
         }
         return results;
     } catch (e) {
@@ -262,18 +262,35 @@ async function handleDrawClick() {
         if (state.moviePoolCache.key === cacheKey && state.moviePoolCache.movies.length > 0) {
             moviePool = state.moviePoolCache.movies;
         } else {
-            // 방안 B: 3가지 정렬로 병렬 fetch → 합산 후 중복 제거
-            const [pool1, pool2, pool3] = await Promise.all([
-                getMovies(state.selectedGenre, 'popularity.desc'),
-                getMovies(state.selectedGenre, 'vote_average.desc'),
-                getMovies(state.selectedGenre, 'revenue.desc'),
-            ]);
-            const seen = new Set();
-            moviePool = [...pool1, ...pool2, ...pool3].filter(m => {
-                if (seen.has(m.id)) return false;
-                seen.add(m.id);
-                return true;
+            // 플랫폼별 균등 비율: 각 OTT(Netflix/Disney+/Prime) × 3가지 정렬 → 9개 병렬 fetch
+            const PROVIDER_IDS = [8, 337, 119];
+            const sortOrders = ['popularity.desc', 'vote_average.desc', 'revenue.desc'];
+            const allResults = await Promise.all(
+                PROVIDER_IDS.flatMap(pid =>
+                    sortOrders.map(sort => getMovies(state.selectedGenre, sort, pid))
+                )
+            );
+            // 플랫폼별로 3개 정렬 결과 합산 후 중복 제거
+            const providerPools = PROVIDER_IDS.map((_, i) => {
+                const seen = new Set();
+                return allResults.slice(i * 3, i * 3 + 3).flat().filter(m => {
+                    if (seen.has(m.id)) return false;
+                    seen.add(m.id);
+                    return true;
+                });
             });
+            // 라운드로빈 방식으로 균등 merge (플랫폼별 동일 슬롯 보장)
+            const seen = new Set();
+            moviePool = [];
+            const maxLen = Math.max(...providerPools.map(p => p.length));
+            for (let i = 0; i < maxLen; i++) {
+                for (const pool of providerPools) {
+                    if (i < pool.length && !seen.has(pool[i].id)) {
+                        seen.add(pool[i].id);
+                        moviePool.push(pool[i]);
+                    }
+                }
+            }
             state.moviePoolCache = { key: cacheKey, movies: moviePool };
         }
 
