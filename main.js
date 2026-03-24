@@ -59,6 +59,7 @@ let state = {
     selectedGenre: null,
     isKMovie: false,
     isNewMovie: false,
+    selectedProvider: null,
     movies: [],
     isDrawing: false,
     theme: localStorage.getItem('theme') || 'dark',
@@ -150,9 +151,11 @@ function renderGenres() {
     if (!container) return;
     container.innerHTML = '';
     
+    const isDefault = !state.selectedGenre && !state.isKMovie && !state.isNewMovie && !state.selectedProvider;
+
     // 1. All Chip
     const allChip = document.createElement('div');
-    allChip.className = `genre-chip ${(!state.selectedGenre && !state.isKMovie && !state.isNewMovie) ? 'active' : ''}`;
+    allChip.className = `genre-chip ${isDefault ? 'active' : ''}`;
     allChip.textContent = I18N[state.lang].all;
     allChip.onclick = () => selectGenre(null, false, false);
     container.appendChild(allChip);
@@ -171,21 +174,36 @@ function renderGenres() {
     newChip.onclick = () => selectGenre(null, false, true);
     container.appendChild(newChip);
 
-    // 4. Fetched Genres
+    // 4. OTT-specific Chips (N / D / P)
+    const ottChips = [
+        { label: 'N', providerId: 8 },
+        { label: 'D', providerId: 337 },
+        { label: 'P', providerId: 119 },
+    ];
+    ottChips.forEach(({ label, providerId }) => {
+        const chip = document.createElement('div');
+        chip.className = `genre-chip ott-chip ${state.selectedProvider === providerId ? 'active' : ''}`;
+        chip.textContent = label;
+        chip.onclick = () => selectGenre(null, false, false, providerId);
+        container.appendChild(chip);
+    });
+
+    // 5. Fetched Genres
     state.genres.forEach(g => {
         const chip = document.createElement('div');
-        chip.className = `genre-chip ${(state.selectedGenre === g.id && !state.isKMovie && !state.isNewMovie) ? 'active' : ''}`;
+        chip.className = `genre-chip ${(state.selectedGenre === g.id && !state.isKMovie && !state.isNewMovie && !state.selectedProvider) ? 'active' : ''}`;
         chip.textContent = g.name;
         chip.onclick = () => selectGenre(g.id, false, false);
         container.appendChild(chip);
     });
 }
 
-function selectGenre(id, isKMovie, isNewMovie) {
+function selectGenre(id, isKMovie, isNewMovie, providerId = null) {
     if (state.isDrawing) return;
     state.selectedGenre = id;
     state.isKMovie = isKMovie;
     state.isNewMovie = isNewMovie;
+    state.selectedProvider = providerId;
     state.movies = [];
     state.moviePoolCache = { key: null, movies: [] };
     renderGenres();
@@ -260,12 +278,24 @@ async function handleDrawClick() {
 
     try {
         const history = getHistory();
-        const cacheKey = `${state.selectedGenre}-${state.isKMovie}-${state.isNewMovie}-${state.lang}`;
+        const cacheKey = `${state.selectedGenre}-${state.isKMovie}-${state.isNewMovie}-${state.selectedProvider}-${state.lang}`;
 
-        // 방안 B: 캐시 히트 시 재fetch 없이 재사용
         let moviePool;
         if (state.moviePoolCache.key === cacheKey && state.moviePoolCache.movies.length > 0) {
             moviePool = state.moviePoolCache.movies;
+        } else if (state.selectedProvider) {
+            // N/D/P 단일 플랫폼: 3가지 정렬로 fetch 후 중복 제거
+            const sortOrders = ['popularity.desc', 'vote_average.desc', 'revenue.desc'];
+            const results = await Promise.all(
+                sortOrders.map(sort => getMovies(state.selectedGenre, sort, state.selectedProvider))
+            );
+            const seen = new Set();
+            moviePool = results.flat().filter(m => {
+                if (seen.has(m.id)) return false;
+                seen.add(m.id);
+                return true;
+            });
+            state.moviePoolCache = { key: cacheKey, movies: moviePool };
         } else {
             // 플랫폼별 균등 비율: 각 OTT(Netflix/Disney+/Prime) × 3가지 정렬 → 9개 병렬 fetch
             const PROVIDER_IDS = [8, 337, 119];

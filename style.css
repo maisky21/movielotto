@@ -147,6 +147,19 @@ body {
     transform: scale(1.05);
 }
 
+.genre-chip.ott-chip {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.genre-chip.ott-chip.active {
+    background: #e50914;
+    border-color: #e50914;
+    color: #fff;
+}
+
 /* Main Card Area */
 .main-card {
     flex-grow: 1;
