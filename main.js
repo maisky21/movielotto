@@ -1,5 +1,5 @@
 const CONFIG = {
-    TMDB_KEY: 'f5ac0b3500a28ee145b8821abe874c7e',
+    TMDB_KEY: '77be59b7948bd8dd4522a4a18ef73767',
     OMDB_KEY: 'd4e88f94',
     TMDB_BASE: 'https://api.themoviedb.org/3',
     OMDB_BASE: 'https://www.omdbapi.com/',
