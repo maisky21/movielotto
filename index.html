@@ -24,7 +24,7 @@
 <body class="dark-mode">
     <div class="app-container">
         <header class="header">
-            <h1 class="logo" onclick="resetApp()">CINE LOTTO</h1>
+            <h1 class="logo" onmousedown="this.classList.add('clicked')" ontouchstart="this.classList.add('clicked')" onmouseup="setTimeout(()=>this.classList.remove('clicked'),200)" ontouchend="setTimeout(()=>this.classList.remove('clicked'),200)" onclick="resetApp()">CINE LOTTO</h1>
             <div class="controls">
                 <button id="lang-toggle" class="icon-btn" onclick="toggleLanguage()">KO</button>
                 <button id="theme-toggle" class="icon-btn" onclick="toggleTheme()">☀️</button>
