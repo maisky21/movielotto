@@ -1,10 +1,20 @@
 {
   "hosting": {
-    "public": ".",
+    "public": "public",
     "ignore": [
-      "firebase-debug.log",
+      "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "@(index.html|sitemap.xml|robots.txt)",
+        "destination": "/index.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   }
 }
