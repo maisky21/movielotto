@@ -587,7 +587,7 @@ async function showResult(movie, omdb, credits, ott) {
 function getKROttDeepLink(pId, title) {
     const q = encodeURIComponent(title);
     if (pId === 8) return `https://www.netflix.com/search?q=${q}`;
-    if (pId === 337) return `https://www.disneyplus.com/home`;
+    if (pId === 337) return `https://www.disneyplus.com/browse/search`;
     if (pId === 119) return `https://www.primevideo.com/search/ref=atv_nb_sug?ie=UTF8&phrase=${q}`;
     return `https://www.google.com/search?q=${q}+OTT`;
 }
