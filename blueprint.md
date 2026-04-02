@@ -11,7 +11,7 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
 - **Analytics & Tracking (GA4):**
     - **Measurement ID:** Updated to the official production ID `G-XXMZ7HLXWQ` across `index.html` to ensure accurate traffic and event tracking.
 - **Security & Compatibility:**
-    - **Disney+ Deep Link:** Updated to `https://www.disneyplus.com/search` for universal device compatibility.
+    - **Disney+ Deep Link:** Updated to `https://www.disneyplus.com/home` for universal device compatibility and to prevent 404 errors on Mac/logged-out browsers.
     - **External Link Security:** All external links (IMDb, Credits, OTT) now enforce `target="_blank"` and `rel="noopener noreferrer"` to protect user session data and prevent performance impacts from destination pages.
 - **Brand Identity (CINE LOTTO):**
     - **Visual Branding:** A premium text-based logo where "CINE" is crisp white (#FFFFFF) and "LOTTO" is radiant gold (#FFD700).
