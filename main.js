@@ -54,6 +54,13 @@ const I18N = {
     }
 };
 
+// GA4 Tracking Helper
+function trackEvent(name, params) {
+    if (typeof gtag === 'function') {
+        gtag('event', name, params);
+    }
+}
+
 let state = {
     genres: [],
     selectedGenre: null,
@@ -211,6 +218,20 @@ function renderGenres() {
 
 function selectGenre(id, isKMovie, isNewMovie, providerId = null) {
     if (state.isDrawing) return;
+
+    // GA4 Tracking
+    let genreName = I18N[state.lang].all;
+    if (isKMovie) genreName = I18N[state.lang].kMovie;
+    else if (isNewMovie) genreName = I18N[state.lang].new;
+    else if (providerId === 8) genreName = 'Netflix';
+    else if (providerId === 337) genreName = 'Disney+';
+    else if (providerId === 119) genreName = 'Prime Video';
+    else if (id) {
+        const genre = state.genres.find(g => g.id === id);
+        if (genre) genreName = genre.name;
+    }
+    trackEvent('select_genre', { genre_name: genreName });
+
     state.selectedGenre = id;
     state.isKMovie = isKMovie;
     state.isNewMovie = isNewMovie;
@@ -275,6 +296,8 @@ async function getMovies(genreId, sortBy = 'popularity.desc', providerId = null,
 async function handleDrawClick() {
     if (state.isDrawing) return;
     
+    trackEvent('click_next_movie');
+
     stopTrailer();
     trailerContainer.style.display = 'none';
     if (playOverlay) playOverlay.style.display = 'flex';
