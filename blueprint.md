@@ -8,6 +8,8 @@ Movie Lotto is a "lottery-style" movie recommendation app. This refactored versi
     - **Global Access:** All search engine crawlers (User-agent: *) are permitted to index the site (Allow: /).
     - **Security/Privacy:** Critical system directories (`.git/`, `.idx/`, `.vscode/`) and temporary logs (`firebase-debug.log`) are explicitly disallowed from crawling.
     - **Sitemap Integration:** The official sitemap URL (`https://cinelotto.com/sitemap.xml`) is linked to guide crawlers efficiently.
+- **Analytics & Tracking (GA4):**
+    - **Measurement ID:** Updated to the official production ID `G-XXMZ7HLXWQ` across `index.html` to ensure accurate traffic and event tracking.
 - **Brand Identity (CINE LOTTO):**
     - **Visual Branding:** A premium text-based logo where "CINE" is crisp white (#FFFFFF) and "LOTTO" is radiant gold (#FFD700).
     - **Golden Shimmer Animation:** A low-overhead CSS animation that sends a subtle golden flash across the "LOTTO" text every 3 seconds, creating a high-end feel without performance impact.
